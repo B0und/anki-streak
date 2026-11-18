@@ -37,7 +37,7 @@ class AnkiActivityModule : Module() {
         if (theme != storedWidgetTheme()) {
           check(widgetPreferences.edit().putString("theme", theme.id).commit())
         }
-        reconcileLauncherIcon(context, theme)
+        reconcileWidgetIcon(theme)
       }
     }
 
@@ -54,9 +54,7 @@ class AnkiActivityModule : Module() {
     }.runOnQueue(Queues.MAIN)
 
     AsyncFunction("readActivity") {
-      runCatching {
-        synchronized(themeLock) { reconcileLauncherIcon(context, storedWidgetTheme()) }
-      }.onFailure { Log.w("AnkiActivity", "Launcher icon reconciliation failed", it) }
+      synchronized(themeLock) { reconcileWidgetIcon(storedWidgetTheme()) }
       readActivity(context)
     }
 
@@ -87,6 +85,11 @@ class AnkiActivityModule : Module() {
 
   private fun storedWidgetTheme(): WidgetTheme =
     WidgetTheme.fromId(widgetPreferences.getString("theme", null))
+
+  private fun reconcileWidgetIcon(theme: WidgetTheme) {
+    runCatching { reconcileLauncherIcon(context, theme) }
+      .onFailure { Log.w("AnkiActivity", "Launcher icon reconciliation failed", it) }
+  }
 
   private val widgetPreferences
     get() = context.getSharedPreferences("anki-streak-widget", Context.MODE_PRIVATE)

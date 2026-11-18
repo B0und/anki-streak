@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "Anki Streak",
+    "slug": "anki-streak",
+    "version": "1.0.0",
+    "platforms": ["android"],
+    "orientation": "portrait",
+    "icon": "./assets/app-icon.png",
+    "android": {
+      "package": "com.ankistreak.anime",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0D1E24"
+      },
+      "blockedPermissions": ["android.permission.SYSTEM_ALERT_WINDOW"]
+    },
+    "plugins": [
+      [
+        "expo-widgets",
+        {
+          "enableAndroid": true,
+          "widgets": [
+            {
+              "name": "AnkiStreak",
+              "displayName": "Anki Streak",
+              "description": "Your Anki review streak, activity, and Miku’s mood.",
+              "android": {
+                "minWidth": 250,
+                "minHeight": 104,
+                "targetCellWidth": 4,
+                "targetCellHeight": 2,
+                "resizeMode": "none",
+                "initialLayout": "./src/AnkiWidget.tsx"
+              }
+            }
+          ]
+        }
+      ]
+    ]
+  }
+}

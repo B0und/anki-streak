@@ -6,24 +6,25 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import expo.modules.interfaces.permissions.Permissions
+import expo.modules.kotlin.Promise
+import expo.modules.kotlin.functions.Queues
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
-import expo.modules.kotlin.queues.Queues
 
 private const val ANKI_PACKAGE = "com.ichi2.anki"
 private const val ANKI_PERMISSION = "com.ichi2.anki.permission.READ_WRITE_DATABASE"
 private const val PROVIDER = "com.ichi2.anki.flashcards"
 private val CARDS_URI = Uri.parse("content://$PROVIDER/cards")
 private const val HEATMAP_DAYS = 45
-private const val MAX_STREAK_DAYS = 3650
 
 class AnkiActivityModule : Module() {
   override fun definition() = ModuleDefinition {
     Name("AnkiActivity")
 
-    Function("hasPermission") {
-      context.checkSelfPermission(ANKI_PERMISSION) == PackageManager.PERMISSION_GRANTED
-    }
+    AsyncFunction("requestPermission") { promise: Promise ->
+      Permissions.askForPermissionsWithPermissionsManager(appContext.permissions, promise, ANKI_PERMISSION)
+    }.runOnQueue(Queues.MAIN)
 
     AsyncFunction("readActivity") {
       readActivity(context)
@@ -60,9 +61,7 @@ class AnkiActivityModule : Module() {
       var day = if (recent.first() > 0) 0 else 1
       val start = day
 
-      while (day < MAX_STREAK_DAYS) {
-        val count = recent.getOrElse(day) { reviewedCards(context, day) }
-        if (count == 0) break
+      while (recent.getOrElse(day) { reviewedCards(context, day) } > 0) {
         day++
       }
 

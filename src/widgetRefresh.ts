@@ -2,15 +2,27 @@ import * as BackgroundTask from 'expo-background-task';
 import * as TaskManager from 'expo-task-manager';
 
 import AnkiWidget from './AnkiWidget';
-import { readActivity, widgetActivity, type AnkiActivity } from './activity';
+import { readActivity, renderWidget, type AnkiActivity } from './activity';
 
 const taskName = 'refresh-anki-widget';
 let inFlight: Promise<AnkiActivity> | undefined;
 
 export function refreshWidget(): Promise<AnkiActivity> {
   inFlight ??= readActivity()
-    .then((activity) => {
-      AnkiWidget.updateSnapshot(widgetActivity(activity));
+    .then(async (activity) => {
+      if (activity.kind === 'ready') {
+        const { streak, today, history, due, newCards } = activity;
+        const imageUri = await renderWidget(streak, today, history, due, newCards);
+        const mood = today > 0 ? 'Miku is happy' : 'Miku is waiting';
+        const dueLabel = due === null ? 'Due count unavailable' : `${due} due`;
+        const newLabel = newCards === null ? 'New count unavailable' : `${newCards} new`;
+        AnkiWidget.updateSnapshot({
+          imageUri,
+          description: `${mood}. ${streak}-day streak. ${today} cards reviewed today. ${dueLabel}. ${newLabel}.`,
+        });
+      } else {
+        AnkiWidget.updateSnapshot({ imageUri: '', description: '' });
+      }
       return activity;
     })
     .finally(() => {

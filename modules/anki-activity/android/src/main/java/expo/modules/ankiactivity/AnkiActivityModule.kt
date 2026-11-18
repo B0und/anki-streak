@@ -11,12 +11,13 @@ import expo.modules.kotlin.Promise
 import expo.modules.kotlin.functions.Queues
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
+import org.json.JSONArray
 
 private const val ANKI_PACKAGE = "com.ichi2.anki"
 private const val ANKI_PERMISSION = "com.ichi2.anki.permission.READ_WRITE_DATABASE"
 private const val PROVIDER = "com.ichi2.anki.flashcards"
 private val CARDS_URI = Uri.parse("content://$PROVIDER/cards")
-private const val HEATMAP_DAYS = 45
+private val DECKS_URI = Uri.parse("content://$PROVIDER/decks")
 
 class AnkiActivityModule : Module() {
   override fun definition() = ModuleDefinition {
@@ -28,6 +29,10 @@ class AnkiActivityModule : Module() {
 
     AsyncFunction("readActivity") {
       readActivity(context)
+    }
+
+    AsyncFunction("renderWidget") { streak: Int?, today: Int?, history: List<Int>, due: Int?, newCards: Int? ->
+      renderWidgetArtwork(context, streak, today, history, due, newCards)
     }
 
     AsyncFunction("openAnki") {
@@ -48,7 +53,7 @@ class AnkiActivityModule : Module() {
   private val context: Context
     get() = requireNotNull(appContext.reactContext)
 
-  private fun readActivity(context: Context): Map<String, Any> {
+  private fun readActivity(context: Context): Map<String, Any?> {
     if (context.packageManager.resolveContentProvider(PROVIDER, 0) == null) {
       return mapOf("kind" to "missing")
     }
@@ -57,7 +62,7 @@ class AnkiActivityModule : Module() {
     }
 
     return try {
-      val recent = (0 until HEATMAP_DAYS).map { daysAgo -> reviewedCards(context, daysAgo) }
+      val recent = (0 until HISTORY_DAYS).map { daysAgo -> reviewedCards(context, daysAgo) }
       var day = if (recent.first() > 0) 0 else 1
       val start = day
 
@@ -65,17 +70,41 @@ class AnkiActivityModule : Module() {
         day++
       }
 
+      val (due, newCards) = remainingCards(context)
+
       mapOf(
         "kind" to "ready",
         "today" to recent.first(),
         "streak" to day - start,
-        "history" to recent.reversed()
+        "history" to recent.reversed(),
+        "due" to due,
+        "newCards" to newCards
       )
     } catch (_: SecurityException) {
       mapOf("kind" to "permission")
     } catch (_: IllegalArgumentException) {
       mapOf("kind" to "unsupported")
     }
+  }
+
+  private fun remainingCards(context: Context): Pair<Int?, Int?> {
+    return runCatching {
+      context.contentResolver.query(DECKS_URI, arrayOf("deck_name", "deck_count"), null, null, null)
+        ?.use { cursor ->
+          var due = 0
+          var newCards = 0
+          while (cursor.moveToNext()) {
+            val name = cursor.getString(0)
+            if (name.isEmpty() || "::" in name) continue
+
+            // Parent-deck counts already include their subdecks.
+            val counts = JSONArray(cursor.getString(1))
+            due += counts.getInt(0) + counts.getInt(1)
+            newCards += counts.getInt(2)
+          }
+          due to newCards
+        }
+    }.getOrNull() ?: (null to null)
   }
 
   private fun reviewedCards(context: Context, daysAgo: Int): Int {

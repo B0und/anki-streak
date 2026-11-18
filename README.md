@@ -1,6 +1,6 @@
 # Anki Streak
 
-An Android home-screen widget and React Native companion app. Miku looks sad until you answer a card in AnkiDroid, then smiles. The widget shows your streak, the number of cards you answered today, and a 45-day heatmap.
+An Android home-screen widget and React Native companion app. Miku looks sad until you answer a card in AnkiDroid, then smiles. The widget shows your streak, a 102-day heatmap, and the number of due and new cards.
 
 ## Add the widget
 

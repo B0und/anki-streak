@@ -5,6 +5,8 @@ type ReadyActivity = {
   today: number;
   streak: number;
   history: number[];
+  due: number | null;
+  newCards: number | null;
 };
 
 export type AnkiActivity =
@@ -14,21 +16,21 @@ export type AnkiActivity =
   | { kind: 'unsupported' }
   | { kind: 'unavailable' };
 
-export type WidgetActivity = {
-  mood: 'waiting' | 'happy' | 'unlinked';
-  streak: number;
-  today: number;
-  history: number[];
-};
-
 const anki = requireNativeModule<{
   readActivity(): Promise<unknown>;
+  renderWidget(
+    streak: number | null,
+    today: number | null,
+    history: number[],
+    due: number | null,
+    newCards: number | null,
+  ): Promise<string>;
   requestPermission(): Promise<unknown>;
   pinWidget(): Promise<boolean>;
   openAnki(): Promise<boolean>;
 }>('AnkiActivity');
 
-export const { pinWidget, openAnki, requestPermission } = anki;
+export const { pinWidget, openAnki, requestPermission, renderWidget } = anki;
 
 function isCount(value: unknown): value is number {
   return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
@@ -51,9 +53,14 @@ export async function readActivity(): Promise<AnkiActivity> {
           'today' in data && isCount(data.today) &&
           'streak' in data && isCount(data.streak) &&
           'history' in data && Array.isArray(data.history) &&
-          data.history.length === 45 && data.history.every(isCount)
+          data.history.length === 102 && data.history.every(isCount) &&
+          'due' in data && (data.due === null || isCount(data.due)) &&
+          'newCards' in data && (data.newCards === null || isCount(data.newCards))
         ) {
-          return { kind: 'ready', today: data.today, streak: data.streak, history: data.history };
+          return {
+            kind: 'ready', today: data.today, streak: data.streak, history: data.history,
+            due: data.due, newCards: data.newCards,
+          };
         }
         break;
     }
@@ -64,15 +71,3 @@ export async function readActivity(): Promise<AnkiActivity> {
   return { kind: 'unavailable' };
 }
 
-export function widgetActivity(activity: AnkiActivity): WidgetActivity {
-  if (activity.kind !== 'ready') {
-    return { mood: 'unlinked', streak: 0, today: 0, history: [] };
-  }
-
-  return {
-    mood: activity.today > 0 ? 'happy' : 'waiting',
-    streak: activity.streak,
-    today: activity.today,
-    history: activity.history,
-  };
-}

@@ -10,6 +10,8 @@ An Android home-screen widget and React Native companion app. Miku looks sad unt
 
 Answering the same card multiple times counts as one card for that study day. Brighter heatmap cells mark busier days. Both averages cover the last 30 completed Anki study days, including days with zero. A new card counts on the day you first answer it. The streak includes yesterday if your current Anki study day is still open and you haven't answered a card. The app refreshes the widget when you open it. Android schedules background refreshes with a 15-minute minimum interval. To see an update immediately, open **Anki Streak** and tap **Refresh**.
 
+Tap the widget to open Anki Streak. Use **Widget transparency** in the app to fade the artwork and stats. The setting applies to every Anki Streak widget on your phone.
+
 ## Build an APK
 
 Use Bun, Node.js, JDK 21, and the Android SDK. Install Android SDK Platform 37.0, Build-Tools 37.0.0, NDK 27.1.12297006, and CMake 3.22.1. Set `JAVA_HOME` and `ANDROID_HOME`.

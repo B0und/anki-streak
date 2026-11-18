@@ -1,4 +1,5 @@
-import Slider from '@react-native-community/slider';
+import { Host, Slider } from '@expo/ui/jetpack-compose';
+import { fillMaxWidth, semantics } from '@expo/ui/jetpack-compose/modifiers';
 import { useCallback, useEffect, useState } from 'react';
 import {
   AppState,
@@ -164,19 +165,20 @@ function Dashboard() {
             <Text style={styles.secondaryText}>Widget transparency</Text>
             <Text style={styles.transparencyValue}>{transparency}%</Text>
           </View>
-          <Slider
-            accessibilityLabel="Widget transparency"
-            value={transparency}
-            minimumValue={0}
-            maximumValue={100}
-            step={1}
-            minimumTrackTintColor="#72F5DD"
-            maximumTrackTintColor="#25494D"
-            thumbTintColor="#72F5DD"
-            style={styles.slider}
-            onValueChange={setTransparency}
-            onSlidingComplete={changeWidgetTransparency}
-          />
+          <Host matchContents={{ vertical: true }} style={styles.slider}>
+            <Slider
+              value={transparency}
+              min={0}
+              max={100}
+              colors={{
+                activeTrackColor: '#72F5DD',
+                inactiveTrackColor: '#25494D',
+                thumbColor: '#72F5DD',
+              }}
+              modifiers={[fillMaxWidth(), semantics({ contentDescription: 'Widget transparency' })]}
+              onValueChange={(value) => setTransparency(Math.round(value))}
+            />
+          </Host>
         </View>
 
         <View style={styles.actions}>
@@ -242,7 +244,7 @@ const styles = StyleSheet.create({
   },
   transparencyHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
   transparencyValue: { color: '#72F5DD', fontSize: 14, fontVariant: ['tabular-nums'] },
-  slider: { height: 44 },
+  slider: { width: '100%' },
   actions: { gap: 8 },
   primary: {
     minHeight: 49, borderRadius: 13, paddingHorizontal: 14,

@@ -129,6 +129,12 @@ function Dashboard() {
           </View>
         </View>
 
+        {ready && (
+          <Text style={styles.caption}>
+            30-day averages · {activity.dailyReviewed} reviewed · {activity.dailyLearned} new cards learned
+          </Text>
+        )}
+
         {activity && activity.kind !== 'ready' && (
           <View style={styles.connection}>
             <Text style={styles.connectionText}>{message[activity.kind]}</Text>

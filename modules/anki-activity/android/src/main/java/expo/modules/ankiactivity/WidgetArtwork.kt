@@ -25,8 +25,8 @@ internal fun renderWidgetArtwork(
   streak: Int?,
   today: Int?,
   history: List<Int>,
-  due: Int?,
-  newCards: Int?
+  dailyReviewed: Int?,
+  dailyLearned: Int?
 ): String {
   val width = minOf(WIDTH, context.resources.displayMetrics.widthPixels)
   val scale = width.toFloat() / WIDTH
@@ -46,8 +46,8 @@ internal fun renderWidgetArtwork(
     canvas.drawArtwork(context, R.drawable.streak_flame, RectF(45f, 164f, 142f, 290f), paint)
     canvas.drawStreak(streak, paint)
     canvas.drawHistory(history, happy, paint)
-    canvas.drawCount(due, 652f, false, paint)
-    canvas.drawCount(newCards, 902f, true, paint)
+    canvas.drawCount(dailyReviewed, 652f, false, paint)
+    canvas.drawCount(dailyLearned, 902f, true, paint)
 
     val file = AtomicFile(File(context.filesDir, "anki-streak-widget.png"))
     val output = file.startWrite()
@@ -140,18 +140,18 @@ private fun Canvas.drawCount(count: Int?, center: Float, isNew: Boolean, paint: 
   val iconX = center - halfWidth + 16f
   paint.color = if (isNew) 0xFF6099C8.toInt() else 0xFFA6AEAF.toInt()
   if (isNew) {
-    save()
-    rotate(-14f, iconX + 24f, 379f)
     paint.style = Paint.Style.STROKE
-    paint.strokeWidth = 6f
-    drawRoundRect(iconX, 363f, iconX + 47f, 396f, 4f, 4f, paint)
+    paint.strokeWidth = 5f
+    drawRoundRect(iconX + 8f, 358f, iconX + 45f, 389f, 5f, 5f, paint)
     paint.style = Paint.Style.FILL
-    restore()
     paint.color = 0xFF274658.toInt()
-    drawCircle(iconX + 44f, 391f, 12f, paint)
+    drawRoundRect(iconX, 367f, iconX + 37f, 398f, 5f, 5f, paint)
     paint.color = 0xFF6099C8.toInt()
-    drawRect(iconX + 34f, 388f, iconX + 54f, 394f, paint)
-    drawRect(iconX + 41f, 381f, iconX + 47f, 401f, paint)
+    paint.style = Paint.Style.STROKE
+    drawRoundRect(iconX, 367f, iconX + 37f, 398f, 5f, 5f, paint)
+    paint.style = Paint.Style.FILL
+    drawRoundRect(iconX + 36f, 387f, iconX + 57f, 393f, 2f, 2f, paint)
+    drawRoundRect(iconX + 43.5f, 379.5f, iconX + 49.5f, 400.5f, 2f, 2f, paint)
   } else {
     drawRect(iconX, 386f, iconX + 48f, 391f, paint)
     drawRect(iconX + 3f, 379f, iconX + 13f, 399f, paint)

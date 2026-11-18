@@ -11,14 +11,12 @@ export function refreshWidget(): Promise<AnkiActivity> {
   inFlight ??= readActivity()
     .then(async (activity) => {
       if (activity.kind === 'ready') {
-        const { streak, today, history, due, newCards } = activity;
-        const imageUri = await renderWidget(streak, today, history, due, newCards);
+        const { streak, today, history, dailyReviewed, dailyLearned } = activity;
+        const imageUri = await renderWidget(streak, today, history, dailyReviewed, dailyLearned);
         const mood = today > 0 ? 'Miku is happy' : 'Miku is waiting';
-        const dueLabel = due === null ? 'Due count unavailable' : `${due} due`;
-        const newLabel = newCards === null ? 'New count unavailable' : `${newCards} new`;
         AnkiWidget.updateSnapshot({
           imageUri,
-          description: `${mood}. ${streak}-day streak. ${today} cards reviewed today. ${dueLabel}. ${newLabel}.`,
+          description: `${mood}. ${streak}-day streak. ${today} cards reviewed today. Daily averages: ${dailyReviewed} cards reviewed, ${dailyLearned} new cards learned.`,
         });
       } else {
         AnkiWidget.updateSnapshot({ imageUri: '', description: '' });

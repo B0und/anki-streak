@@ -5,8 +5,8 @@ type ReadyActivity = {
   today: number;
   streak: number;
   history: number[];
-  due: number | null;
-  newCards: number | null;
+  dailyReviewed: number;
+  dailyLearned: number;
 };
 
 export type AnkiActivity =
@@ -22,8 +22,8 @@ const anki = requireNativeModule<{
     streak: number | null,
     today: number | null,
     history: number[],
-    due: number | null,
-    newCards: number | null,
+    dailyReviewed: number,
+    dailyLearned: number,
   ): Promise<string>;
   requestPermission(): Promise<unknown>;
   pinWidget(): Promise<boolean>;
@@ -54,12 +54,12 @@ export async function readActivity(): Promise<AnkiActivity> {
           'streak' in data && isCount(data.streak) &&
           'history' in data && Array.isArray(data.history) &&
           data.history.length === 102 && data.history.every(isCount) &&
-          'due' in data && (data.due === null || isCount(data.due)) &&
-          'newCards' in data && (data.newCards === null || isCount(data.newCards))
+          'dailyReviewed' in data && isCount(data.dailyReviewed) &&
+          'dailyLearned' in data && isCount(data.dailyLearned)
         ) {
           return {
             kind: 'ready', today: data.today, streak: data.streak, history: data.history,
-            due: data.due, newCards: data.newCards,
+            dailyReviewed: data.dailyReviewed, dailyLearned: data.dailyLearned,
           };
         }
         break;

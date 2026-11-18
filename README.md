@@ -1,6 +1,6 @@
 # Anki Streak
 
-An Android home-screen widget and React Native companion app. Miku looks sad until you answer a card in AnkiDroid, then smiles. The widget shows your streak, a 102-day heatmap, and the number of due and new cards.
+An Android home-screen widget and React Native companion app. Miku looks sad until you answer a card in AnkiDroid, then smiles. The widget shows your streak, a 102-day heatmap, and daily averages for reviews and new cards learned.
 
 ## Add the widget
 
@@ -8,7 +8,7 @@ An Android home-screen widget and React Native companion app. Miku looks sad unt
 2. Open **Anki Streak**, tap **Connect AnkiDroid**, and allow access. AnkiDroid names its API permission “read and write.” Anki Streak only queries review counts.
 3. Tap **Add home screen widget** and confirm the launcher prompt. If your launcher has no prompt, touch and hold the home screen and find **Anki Streak** in its widget picker.
 
-Answering the same card multiple times counts as one card for that study day. Brighter heatmap cells mark busier days. The streak includes yesterday if your current Anki study day is still open and you haven't answered a card. The app refreshes the widget when you open it. Android schedules background refreshes with a 15-minute minimum interval. To see an update immediately, open **Anki Streak** and tap **Refresh**.
+Answering the same card multiple times counts as one card for that study day. Brighter heatmap cells mark busier days. Both averages cover the last 30 completed Anki study days, including days with zero. A new card counts on the day you first answer it. The streak includes yesterday if your current Anki study day is still open and you haven't answered a card. The app refreshes the widget when you open it. Android schedules background refreshes with a 15-minute minimum interval. To see an update immediately, open **Anki Streak** and tap **Refresh**.
 
 ## Build an APK
 

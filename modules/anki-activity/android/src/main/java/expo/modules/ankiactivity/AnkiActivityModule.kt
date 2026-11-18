@@ -11,13 +11,13 @@ import expo.modules.kotlin.Promise
 import expo.modules.kotlin.functions.Queues
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
-import org.json.JSONArray
+import kotlin.math.roundToInt
 
 private const val ANKI_PACKAGE = "com.ichi2.anki"
 private const val ANKI_PERMISSION = "com.ichi2.anki.permission.READ_WRITE_DATABASE"
 private const val PROVIDER = "com.ichi2.anki.flashcards"
 private val CARDS_URI = Uri.parse("content://$PROVIDER/cards")
-private val DECKS_URI = Uri.parse("content://$PROVIDER/decks")
+private const val AVERAGE_DAYS = 30
 
 class AnkiActivityModule : Module() {
   override fun definition() = ModuleDefinition {
@@ -31,8 +31,8 @@ class AnkiActivityModule : Module() {
       readActivity(context)
     }
 
-    AsyncFunction("renderWidget") { streak: Int?, today: Int?, history: List<Int>, due: Int?, newCards: Int? ->
-      renderWidgetArtwork(context, streak, today, history, due, newCards)
+    AsyncFunction("renderWidget") { streak: Int?, today: Int?, history: List<Int>, dailyReviewed: Int?, dailyLearned: Int? ->
+      renderWidgetArtwork(context, streak, today, history, dailyReviewed, dailyLearned)
     }
 
     AsyncFunction("openAnki") {
@@ -70,15 +70,17 @@ class AnkiActivityModule : Module() {
         day++
       }
 
-      val (due, newCards) = remainingCards(context)
+      val dailyReviewed = recent.drop(1).take(AVERAGE_DAYS).average().roundToInt()
+      val introduced = countCards(context, "introduced:${AVERAGE_DAYS + 1} -introduced:1")
+      val dailyLearned = (introduced.toDouble() / AVERAGE_DAYS).roundToInt()
 
       mapOf(
         "kind" to "ready",
         "today" to recent.first(),
         "streak" to day - start,
         "history" to recent.reversed(),
-        "due" to due,
-        "newCards" to newCards
+        "dailyReviewed" to dailyReviewed,
+        "dailyLearned" to dailyLearned
       )
     } catch (_: SecurityException) {
       mapOf("kind" to "permission")
@@ -87,30 +89,12 @@ class AnkiActivityModule : Module() {
     }
   }
 
-  private fun remainingCards(context: Context): Pair<Int?, Int?> {
-    return runCatching {
-      context.contentResolver.query(DECKS_URI, arrayOf("deck_name", "deck_count"), null, null, null)
-        ?.use { cursor ->
-          var due = 0
-          var newCards = 0
-          while (cursor.moveToNext()) {
-            val name = cursor.getString(0)
-            if (name.isEmpty() || "::" in name) continue
+  private fun reviewedCards(context: Context, daysAgo: Int): Int =
+    countCards(context, "prop:rated=${-daysAgo}")
 
-            // Parent-deck counts already include their subdecks.
-            val counts = JSONArray(cursor.getString(1))
-            due += counts.getInt(0) + counts.getInt(1)
-            newCards += counts.getInt(2)
-          }
-          due to newCards
-        }
-    }.getOrNull() ?: (null to null)
-  }
-
-  private fun reviewedCards(context: Context, daysAgo: Int): Int {
+  private fun countCards(context: Context, search: String): Int {
     // The provider passes its selection through to Anki's browser search.
-    val day = -daysAgo
-    return context.contentResolver.query(CARDS_URI, arrayOf("_id"), "prop:rated=$day", null, null)
+    return context.contentResolver.query(CARDS_URI, arrayOf("_id"), search, null, null)
       ?.use { it.count }
       ?: error("AnkiDroid did not return a card cursor")
   }

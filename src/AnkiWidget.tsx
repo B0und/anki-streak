@@ -1,5 +1,5 @@
 import { Box, Image, Row, Text } from '@expo/ui/jetpack-compose';
-import { background, cornerRadius, fillMaxSize, paddingAll, size } from '@expo/ui/jetpack-compose/modifiers';
+import { background, cornerRadius, fillMaxSize, padding, paddingAll, size } from '@expo/ui/jetpack-compose/modifiers';
 import { createWidget, type WidgetEnvironment } from 'expo-widgets';
 
 type WidgetImage = {
@@ -31,28 +31,32 @@ function AnkiStreak(
 
   const layout = height >= width * 0.4 ? 'tall' : 'compact';
   const stats = artwork && (layout === 'tall' ? artwork.tallStats : artwork.compactStats);
-  const portraitHeight = Math.max(1, height - 4);
-  const portraitWidth = Math.min(portraitHeight * (artwork?.portraitAspect ?? 1), width * (layout === 'tall' ? 0.42 : 0.34));
-  const statsWidth = width - portraitWidth;
+  const portraitAspect = artwork?.portraitAspect ?? 1;
+  const portraitInset = 6;
+  const portraitMaxWidth = width * (layout === 'tall' ? 0.58 : 0.38);
+  const portraitHeight = Math.max(1, Math.min(height - 4, portraitMaxWidth / portraitAspect));
+  const portraitWidth = portraitHeight * portraitAspect;
+  const overlap = layout === 'tall' ? Math.min(12, portraitWidth * 0.08) : 0;
+  const statsWidth = Math.max(1, width - portraitWidth - portraitInset + overlap);
   const statsHeight = stats ? Math.min(height, statsWidth / stats.aspect) : 0;
 
   return (
     <Box contentAlignment="center" modifiers={[fillMaxSize(), background(backdrop), cornerRadius(20), { $type: 'openAppOnTap' }]}>
       {artwork && stats ? (
         <>
+          <Box contentAlignment="bottomEnd" modifiers={[fillMaxSize(), padding(0, 0, portraitInset, 0)]}>
+            <Image
+              source={{ uri: artwork.portraitDrawable }}
+              contentScale="fit"
+              modifiers={[size(portraitWidth, portraitHeight)]}
+            />
+          </Box>
           <Box contentAlignment="centerStart" modifiers={[fillMaxSize()]}>
             <Image
               source={{ uri: stats.uri }}
               contentDescription={description}
               contentScale="fit"
               modifiers={[size(statsWidth, statsHeight)]}
-            />
-          </Box>
-          <Box contentAlignment="bottomEnd" modifiers={[fillMaxSize()]}>
-            <Image
-              source={{ uri: artwork.portraitDrawable }}
-              contentScale="crop"
-              modifiers={[size(portraitWidth, portraitHeight)]}
             />
           </Box>
         </>

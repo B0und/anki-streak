@@ -4,12 +4,10 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
-import android.graphics.LinearGradient
 import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.graphics.RectF
-import android.graphics.Shader
 import android.graphics.Typeface
 import android.net.Uri
 import android.util.AtomicFile
@@ -39,21 +37,21 @@ internal fun renderWidgetArtwork(
   }
   val tall = writeStats(context, theme, "tall", TALL_STATS_HEIGHT) { canvas, paint ->
     canvas.save()
-    canvas.translate(41f, -151f)
-    canvas.scale(1.48f, 1.48f)
+    canvas.translate(66f, -102f)
+    canvas.scale(1.5f, 1.5f)
     canvas.drawFlameAndStreak(context, streak, theme, paint)
     canvas.restore()
 
     canvas.save()
-    canvas.translate(-140f, -369f)
-    canvas.scale(1.43f, 1.43f)
-    canvas.drawCount(dailyReviewed, 614f, false, theme, paint)
-    canvas.drawCount(dailyLearned, 823f, true, theme, paint)
+    canvas.translate(906f, 116f)
+    canvas.scale(1.65f, 1.65f)
+    canvas.drawCount(dailyReviewed, 0f, false, theme, paint, centerY = 33f, maxWidth = 290f)
+    canvas.drawCount(dailyLearned, 0f, true, theme, paint, centerY = 115f, maxWidth = 290f)
     canvas.restore()
 
     canvas.save()
-    canvas.translate(63f, 401f)
-    canvas.scale(1.38f, 1.38f)
+    canvas.translate(30f, 420f)
+    canvas.scale(1.44f, 1.44f)
     canvas.translate(-393f, -75f)
     canvas.drawHistory(history, today > 0, theme, paint)
     canvas.restore()
@@ -118,26 +116,20 @@ private fun Canvas.drawArtwork(context: Context, resource: Int, destination: Rec
 
 private fun Canvas.drawStreak(streak: Int, theme: WidgetTheme, paint: Paint) {
   val label = streak.toString()
-  paint.typeface = Typeface.create("sans-serif-black", Typeface.NORMAL)
-  paint.textSize = 204f
-  if (paint.measureText(label) > 225f) {
-    paint.textSize *= 225f / paint.measureText(label)
-  }
-
-  val baseline = 227f - (paint.ascent() + paint.descent()) / 2
-  paint.style = Paint.Style.STROKE
-  paint.strokeJoin = Paint.Join.ROUND
-  paint.strokeWidth = 11f
-  paint.color = 0xD75C6064.toInt()
-  drawText(label, 147f, baseline + 5f, paint)
-  paint.strokeWidth = 7f
-  paint.color = 0xFFB0B0B0.toInt()
-  drawText(label, 147f, baseline, paint)
-
   paint.style = Paint.Style.FILL
-  paint.shader = LinearGradient(0f, 165f, 0f, 300f, theme.streakLight, theme.streakDark, Shader.TileMode.CLAMP)
-  drawText(label, 147f, baseline, paint)
-  paint.shader = null
+  paint.typeface = Typeface.create("sans-serif-condensed", Typeface.BOLD)
+  paint.textSize = 192f
+  val digitWidth = paint.measureText(label)
+  if (digitWidth > 225f) paint.textSize *= 225f / digitWidth
+  paint.color = theme.streakLight
+  paint.setShadowLayer(11f, 0f, 2f, 0xCC000000.toInt())
+  drawText(label, 147f, 262f, paint)
+
+  paint.typeface = Typeface.create("sans-serif", Typeface.NORMAL)
+  paint.textSize = 37f
+  paint.color = theme.streakDark
+  drawText("day streak", 154f, 311f, paint)
+  paint.clearShadowLayer()
 }
 
 private fun Canvas.drawHistory(history: List<Int>, happy: Boolean, theme: WidgetTheme, paint: Paint) {
@@ -168,11 +160,24 @@ private fun Canvas.drawHistory(history: List<Int>, happy: Boolean, theme: Widget
   }
 }
 
-private fun Canvas.drawCount(count: Int, center: Float, isNew: Boolean, theme: WidgetTheme, paint: Paint) {
+private fun Canvas.drawCount(
+  count: Int,
+  center: Float,
+  isNew: Boolean,
+  theme: WidgetTheme,
+  paint: Paint,
+  centerY: Float = 381f,
+  maxWidth: Float = 232f
+) {
   val label = count.toString()
+  val availableTextWidth = maxWidth - 88f
   paint.typeface = Typeface.create("sans-serif", Typeface.BOLD)
   paint.textSize = 43f
+  val textWidth = paint.measureText(label)
+  if (textWidth > availableTextWidth) paint.textSize *= availableTextWidth / textWidth
   val halfWidth = maxOf(73f, (paint.measureText(label) + 88f) / 2)
+  save()
+  translate(0f, centerY - 381f)
   paint.color = if (isNew) theme.newBackground else theme.reviewBackground
   drawRoundRect(center - halfWidth, 348f, center + halfWidth, 414f, 34f, 34f, paint)
 
@@ -198,5 +203,7 @@ private fun Canvas.drawCount(count: Int, center: Float, isNew: Boolean, theme: W
     drawRect(iconX + 35f, 360f, iconX + 45f, 399f, paint)
   }
 
-  drawText(label, iconX + 61f, 396f, paint)
+  val baseline = 381f - (paint.ascent() + paint.descent()) / 2
+  drawText(label, iconX + 61f, baseline, paint)
+  restore()
 }

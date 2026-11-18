@@ -20,10 +20,12 @@ import { changeWidgetTheme, changeWidgetBackgroundTransparency, enableBackground
 import { themes, themeOrder, type WidgetTheme } from './themes';
 
 type PreviewMood = 'waiting' | 'happy';
+const previewMinHeight = 170;
 
 function Dashboard() {
   const [activity, setActivity] = useState<AnkiActivity | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [previewHeight, setPreviewHeight] = useState(previewMinHeight);
   const [preview, setPreview] = useState<PreviewMood>();
   const [notice, setNotice] = useState('');
   const [transparency, setTransparency] = useState(getWidgetBackgroundTransparency);
@@ -65,6 +67,8 @@ function Dashboard() {
   const mood = preview ?? (ready && activity.today > 0 ? 'happy' : 'waiting');
   const portrait = theme[mood];
   const portraitSize = Image.resolveAssetSource(portrait);
+  const portraitAspect = (portraitSize?.width ?? 1) / (portraitSize?.height ?? 1);
+  const portraitHeight = previewHeight * 0.97;
   const message = {
     permission: 'Allow access to read your review activity from AnkiDroid.',
     missing: 'Install AnkiDroid to link your review activity.',
@@ -121,7 +125,10 @@ function Dashboard() {
       <StatusBar barStyle="light-content" />
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.title}>Anki Streak</Text>
-        <View style={[styles.card, { backgroundColor: theme.card }]}>
+        <View
+          style={[styles.card, { backgroundColor: theme.card }]}
+          onLayout={({ nativeEvent }) => setPreviewHeight(nativeEvent.layout.height)}
+        >
           <View style={styles.cardBody}>
             <Text style={[styles.label, { color: theme.accent }]}>TODAY</Text>
             <Text style={styles.stat}>{ready ? activity.today : '—'}</Text>
@@ -133,8 +140,8 @@ function Dashboard() {
           <Image
             source={portrait}
             accessibilityLabel={`${theme.name} is ${mood === 'happy' ? 'cheering' : 'waiting'}`}
-            resizeMode="stretch"
-            style={[styles.portrait, { aspectRatio: (portraitSize?.width ?? 1) / (portraitSize?.height ?? 1) }]}
+            resizeMode="contain"
+            style={[styles.portrait, { width: portraitHeight * portraitAspect, height: portraitHeight }]}
           />
         </View>
         <View style={styles.themes}>
@@ -253,7 +260,7 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: 22, paddingTop: 26, paddingBottom: 32, gap: 15 },
   title: { color: '#F2FEFC', fontSize: 32, fontWeight: '800', letterSpacing: -1.1 },
   card: {
-    minHeight: 170, borderRadius: 24, borderWidth: 1, borderColor: '#25494D',
+    minHeight: previewMinHeight, borderRadius: 24, borderWidth: 1, borderColor: '#25494D',
     overflow: 'hidden', backgroundColor: '#11282E',
   },
   cardBody: { padding: 20, alignSelf: 'flex-start', zIndex: 1 },
@@ -261,7 +268,7 @@ const styles = StyleSheet.create({
   stat: { color: '#F2FEFC', fontSize: 46, fontWeight: '800', lineHeight: 54 },
   caption: { color: '#A4BFC1', fontSize: 14 },
   streak: { marginTop: 11, color: '#72F5DD', fontSize: 14, fontWeight: '700' },
-  portrait: { position: 'absolute', bottom: 0, right: 0, height: '97%' },
+  portrait: { position: 'absolute', bottom: 0, right: 0 },
   themes: { gap: 8 },
   themeOptions: { flexDirection: 'row', gap: 7 },
   themeButton: {

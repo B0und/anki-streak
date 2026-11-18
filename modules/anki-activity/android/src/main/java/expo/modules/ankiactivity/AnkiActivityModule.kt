@@ -25,12 +25,22 @@ class AnkiActivityModule : Module() {
 
     Constant("historyDays") { HISTORY_DAYS }
 
-    Function("getWidgetTransparency") {
-      widgetPreferences.getInt("transparency", 0)
+    Function("getWidgetTheme") {
+      WidgetTheme.fromId(widgetPreferences.getString("theme", null)).id
     }
 
-    Function("setWidgetTransparency") { value: Int ->
-      widgetPreferences.edit().putInt("transparency", value.coerceIn(0, 100)).apply()
+    Function("setWidgetTheme") { id: String ->
+      val theme = WidgetTheme.fromId(id)
+      updateLauncherIcon(context, theme)
+      widgetPreferences.edit().putString("theme", theme.id).apply()
+    }
+
+    Function("getWidgetBackgroundTransparency") {
+      widgetPreferences.getInt("backgroundTransparency", 100)
+    }
+
+    Function("setWidgetBackgroundTransparency") { value: Int ->
+      widgetPreferences.edit().putInt("backgroundTransparency", value.coerceIn(0, 100)).apply()
     }
 
     AsyncFunction("requestPermission") { promise: Promise ->
@@ -41,8 +51,8 @@ class AnkiActivityModule : Module() {
       readActivity(context)
     }
 
-    AsyncFunction("renderWidget") { streak: Int, today: Int, history: List<Int>, dailyReviewed: Int, dailyLearned: Int ->
-      renderWidgetArtwork(context, streak, today, history, dailyReviewed, dailyLearned)
+    AsyncFunction("renderWidget") { streak: Int, today: Int, history: List<Int>, dailyReviewed: Int, dailyLearned: Int, theme: String ->
+      renderWidgetArtwork(context, streak, today, history, dailyReviewed, dailyLearned, WidgetTheme.fromId(theme))
     }
 
     AsyncFunction("openAnki") {

@@ -3,7 +3,9 @@
     "name": "Anki Streak",
     "slug": "anki-streak",
     "version": "1.0.0",
-    "platforms": ["android"],
+    "platforms": [
+      "android"
+    ],
     "orientation": "portrait",
     "icon": "./assets/app-icon.png",
     "android": {
@@ -12,7 +14,9 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0D1E24"
       },
-      "blockedPermissions": ["android.permission.SYSTEM_ALERT_WINDOW"]
+      "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW"
+      ]
     },
     "plugins": [
       [
@@ -35,7 +39,8 @@
             }
           ]
         }
-      ]
+      ],
+      "./plugins/withLauncherThemes"
     ]
   }
 }

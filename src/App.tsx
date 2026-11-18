@@ -14,11 +14,10 @@ import {
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
-import { getWidgetTransparency, openAnki, pinWidget, requestPermission, type AnkiActivity } from './activity';
-import { changeWidgetTransparency, enableBackgroundRefresh, refreshWidget } from './widgetRefresh';
+import { getWidgetTheme, getWidgetBackgroundTransparency, openAnki, pinWidget, requestPermission, type AnkiActivity } from './activity';
+import { changeWidgetTheme, changeWidgetBackgroundTransparency, enableBackgroundRefresh, refreshWidget } from './widgetRefresh';
 
-const waitingPortrait = require('../modules/anki-activity/android/src/main/res/drawable-nodpi/miku_waiting.png');
-const happyPortrait = require('../modules/anki-activity/android/src/main/res/drawable-nodpi/miku_happy.png');
+import { themes, themeOrder, type WidgetTheme } from './themes';
 
 type PreviewMood = 'waiting' | 'happy';
 
@@ -27,7 +26,9 @@ function Dashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [preview, setPreview] = useState<PreviewMood>();
   const [notice, setNotice] = useState('');
-  const [transparency, setTransparency] = useState(getWidgetTransparency);
+  const [transparency, setTransparency] = useState(getWidgetBackgroundTransparency);
+  const [themeId, setThemeId] = useState(getWidgetTheme);
+  const theme = themes[themeId];
 
   const refresh = useCallback(async () => {
     setRefreshing(true);
@@ -55,8 +56,8 @@ function Dashboard() {
   }, [refresh]);
 
   useEffect(() => {
-    if (transparency === getWidgetTransparency()) return;
-    const pending = setTimeout(() => changeWidgetTransparency(transparency), 150);
+    if (transparency === getWidgetBackgroundTransparency()) return;
+    const pending = setTimeout(() => changeWidgetBackgroundTransparency(transparency), 150);
     return () => clearTimeout(pending);
   }, [transparency]);
 
@@ -68,6 +69,19 @@ function Dashboard() {
     unsupported: 'Update AnkiDroid to a version that supports card searches.',
     unavailable: 'Open AnkiDroid to load your collection, then try refreshing.',
   };
+
+  async function selectTheme(id: WidgetTheme) {
+    if (id === themeId) return;
+    setNotice('');
+    try {
+      const update = changeWidgetTheme(id);
+      setThemeId(id);
+      setActivity(await update);
+    } catch {
+      setThemeId(getWidgetTheme());
+      setNotice('Couldn’t update the widget theme. Try refreshing.');
+    }
+  }
 
   async function connect() {
     setNotice('');
@@ -105,21 +119,42 @@ function Dashboard() {
       <StatusBar barStyle="light-content" />
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.title}>Anki Streak</Text>
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: theme.card }]}>
           <View style={styles.cardBody}>
-            <Text style={styles.label}>TODAY</Text>
+            <Text style={[styles.label, { color: theme.accent }]}>TODAY</Text>
             <Text style={styles.stat}>{ready ? activity.today : '—'}</Text>
             <Text style={styles.caption}>cards reviewed</Text>
-            <Text style={styles.streak}>
+            <Text style={[styles.streak, { color: theme.accent }]}>
               {ready ? `${activity.streak} ${activity.streak === 1 ? 'day' : 'days'} in a row` : 'Review streak'}
             </Text>
           </View>
           <Image
-            source={mood === 'happy' ? happyPortrait : waitingPortrait}
-            accessibilityLabel={mood === 'happy' ? 'Miku is cheering' : 'Miku is waiting'}
+            source={theme[mood]}
+            accessibilityLabel={`${theme.name} is ${mood === 'happy' ? 'cheering' : 'waiting'}`}
             resizeMode="contain"
             style={styles.portrait}
           />
+        </View>
+        <View style={styles.themes}>
+          <Text style={styles.caption}>Theme</Text>
+          <View style={styles.themeOptions}>
+            {themeOrder.map((id) => {
+              const option = themes[id];
+              const selected = id === themeId;
+              return (
+                <Pressable
+                  key={id}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
+                  onPress={() => void selectTheme(id)}
+                  style={[styles.themeButton, selected && { borderColor: option.accent, backgroundColor: option.card }]}
+                >
+                  <View style={[styles.themeSwatch, { backgroundColor: option.accent }]} />
+                  <Text style={styles.moodText}>{option.name}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
         </View>
         <View style={styles.moods}>
           <Text style={styles.caption}>Preview moods</Text>
@@ -162,7 +197,7 @@ function Dashboard() {
 
         <View style={styles.transparency}>
           <View style={styles.transparencyHeader}>
-            <Text style={styles.secondaryText}>Widget transparency</Text>
+            <Text style={styles.secondaryText}>Background transparency</Text>
             <Text style={styles.transparencyValue}>{transparency}%</Text>
           </View>
           <Host matchContents={{ vertical: true }} style={styles.slider}>
@@ -171,11 +206,11 @@ function Dashboard() {
               min={0}
               max={100}
               colors={{
-                activeTrackColor: '#72F5DD',
+                activeTrackColor: theme.accent,
                 inactiveTrackColor: '#25494D',
-                thumbColor: '#72F5DD',
+                thumbColor: theme.accent,
               }}
-              modifiers={[fillMaxWidth(), semantics({ contentDescription: 'Widget transparency' })]}
+              modifiers={[fillMaxWidth(), semantics({ contentDescription: 'Background transparency' })]}
               onValueChange={(value) => setTransparency(Math.round(value))}
             />
           </Host>
@@ -225,6 +260,14 @@ const styles = StyleSheet.create({
   caption: { color: '#A4BFC1', fontSize: 14 },
   streak: { marginTop: 11, color: '#72F5DD', fontSize: 14, fontWeight: '700' },
   portrait: { position: 'absolute', bottom: -1, right: -6, width: '58%', height: '100%' },
+  themes: { gap: 8 },
+  themeOptions: { flexDirection: 'row', gap: 7 },
+  themeButton: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7,
+    minHeight: 44, paddingHorizontal: 7, borderRadius: 12, borderWidth: 1,
+    borderColor: '#25494D', backgroundColor: '#0D1E24',
+  },
+  themeSwatch: { width: 9, height: 9, borderRadius: 5 },
   moods: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   moodOptions: { flexDirection: 'row', gap: 6 },
   moodButton: {

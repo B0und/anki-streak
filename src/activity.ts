@@ -1,5 +1,7 @@
 import { requireNativeModule } from 'expo';
 
+import { themeOrder, type WidgetTheme } from './themes';
+
 type ReadyActivity = {
   kind: 'ready';
   today: number;
@@ -18,8 +20,10 @@ export type AnkiActivity =
 
 const anki = requireNativeModule<{
   readonly historyDays: number;
-  getWidgetTransparency(): number;
-  setWidgetTransparency(value: number): void;
+  getWidgetTheme(): unknown;
+  setWidgetTheme(theme: WidgetTheme): void;
+  getWidgetBackgroundTransparency(): number;
+  setWidgetBackgroundTransparency(value: number): void;
   readActivity(): Promise<unknown>;
   renderWidget(
     streak: number,
@@ -27,6 +31,7 @@ const anki = requireNativeModule<{
     history: number[],
     dailyReviewed: number,
     dailyLearned: number,
+    theme: WidgetTheme,
   ): Promise<string>;
   requestPermission(): Promise<unknown>;
   pinWidget(): Promise<boolean>;
@@ -34,8 +39,13 @@ const anki = requireNativeModule<{
 }>('AnkiActivity');
 
 export const {
-  pinWidget, openAnki, requestPermission, renderWidget, getWidgetTransparency, setWidgetTransparency,
+  pinWidget, openAnki, requestPermission, renderWidget, getWidgetBackgroundTransparency, setWidgetBackgroundTransparency, setWidgetTheme,
 } = anki;
+
+export function getWidgetTheme(): WidgetTheme {
+  const id = anki.getWidgetTheme();
+  return themeOrder.find((theme) => theme === id) ?? 'miku';
+}
 
 function isCount(value: unknown): value is number {
   return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;

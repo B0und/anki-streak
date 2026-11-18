@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { AppState } from 'react-native';
+import { AppState, Linking } from 'react-native';
 
 import {
   getWidgetBackgroundTransparency, getWidgetTheme, openAnki, pinWidget, requestPermission, type ReviewMood,
@@ -11,11 +11,11 @@ import {
 } from './widgetRefresh';
 
 type MoodPreview = { kind: 'live' } | { kind: 'preview'; mood: ReviewMood };
-type AndroidRequest = 'permission' | 'pin' | 'open';
+type AndroidRequest = 'permission' | 'settings' | 'pin' | 'open';
 type RequestState =
   | { kind: 'idle' }
   | { kind: 'running'; request: AndroidRequest }
-  | { kind: 'notice'; message: string };
+  | { kind: 'notice'; request: AndroidRequest; message: string };
 
 const pinFallback = 'Touch and hold your home screen, then choose Widgets → Anki Streak.';
 const refreshError = 'Couldn’t refresh the widget. Try again.';
@@ -79,6 +79,13 @@ export function useDashboard() {
           }
         }
         break;
+      case 'settings':
+        try {
+          await Linking.openSettings();
+        } catch {
+          message = 'Couldn’t open Android settings.';
+        }
+        break;
       case 'pin':
         try {
           if (await pinWidget() === 'use-picker') message = pinFallback;
@@ -94,7 +101,7 @@ export function useDashboard() {
         }
         break;
     }
-    transitionRequest(message ? { kind: 'notice', message } : { kind: 'idle' });
+    transitionRequest(message ? { kind: 'notice', request: action, message } : { kind: 'idle' });
   }
 
   async function selectTheme(id: WidgetTheme) {

@@ -19,6 +19,7 @@ private const val ANKI_PERMISSION = "com.ichi2.anki.permission.READ_WRITE_DATABA
 private const val PROVIDER = "com.ichi2.anki.flashcards"
 private val CARDS_URI = Uri.parse("content://$PROVIDER/cards")
 private const val AVERAGE_DAYS = 30
+private val themeLock = Any()
 
 class AnkiActivityModule : Module() {
   override fun definition() = ModuleDefinition {
@@ -32,10 +33,12 @@ class AnkiActivityModule : Module() {
 
     Function("setWidgetTheme") { id: String ->
       val theme = WidgetTheme.fromId(id)
-      if (theme != storedWidgetTheme()) {
-        check(widgetPreferences.edit().putString("theme", theme.id).commit())
+      synchronized(themeLock) {
+        if (theme != storedWidgetTheme()) {
+          check(widgetPreferences.edit().putString("theme", theme.id).commit())
+        }
+        reconcileLauncherIcon(context, theme)
       }
-      reconcileLauncherIcon(context, theme)
     }
 
     Function("getWidgetBackgroundTransparency") {
@@ -51,8 +54,9 @@ class AnkiActivityModule : Module() {
     }.runOnQueue(Queues.MAIN)
 
     AsyncFunction("readActivity") {
-      runCatching { reconcileLauncherIcon(context, storedWidgetTheme()) }
-        .onFailure { Log.w("AnkiActivity", "Launcher icon reconciliation failed", it) }
+      runCatching {
+        synchronized(themeLock) { reconcileLauncherIcon(context, storedWidgetTheme()) }
+      }.onFailure { Log.w("AnkiActivity", "Launcher icon reconciliation failed", it) }
       readActivity(context)
     }
 

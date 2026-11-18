@@ -3,7 +3,6 @@ import { fillMaxWidth, semantics } from '@expo/ui/jetpack-compose/modifiers';
 import { useState } from 'react';
 import {
   Image,
-  Linking,
   Pressable,
   ScrollView,
   StatusBar,
@@ -112,7 +111,7 @@ function Dashboard() {
                 <Pressable accessibilityRole="button" style={styles.primary} disabled={requesting} onPress={() => void dashboard.runAndroidRequest('permission')}>
                   <Text style={styles.primaryText}>Connect AnkiDroid</Text>
                 </Pressable>
-                <Pressable accessibilityRole="button" style={styles.secondary} onPress={() => void Linking.openSettings()}>
+                <Pressable accessibilityRole="button" style={styles.secondary} disabled={requesting} onPress={() => void dashboard.runAndroidRequest('settings')}>
                   <Text style={styles.secondaryText}>Android permissions</Text>
                 </Pressable>
               </>

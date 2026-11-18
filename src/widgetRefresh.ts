@@ -67,16 +67,21 @@ function publish(publication: Publication) {
 
 type AppearanceUpdate =
   | { kind: 'idle' }
-  | { kind: 'scheduled'; timer: ReturnType<typeof setTimeout> };
+  | { kind: 'scheduled'; timer: ReturnType<typeof setTimeout> }
+  | { kind: 'waitingForRefresh' };
 
 let appearance: AppearanceUpdate = { kind: 'idle' };
 
 export function flushWidgetAppearance() {
   if (appearance.kind === 'idle') return;
-  clearTimeout(appearance.timer);
+  if (appearance.kind === 'scheduled') clearTimeout(appearance.timer);
+  if (state.kind === 'reading' || state.kind === 'rendering') {
+    appearance = { kind: 'waitingForRefresh' };
+    return;
+  }
   appearance = { kind: 'idle' };
   const last = lastCompletedRefresh(state);
-  if (!last || state.kind === 'reading' || state.kind === 'rendering') return;
+  if (!last) return;
   try {
     publish(last.publication);
   } catch (error) {
@@ -143,6 +148,7 @@ export function refreshWidget(): Promise<AnkiActivity> {
       return activity;
     } catch (error) {
       transition({ kind: 'failed', previous, error });
+      if (appearance.kind === 'waitingForRefresh') flushWidgetAppearance();
       throw error;
     }
   });

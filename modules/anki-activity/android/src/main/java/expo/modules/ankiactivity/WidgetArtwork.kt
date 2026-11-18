@@ -28,10 +28,12 @@ internal fun renderWidgetArtwork(
   due: Int?,
   newCards: Int?
 ): String {
-  val bitmap = Bitmap.createBitmap(WIDTH, HEIGHT, Bitmap.Config.ARGB_8888)
+  val width = minOf(WIDTH, context.resources.displayMetrics.widthPixels)
+  val scale = width.toFloat() / WIDTH
+  val bitmap = Bitmap.createBitmap(width, (HEIGHT * scale).toInt(), Bitmap.Config.ARGB_8888)
 
   try {
-    val canvas = Canvas(bitmap)
+    val canvas = Canvas(bitmap).apply { scale(scale, scale) }
     val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
     val happy = (today ?: 0) > 0
 
@@ -100,18 +102,16 @@ private fun Canvas.drawHistory(history: List<Int>, happy: Boolean, paint: Paint)
     0xFF0A5048.toInt(), 0xFF096255.toInt(), 0xFF078577.toInt(), 0xFF0AAE9B.toInt(), 0xFF1DD6C1.toInt()
   )
   val accent = 0xFF22E6CE.toInt()
+  val activeDays = history.filter { it > 0 }.sorted()
+  val thresholds = listOf(45, 72, 90).map { percentile ->
+    activeDays.getOrElse(activeDays.lastIndex * percentile / 100) { 0 }
+  }
 
   for (row in 0 until HISTORY_ROWS) {
     for (column in 0 until HISTORY_COLUMNS) {
       val day = row * HISTORY_COLUMNS + column
       val count = history.getOrElse(day) { 0 }
-      val intensity = when {
-        count == 0 -> 0
-        count < 5 -> 1
-        count < 20 -> 2
-        count < 50 -> 3
-        else -> 4
-      }
+      val intensity = if (count == 0) 0 else 1 + thresholds.count { count > it }
 
       val x = 393f + 45.8f * column
       val y = 75f + 43.4f * row

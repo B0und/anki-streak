@@ -2,10 +2,25 @@ import * as BackgroundTask from 'expo-background-task';
 import * as TaskManager from 'expo-task-manager';
 
 import AnkiWidget from './AnkiWidget';
-import { readActivity, renderWidget, type AnkiActivity } from './activity';
+import {
+  getWidgetTransparency, readActivity, renderWidget, setWidgetTransparency, type AnkiActivity,
+} from './activity';
 
 const taskName = 'refresh-anki-widget';
 let inFlight: Promise<AnkiActivity> | undefined;
+let content: { imageUri: string; description: string } | undefined;
+
+function publishWidget() {
+  if (content) {
+    AnkiWidget.updateSnapshot({ ...content, opacity: 1 - getWidgetTransparency() / 100 });
+  }
+}
+
+export function changeWidgetTransparency(value: number) {
+  if (value === getWidgetTransparency()) return;
+  setWidgetTransparency(value);
+  publishWidget();
+}
 
 export function refreshWidget(): Promise<AnkiActivity> {
   inFlight ??= readActivity()
@@ -14,13 +29,14 @@ export function refreshWidget(): Promise<AnkiActivity> {
         const { streak, today, history, dailyReviewed, dailyLearned } = activity;
         const imageUri = await renderWidget(streak, today, history, dailyReviewed, dailyLearned);
         const mood = today > 0 ? 'Miku is happy' : 'Miku is waiting';
-        AnkiWidget.updateSnapshot({
+        content = {
           imageUri,
           description: `${mood}. ${streak}-day streak. ${today} cards reviewed today. Daily averages: ${dailyReviewed} cards reviewed, ${dailyLearned} new cards learned.`,
-        });
+        };
       } else {
-        AnkiWidget.updateSnapshot({ imageUri: '', description: '' });
+        content = { imageUri: '', description: '' };
       }
+      publishWidget();
       return activity;
     })
     .finally(() => {

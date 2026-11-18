@@ -23,6 +23,14 @@ class AnkiActivityModule : Module() {
   override fun definition() = ModuleDefinition {
     Name("AnkiActivity")
 
+    Function("getWidgetTransparency") {
+      widgetPreferences.getInt("transparency", 0)
+    }
+
+    Function("setWidgetTransparency") { value: Int ->
+      widgetPreferences.edit().putInt("transparency", value.coerceIn(0, 100)).apply()
+    }
+
     AsyncFunction("requestPermission") { promise: Promise ->
       Permissions.askForPermissionsWithPermissionsManager(appContext.permissions, promise, ANKI_PERMISSION)
     }.runOnQueue(Queues.MAIN)
@@ -49,6 +57,9 @@ class AnkiActivityModule : Module() {
       manager.isRequestPinAppWidgetSupported && manager.requestPinAppWidget(provider, null, null)
     }.runOnQueue(Queues.MAIN)
   }
+
+  private val widgetPreferences
+    get() = context.getSharedPreferences("anki-streak-widget", Context.MODE_PRIVATE)
 
   private val context: Context
     get() = requireNotNull(appContext.reactContext)

@@ -5,30 +5,32 @@ import { createWidget } from 'expo-widgets';
 type WidgetProps = {
   imageUri: string;
   description: string;
+  opacity: number;
 };
 
-function AnkiStreak({ imageUri, description }: WidgetProps) {
+function AnkiStreak({ imageUri, description, opacity = 1 }: WidgetProps) {
   'widget';
 
-  if (imageUri) {
-    return (
-      <Image
-        source={{ uri: imageUri }}
-        contentDescription={description}
-        contentScale="fit"
-        modifiers={[fillMaxSize()]}
-      />
-    );
-  }
-
   return (
-    <Box contentAlignment="center" modifiers={[fillMaxSize()]}>
-      <Row verticalAlignment="center">
-        <Image source={{ uri: 'miku_waiting' }} modifiers={[size(69, 51)]} />
-        <Text color="#FFFFFF" modifiers={[paddingAll(8)]}>Open Anki Streak to connect</Text>
-      </Row>
+    <Box contentAlignment="center" modifiers={[fillMaxSize(), { $type: 'openAppOnTap' }]}>
+      {imageUri ? (
+        <Image
+          source={{ uri: imageUri }}
+          contentDescription={description}
+          contentScale="fit"
+          alpha={opacity}
+          modifiers={[fillMaxSize()]}
+        />
+      ) : (
+        <Row verticalAlignment="center">
+          <Image source={{ uri: 'miku_waiting' }} alpha={opacity} modifiers={[size(69, 51)]} />
+          <Text color="#FFFFFF" modifiers={[paddingAll(8)]}>Open Anki Streak to connect</Text>
+        </Row>
+      )}
     </Box>
   );
 }
 
-export default createWidget('AnkiStreak', AnkiStreak, { imageUri: '', description: '' });
+export default createWidget('AnkiStreak', AnkiStreak, {
+  imageUri: '', description: '', opacity: 1,
+});

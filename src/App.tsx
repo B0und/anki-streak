@@ -1,3 +1,4 @@
+import Slider from '@react-native-community/slider';
 import { useCallback, useEffect, useState } from 'react';
 import {
   AppState,
@@ -12,8 +13,8 @@ import {
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
-import { openAnki, pinWidget, requestPermission, type AnkiActivity } from './activity';
-import { enableBackgroundRefresh, refreshWidget } from './widgetRefresh';
+import { getWidgetTransparency, openAnki, pinWidget, requestPermission, type AnkiActivity } from './activity';
+import { changeWidgetTransparency, enableBackgroundRefresh, refreshWidget } from './widgetRefresh';
 
 const waitingPortrait = require('../modules/anki-activity/android/src/main/res/drawable-nodpi/miku_waiting.png');
 const happyPortrait = require('../modules/anki-activity/android/src/main/res/drawable-nodpi/miku_happy.png');
@@ -25,6 +26,7 @@ function Dashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [preview, setPreview] = useState<PreviewMood>();
   const [notice, setNotice] = useState('');
+  const [transparency, setTransparency] = useState(getWidgetTransparency);
 
   const refresh = useCallback(async () => {
     setRefreshing(true);
@@ -50,6 +52,12 @@ function Dashboard() {
     });
     return () => listener.remove();
   }, [refresh]);
+
+  useEffect(() => {
+    if (transparency === getWidgetTransparency()) return;
+    const pending = setTimeout(() => changeWidgetTransparency(transparency), 150);
+    return () => clearTimeout(pending);
+  }, [transparency]);
 
   const ready = activity?.kind === 'ready';
   const mood = preview ?? (ready && activity.today > 0 ? 'happy' : 'waiting');
@@ -151,6 +159,26 @@ function Dashboard() {
           </View>
         )}
 
+        <View style={styles.transparency}>
+          <View style={styles.transparencyHeader}>
+            <Text style={styles.secondaryText}>Widget transparency</Text>
+            <Text style={styles.transparencyValue}>{transparency}%</Text>
+          </View>
+          <Slider
+            accessibilityLabel="Widget transparency"
+            value={transparency}
+            minimumValue={0}
+            maximumValue={100}
+            step={1}
+            minimumTrackTintColor="#72F5DD"
+            maximumTrackTintColor="#25494D"
+            thumbTintColor="#72F5DD"
+            style={styles.slider}
+            onValueChange={setTransparency}
+            onSlidingComplete={changeWidgetTransparency}
+          />
+        </View>
+
         <View style={styles.actions}>
           <Pressable accessibilityRole="button" style={styles.primary} onPress={() => void addWidget()}>
             <Text style={styles.primaryText}>Add home screen widget</Text>
@@ -208,6 +236,13 @@ const styles = StyleSheet.create({
     borderColor: '#25494D', backgroundColor: '#0D1E24',
   },
   connectionText: { color: '#D8F1EF', fontSize: 14, lineHeight: 20 },
+  transparency: {
+    paddingHorizontal: 14, paddingTop: 12, borderRadius: 17, borderWidth: 1,
+    borderColor: '#25494D', backgroundColor: '#0D1E24',
+  },
+  transparencyHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
+  transparencyValue: { color: '#72F5DD', fontSize: 14, fontVariant: ['tabular-nums'] },
+  slider: { height: 44 },
   actions: { gap: 8 },
   primary: {
     minHeight: 49, borderRadius: 13, paddingHorizontal: 14,

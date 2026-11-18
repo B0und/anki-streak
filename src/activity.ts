@@ -17,6 +17,8 @@ export type AnkiActivity =
   | { kind: 'unavailable' };
 
 const anki = requireNativeModule<{
+  getWidgetTransparency(): number;
+  setWidgetTransparency(value: number): void;
   readActivity(): Promise<unknown>;
   renderWidget(
     streak: number,
@@ -30,7 +32,9 @@ const anki = requireNativeModule<{
   openAnki(): Promise<boolean>;
 }>('AnkiActivity');
 
-export const { pinWidget, openAnki, requestPermission, renderWidget } = anki;
+export const {
+  pinWidget, openAnki, requestPermission, renderWidget, getWidgetTransparency, setWidgetTransparency,
+} = anki;
 
 function isCount(value: unknown): value is number {
   return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;

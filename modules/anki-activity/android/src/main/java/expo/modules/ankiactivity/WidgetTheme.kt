@@ -47,18 +47,25 @@ internal enum class WidgetTheme(
 private fun color(value: String): Int = Color.parseColor(value)
 private fun colors(vararg values: String): IntArray = values.map(::color).toIntArray()
 
-internal fun updateLauncherIcon(context: Context, theme: WidgetTheme) {
+internal fun reconcileLauncherIcon(context: Context, theme: WidgetTheme) {
   val packageName = context.packageName
-  val settings = WidgetTheme.entries.map { candidate ->
+  val manager = context.packageManager
+  val settings = WidgetTheme.entries.mapNotNull { candidate ->
     val component = ComponentName(packageName, "$packageName.Launcher_${candidate.id}")
     val state = if (candidate == theme) {
       PackageManager.COMPONENT_ENABLED_STATE_ENABLED
     } else {
       PackageManager.COMPONENT_ENABLED_STATE_DISABLED
     }
-    component to state
+    val current = manager.getComponentEnabledSetting(component)
+    val enabled = when (current) {
+      PackageManager.COMPONENT_ENABLED_STATE_DEFAULT -> candidate == WidgetTheme.MIKU
+      PackageManager.COMPONENT_ENABLED_STATE_ENABLED -> true
+      else -> false
+    }
+    if (enabled == (candidate == theme)) null else component to state
   }
-  val manager = context.packageManager
+  if (settings.isEmpty()) return
   val flags = PackageManager.DONT_KILL_APP
   if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
     manager.setComponentEnabledSettings(settings.map { (component, state) ->

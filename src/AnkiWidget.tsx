@@ -29,10 +29,10 @@ function AnkiStreak(
 ) {
   'widget';
 
-  const tall = height >= width * 0.4;
-  const stats = artwork && (tall ? artwork.tallStats : artwork.compactStats);
+  const layout = height >= width * 0.4 ? 'tall' : 'compact';
+  const stats = artwork && (layout === 'tall' ? artwork.tallStats : artwork.compactStats);
   const portraitHeight = Math.max(1, height - 4);
-  const portraitWidth = Math.min(portraitHeight * (artwork?.portraitAspect ?? 1), width * (tall ? 0.42 : 0.34));
+  const portraitWidth = Math.min(portraitHeight * (artwork?.portraitAspect ?? 1), width * (layout === 'tall' ? 0.42 : 0.34));
   const statsWidth = width - portraitWidth;
   const statsHeight = stats ? Math.min(height, statsWidth / stats.aspect) : 0;
 

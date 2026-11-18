@@ -3,9 +3,12 @@ import { requireNativeModule } from 'expo';
 import type { WidgetArtwork } from './AnkiWidget';
 import { themeOrder, type WidgetTheme } from './themes';
 
+export type ReviewMood = 'waiting' | 'happy';
+
 type ReadyActivity = {
   kind: 'ready';
   today: number;
+  mood: ReviewMood;
   streak: number;
   history: number[];
   dailyReviewed: number;
@@ -35,8 +38,8 @@ const anki = requireNativeModule<{
     theme: WidgetTheme,
   ): Promise<WidgetArtwork>;
   requestPermission(): Promise<unknown>;
-  pinWidget(): Promise<boolean>;
-  openAnki(): Promise<boolean>;
+  pinWidget(): Promise<'requested' | 'use-picker'>;
+  openAnki(): Promise<'opened' | 'missing'>;
 }>('AnkiActivity');
 
 export const {
@@ -74,7 +77,7 @@ export async function readActivity(): Promise<AnkiActivity> {
           'dailyLearned' in data && isCount(data.dailyLearned)
         ) {
           return {
-            kind: 'ready', today: data.today, streak: data.streak, history: data.history,
+            kind: 'ready', today: data.today, mood: data.today > 0 ? 'happy' : 'waiting', streak: data.streak, history: data.history,
             dailyReviewed: data.dailyReviewed, dailyLearned: data.dailyLearned,
           };
         }

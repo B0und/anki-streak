@@ -1,8 +1,7 @@
 import { Host, Slider } from '@expo/ui/jetpack-compose';
 import { fillMaxWidth, semantics } from '@expo/ui/jetpack-compose/modifiers';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
-  AppState,
   Image,
   Linking,
   Pressable,
@@ -14,57 +13,18 @@ import {
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
-import { getWidgetTheme, getWidgetBackgroundTransparency, openAnki, pinWidget, requestPermission, type AnkiActivity } from './activity';
-import { changeWidgetTheme, changeWidgetBackgroundTransparency, enableBackgroundRefresh, refreshWidget } from './widgetRefresh';
+import { themes, themeOrder } from './themes';
+import { useDashboard } from './useDashboard';
 
-import { themes, themeOrder, type WidgetTheme } from './themes';
-
-type PreviewMood = 'waiting' | 'happy';
 const previewMinHeight = 170;
+const previewMoods = ['waiting', 'happy'] as const;
 
 function Dashboard() {
-  const [activity, setActivity] = useState<AnkiActivity | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
+  const dashboard = useDashboard();
+  const { activity, themeId, transparency, mood, preview, notice, refreshing, requesting } = dashboard;
   const [previewHeight, setPreviewHeight] = useState(previewMinHeight);
-  const [preview, setPreview] = useState<PreviewMood>();
-  const [notice, setNotice] = useState('');
-  const [transparency, setTransparency] = useState(getWidgetBackgroundTransparency);
-  const [themeId, setThemeId] = useState(getWidgetTheme);
   const theme = themes[themeId];
-
-  const refresh = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      const next = await refreshWidget();
-      setActivity(next);
-      if (next.kind === 'ready') {
-        await enableBackgroundRefresh();
-      }
-    } catch {
-      setNotice('Couldn’t refresh the widget. Try again.');
-    } finally {
-      setRefreshing(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void refresh();
-    const listener = AppState.addEventListener('change', (state) => {
-      if (state === 'active') {
-        void refresh();
-      }
-    });
-    return () => listener.remove();
-  }, [refresh]);
-
-  useEffect(() => {
-    if (transparency === getWidgetBackgroundTransparency()) return;
-    const pending = setTimeout(() => changeWidgetBackgroundTransparency(transparency), 150);
-    return () => clearTimeout(pending);
-  }, [transparency]);
-
   const ready = activity?.kind === 'ready';
-  const mood = preview ?? (ready && activity.today > 0 ? 'happy' : 'waiting');
   const portrait = theme[mood];
   const portraitSize = Image.resolveAssetSource(portrait);
   const portraitAspect = (portraitSize?.width ?? 1) / (portraitSize?.height ?? 1);
@@ -75,50 +35,6 @@ function Dashboard() {
     unsupported: 'Update AnkiDroid to a version that supports card searches.',
     unavailable: 'Open AnkiDroid to load your collection, then try refreshing.',
   };
-
-  async function selectTheme(id: WidgetTheme) {
-    if (id === themeId) return;
-    setNotice('');
-    try {
-      const update = changeWidgetTheme(id);
-      setThemeId(id);
-      setActivity(await update);
-    } catch {
-      setThemeId(getWidgetTheme());
-      setNotice('Couldn’t update the widget theme. Try refreshing.');
-    }
-  }
-
-  async function connect() {
-    setNotice('');
-    try {
-      await requestPermission();
-      await refresh();
-    } catch {
-      setNotice('Couldn’t open the permission prompt. Check the app’s Android permissions.');
-    }
-  }
-
-  async function addWidget() {
-    setNotice('');
-    try {
-      if (await pinWidget()) return;
-    } catch {
-      // Launchers without pin support can still offer the widget through their picker.
-    }
-    setNotice('Touch and hold your home screen, then choose Widgets → Anki Streak.');
-  }
-
-  async function launchAnki() {
-    setNotice('');
-    try {
-      if (await openAnki()) return;
-    } catch {
-      setNotice('Couldn’t open AnkiDroid.');
-      return;
-    }
-    setNotice('Install AnkiDroid to open your collection.');
-  }
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -155,7 +71,7 @@ function Dashboard() {
                   key={id}
                   accessibilityRole="button"
                   accessibilityState={{ selected }}
-                  onPress={() => void selectTheme(id)}
+                  onPress={() => void dashboard.selectTheme(id)}
                   style={[styles.themeButton, selected && { borderColor: option.accent, backgroundColor: option.card }]}
                 >
                   <View style={[styles.themeSwatch, { backgroundColor: option.accent }]} />
@@ -168,13 +84,13 @@ function Dashboard() {
         <View style={styles.moods}>
           <Text style={styles.caption}>Preview moods</Text>
           <View style={styles.moodOptions}>
-            {(['waiting', 'happy'] satisfies PreviewMood[]).map((option) => (
+            {previewMoods.map((option) => (
               <Pressable
                 key={option}
                 accessibilityRole="button"
-                accessibilityState={{ selected: preview === option }}
-                onPress={() => setPreview((current) => current === option ? undefined : option)}
-                style={[styles.moodButton, preview === option && styles.moodSelected]}
+                accessibilityState={{ selected: preview.kind === 'preview' && preview.mood === option }}
+                onPress={() => dashboard.togglePreview(option)}
+                style={[styles.moodButton, preview.kind === 'preview' && preview.mood === option && styles.moodSelected]}
               >
                 <Text style={styles.moodText}>{option === 'waiting' ? 'Waiting' : 'Happy'}</Text>
               </Pressable>
@@ -193,7 +109,7 @@ function Dashboard() {
             <Text style={styles.connectionText}>{message[activity.kind]}</Text>
             {activity.kind === 'permission' && (
               <>
-                <Pressable accessibilityRole="button" style={styles.primary} onPress={() => void connect()}>
+                <Pressable accessibilityRole="button" style={styles.primary} disabled={requesting} onPress={() => void dashboard.runAndroidRequest('permission')}>
                   <Text style={styles.primaryText}>Connect AnkiDroid</Text>
                 </Pressable>
                 <Pressable accessibilityRole="button" style={styles.secondary} onPress={() => void Linking.openSettings()}>
@@ -220,25 +136,25 @@ function Dashboard() {
                 thumbColor: theme.accent,
               }}
               modifiers={[fillMaxWidth(), semantics({ contentDescription: 'Background transparency' })]}
-              onValueChange={(value) => setTransparency(Math.round(value))}
+              onValueChange={(value) => dashboard.changeTransparency(Math.round(value))}
             />
           </Host>
         </View>
 
         <View style={styles.actions}>
-          <Pressable accessibilityRole="button" style={styles.primary} onPress={() => void addWidget()}>
+          <Pressable accessibilityRole="button" style={styles.primary} disabled={requesting} onPress={() => void dashboard.runAndroidRequest('pin')}>
             <Text style={styles.primaryText}>Add home screen widget</Text>
           </Pressable>
           <View style={styles.secondaryActions}>
             {activity?.kind !== 'missing' && (
-              <Pressable accessibilityRole="button" style={styles.secondary} onPress={() => void launchAnki()}>
+              <Pressable accessibilityRole="button" style={styles.secondary} disabled={requesting} onPress={() => void dashboard.runAndroidRequest('open')}>
                 <Text style={styles.secondaryText}>Open AnkiDroid</Text>
               </Pressable>
             )}
             <Pressable
               accessibilityRole="button"
               disabled={refreshing}
-              onPress={() => { setNotice(''); void refresh(); }}
+              onPress={() => void dashboard.refresh()}
               style={styles.secondary}
             >
               <Text style={styles.secondaryText}>{refreshing ? 'Refreshing…' : 'Refresh'}</Text>

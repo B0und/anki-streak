@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.util.Log
 import expo.modules.interfaces.permissions.Permissions
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.functions.Queues
@@ -26,13 +27,15 @@ class AnkiActivityModule : Module() {
     Constant("historyDays") { HISTORY_DAYS }
 
     Function("getWidgetTheme") {
-      WidgetTheme.fromId(widgetPreferences.getString("theme", null)).id
+      storedWidgetTheme().id
     }
 
     Function("setWidgetTheme") { id: String ->
       val theme = WidgetTheme.fromId(id)
-      updateLauncherIcon(context, theme)
-      widgetPreferences.edit().putString("theme", theme.id).apply()
+      if (theme != storedWidgetTheme()) {
+        check(widgetPreferences.edit().putString("theme", theme.id).commit())
+      }
+      reconcileLauncherIcon(context, theme)
     }
 
     Function("getWidgetBackgroundTransparency") {
@@ -48,6 +51,8 @@ class AnkiActivityModule : Module() {
     }.runOnQueue(Queues.MAIN)
 
     AsyncFunction("readActivity") {
+      runCatching { reconcileLauncherIcon(context, storedWidgetTheme()) }
+        .onFailure { Log.w("AnkiActivity", "Launcher icon reconciliation failed", it) }
       readActivity(context)
     }
 
@@ -57,18 +62,27 @@ class AnkiActivityModule : Module() {
 
     AsyncFunction("openAnki") {
       val intent = context.packageManager.getLaunchIntentForPackage(ANKI_PACKAGE)
-      if (intent != null) {
+      if (intent == null) {
+        "missing"
+      } else {
         context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        "opened"
       }
-      intent != null
     }.runOnQueue(Queues.MAIN)
 
     AsyncFunction("pinWidget") {
       val manager = AppWidgetManager.getInstance(context)
       val provider = ComponentName(context.packageName, "${context.packageName}.AnkiStreakProvider")
-      manager.isRequestPinAppWidgetSupported && manager.requestPinAppWidget(provider, null, null)
+      if (manager.isRequestPinAppWidgetSupported && manager.requestPinAppWidget(provider, null, null)) {
+        "requested"
+      } else {
+        "use-picker"
+      }
     }.runOnQueue(Queues.MAIN)
   }
+
+  private fun storedWidgetTheme(): WidgetTheme =
+    WidgetTheme.fromId(widgetPreferences.getString("theme", null))
 
   private val widgetPreferences
     get() = context.getSharedPreferences("anki-streak-widget", Context.MODE_PRIVATE)

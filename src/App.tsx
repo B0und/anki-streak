@@ -63,6 +63,8 @@ function Dashboard() {
 
   const ready = activity?.kind === 'ready';
   const mood = preview ?? (ready && activity.today > 0 ? 'happy' : 'waiting');
+  const portrait = theme[mood];
+  const portraitSize = Image.resolveAssetSource(portrait);
   const message = {
     permission: 'Allow access to read your review activity from AnkiDroid.',
     missing: 'Install AnkiDroid to link your review activity.',
@@ -129,10 +131,10 @@ function Dashboard() {
             </Text>
           </View>
           <Image
-            source={theme[mood]}
+            source={portrait}
             accessibilityLabel={`${theme.name} is ${mood === 'happy' ? 'cheering' : 'waiting'}`}
-            resizeMode="contain"
-            style={styles.portrait}
+            resizeMode="stretch"
+            style={[styles.portrait, { aspectRatio: (portraitSize?.width ?? 1) / (portraitSize?.height ?? 1) }]}
           />
         </View>
         <View style={styles.themes}>
@@ -259,7 +261,7 @@ const styles = StyleSheet.create({
   stat: { color: '#F2FEFC', fontSize: 46, fontWeight: '800', lineHeight: 54 },
   caption: { color: '#A4BFC1', fontSize: 14 },
   streak: { marginTop: 11, color: '#72F5DD', fontSize: 14, fontWeight: '700' },
-  portrait: { position: 'absolute', bottom: -1, right: -6, width: '58%', height: '100%' },
+  portrait: { position: 'absolute', bottom: 0, right: 0, height: '97%' },
   themes: { gap: 8 },
   themeOptions: { flexDirection: 'row', gap: 7 },
   themeButton: {

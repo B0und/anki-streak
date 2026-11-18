@@ -1,7 +1,7 @@
 import * as BackgroundTask from 'expo-background-task';
 import * as TaskManager from 'expo-task-manager';
 
-import AnkiWidget from './AnkiWidget';
+import AnkiWidget, { type WidgetArtwork } from './AnkiWidget';
 import {
   getWidgetTheme, getWidgetBackgroundTransparency, readActivity, renderWidget, setWidgetTheme, setWidgetBackgroundTransparency, type AnkiActivity,
 } from './activity';
@@ -9,13 +9,12 @@ import { themes, type WidgetTheme } from './themes';
 
 const taskName = 'refresh-anki-widget';
 let inFlight: Promise<AnkiActivity> | undefined;
-let content: { imageUri: string; description: string; waitingDrawable: string; theme: WidgetTheme } | undefined;
+let content: { artwork: WidgetArtwork | null; description: string; waitingDrawable: string } | undefined;
 
 function publishWidget() {
   if (content) {
-    const { theme, ...snapshot } = content;
     const alpha = Math.round(255 * (1 - getWidgetBackgroundTransparency() / 100)).toString(16).padStart(2, '0');
-    AnkiWidget.updateSnapshot({ ...snapshot, backdrop: `${themes[theme].card}${alpha}` });
+    AnkiWidget.updateSnapshot({ ...content, backdrop: `#000000${alpha}` });
   }
 }
 
@@ -39,16 +38,15 @@ export function refreshWidget(): Promise<AnkiActivity> {
         const { name, waitingDrawable } = themes[theme];
         if (activity.kind === 'ready') {
           const { streak, today, history, dailyReviewed, dailyLearned } = activity;
-          const imageUri = await renderWidget(streak, today, history, dailyReviewed, dailyLearned, theme);
+          const artwork = await renderWidget(streak, today, history, dailyReviewed, dailyLearned, theme);
           const mood = today > 0 ? 'happy' : 'waiting';
           content = {
-            imageUri,
+            artwork,
             description: `${name} is ${mood}. ${streak}-day streak. ${today} cards reviewed today. Daily averages: ${dailyReviewed} cards reviewed, ${dailyLearned} new cards learned.`,
             waitingDrawable,
-            theme,
           };
         } else {
-          content = { imageUri: '', description: '', waitingDrawable, theme };
+          content = { artwork: null, description: '', waitingDrawable };
         }
       } while (theme !== getWidgetTheme());
       publishWidget();

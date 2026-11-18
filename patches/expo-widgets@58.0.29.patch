@@ -26,3 +26,17 @@ index 3df9e4a4d92155a00d3f5652d17d20be10bef1c1..3a5e2469e970d3b30ea7454c4ab1f088
      // Unsupported Expo UI modifiers are ignored until they have exact Glance semantics.
      else -> null
    } ?: GlanceModifier
+diff --git a/android/src/main/java/expo/modules/widgets/ExpoWidgetsPeekWidget.kt b/android/src/main/java/expo/modules/widgets/ExpoWidgetsPeekWidget.kt
+index edabde8f51b3bd9162b634e46f2f09686c3a3b8a..da3e7b5655520247515d414760230edcc3c7b124 100644
+--- a/android/src/main/java/expo/modules/widgets/ExpoWidgetsPeekWidget.kt
++++ b/android/src/main/java/expo/modules/widgets/ExpoWidgetsPeekWidget.kt
+@@ -25,5 +25,8 @@ internal class ExpoWidgetsPeekWidget(
+     val layout = WidgetsLayoutRegistry.layout(appContext, widgetName)
+       ?: return createErrorRoot("No layout found for $widgetName")
+     val props = WidgetsLayoutRegistry.props(appContext, widgetName)
+-    val environment = getWidgetEnvironment(appContext)
++    val environment = getWidgetEnvironment(appContext) + mapOf(
++      "width" to size.width.value.toDouble(),
++      "height" to size.height.value.toDouble()
++    )
+     val node = evaluateLayout(appContext, layout, props, environment)

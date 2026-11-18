@@ -36,7 +36,7 @@ class AnkiActivityModule : Module() {
     }
 
     Function("getWidgetBackgroundTransparency") {
-      widgetPreferences.getInt("backgroundTransparency", 100)
+      widgetPreferences.getInt("backgroundTransparency", 0)
     }
 
     Function("setWidgetBackgroundTransparency") { value: Int ->

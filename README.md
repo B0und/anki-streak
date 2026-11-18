@@ -10,7 +10,7 @@ An Android home-screen widget and React Native companion app. Miku looks sad unt
 
 Answering the same card multiple times counts as one card for that study day. Brighter heatmap cells mark busier days. Both averages cover the last 30 completed Anki study days, including days with zero. A new card counts on the day you first answer it. The streak includes yesterday if your current Anki study day is still open and you haven't answered a card. The app refreshes the widget when you open it. Android schedules background refreshes with a 15-minute minimum interval. To see an update immediately, open **Anki Streak** and tap **Refresh**.
 
-Tap the widget to open Anki Streak. Choose **Miku**, **2B**, or **Emilia** in the app to change the artwork, palette, and launcher icon. Use **Background transparency** to adjust the panel behind the artwork and stats. The theme and background setting apply to every Anki Streak widget on your phone.
+Tap the widget to open Anki Streak. Choose **Miku**, **2B**, or **Emilia** in the app to change the artwork, palette, and launcher icon. Use **Background transparency** to fade the black panel behind the artwork and stats. Long-press the widget and drag a vertical resize handle for a larger layout. The theme and background setting apply to every Anki Streak widget on your phone.
 
 ## Build an APK
 

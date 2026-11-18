@@ -33,7 +33,7 @@
                 "minHeight": 63,
                 "targetCellWidth": 4,
                 "targetCellHeight": 1,
-                "resizeMode": "none",
+                "resizeMode": "vertical",
                 "initialLayout": "./src/AnkiWidget.tsx"
               }
             }

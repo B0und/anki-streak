@@ -15,8 +15,9 @@ import android.net.Uri
 import android.util.AtomicFile
 import java.io.File
 
-private const val WIDTH = 1774
-private const val HEIGHT = 424
+private const val STATS_WIDTH = 1199
+private const val COMPACT_STATS_HEIGHT = 424
+private const val TALL_STATS_HEIGHT = 840
 internal const val HISTORY_COLUMNS = 17
 internal const val HISTORY_ROWS = 6
 internal const val HISTORY_DAYS = HISTORY_COLUMNS * HISTORY_ROWS
@@ -29,31 +30,62 @@ internal fun renderWidgetArtwork(
   dailyReviewed: Int,
   dailyLearned: Int,
   theme: WidgetTheme
-): String {
-  val width = minOf(WIDTH, context.resources.displayMetrics.widthPixels)
-  val scale = width.toFloat() / WIDTH
-  val bitmap = Bitmap.createBitmap(width, (HEIGHT * scale).toInt(), Bitmap.Config.ARGB_8888)
+): Map<String, Any> {
+  val compact = writeStats(context, theme, "compact", COMPACT_STATS_HEIGHT) { canvas, paint ->
+    canvas.drawFlameAndStreak(context, streak, theme, paint)
+    canvas.drawHistory(history, today > 0, theme, paint)
+    canvas.drawCount(dailyReviewed, 652f, false, theme, paint)
+    canvas.drawCount(dailyLearned, 902f, true, theme, paint)
+  }
+  val tall = writeStats(context, theme, "tall", TALL_STATS_HEIGHT) { canvas, paint ->
+    canvas.save()
+    canvas.translate(41f, -151f)
+    canvas.scale(1.48f, 1.48f)
+    canvas.drawFlameAndStreak(context, streak, theme, paint)
+    canvas.restore()
+
+    canvas.save()
+    canvas.translate(-140f, -369f)
+    canvas.scale(1.43f, 1.43f)
+    canvas.drawCount(dailyReviewed, 614f, false, theme, paint)
+    canvas.drawCount(dailyLearned, 823f, true, theme, paint)
+    canvas.restore()
+
+    canvas.save()
+    canvas.translate(63f, 401f)
+    canvas.scale(1.38f, 1.38f)
+    canvas.translate(-393f, -75f)
+    canvas.drawHistory(history, today > 0, theme, paint)
+    canvas.restore()
+  }
+  val portrait = if (today > 0) theme.happy else theme.waiting
+  val dimensions = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+  BitmapFactory.decodeResource(context.resources, portrait, dimensions)
+
+  return mapOf(
+    "compactStats" to compact,
+    "tallStats" to tall,
+    "portraitDrawable" to context.resources.getResourceEntryName(portrait),
+    "portraitAspect" to dimensions.outWidth.toDouble() / dimensions.outHeight
+  )
+}
+
+private fun writeStats(
+  context: Context,
+  theme: WidgetTheme,
+  layout: String,
+  height: Int,
+  draw: (Canvas, Paint) -> Unit
+): Map<String, Any> {
+  val width = minOf(STATS_WIDTH, context.resources.displayMetrics.widthPixels)
+  val scale = width.toFloat() / STATS_WIDTH
+  val bitmap = Bitmap.createBitmap(width, (height * scale).toInt(), Bitmap.Config.ARGB_8888)
 
   try {
     val canvas = Canvas(bitmap).apply { scale(scale, scale) }
-    val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
-    val happy = today > 0
+    draw(canvas, Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG))
 
-    canvas.drawArtwork(
-      context,
-      if (happy) theme.happy else theme.waiting,
-      RectF(1199f, 0f, 1753f, 424f),
-      paint
-    )
-    paint.colorFilter = theme.flameTint?.let { PorterDuffColorFilter(it, PorterDuff.Mode.SRC_IN) }
-    canvas.drawArtwork(context, R.drawable.streak_flame, RectF(45f, 164f, 142f, 290f), paint)
-    paint.colorFilter = null
-    canvas.drawStreak(streak, theme, paint)
-    canvas.drawHistory(history, happy, theme, paint)
-    canvas.drawCount(dailyReviewed, 652f, false, theme, paint)
-    canvas.drawCount(dailyLearned, 902f, true, theme, paint)
-
-    val file = AtomicFile(File(context.filesDir, "anki-streak-widget-${theme.id}.png"))
+    val file = AtomicFile(File(context.filesDir, "anki-streak-${theme.id}-$layout.png"))
     val output = file.startWrite()
     try {
       check(bitmap.compress(Bitmap.CompressFormat.PNG, 100, output))
@@ -62,10 +94,17 @@ internal fun renderWidgetArtwork(
       file.failWrite(output)
       throw error
     }
-    return Uri.fromFile(file.baseFile).toString()
+    return mapOf("uri" to Uri.fromFile(file.baseFile).toString(), "aspect" to STATS_WIDTH.toDouble() / height)
   } finally {
     bitmap.recycle()
   }
+}
+
+private fun Canvas.drawFlameAndStreak(context: Context, streak: Int, theme: WidgetTheme, paint: Paint) {
+  paint.colorFilter = theme.flameTint?.let { PorterDuffColorFilter(it, PorterDuff.Mode.SRC_IN) }
+  drawArtwork(context, R.drawable.streak_flame, RectF(45f, 164f, 142f, 290f), paint)
+  paint.colorFilter = null
+  drawStreak(streak, theme, paint)
 }
 
 private fun Canvas.drawArtwork(context: Context, resource: Int, destination: RectF, paint: Paint) {

@@ -1,5 +1,6 @@
 import { requireNativeModule } from 'expo';
 
+import type { WidgetArtwork } from './AnkiWidget';
 import { themeOrder, type WidgetTheme } from './themes';
 
 type ReadyActivity = {
@@ -32,7 +33,7 @@ const anki = requireNativeModule<{
     dailyReviewed: number,
     dailyLearned: number,
     theme: WidgetTheme,
-  ): Promise<string>;
+  ): Promise<WidgetArtwork>;
   requestPermission(): Promise<unknown>;
   pinWidget(): Promise<boolean>;
   openAnki(): Promise<boolean>;

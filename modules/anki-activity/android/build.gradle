@@ -3,11 +3,13 @@ plugins {
   id 'expo-module-gradle-plugin'
 }
 
+group = 'expo.modules.ankiactivity'
+version = '1.0.0'
+
+expoModule {
+  canBePublished false
+}
+
 android {
   namespace 'expo.modules.ankiactivity'
-
-  defaultConfig {
-    versionCode 1
-    versionName '1.0.0'
-  }
 }

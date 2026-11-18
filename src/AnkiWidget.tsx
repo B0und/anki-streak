@@ -27,17 +27,20 @@ function AnkiStreak({ mood, streak, today, history }: WidgetActivity) {
           source={{ uri: happy ? 'miku_happy' : 'miku_waiting' }}
           contentScale="fit"
           contentDescription={happy ? 'Miku is cheering' : 'Miku is waiting'}
-          modifiers={[size(121, 101)]}
+          modifiers={[size(184, 145)]}
         />
       </Box>
-      <Box contentAlignment="centerStart" modifiers={[fillMaxSize(), padding(13, 0, 0, 0)]}>
+      <Box contentAlignment="centerStart" modifiers={[fillMaxSize(), padding(17, 0, 0, 0)]}>
         <Column>
-          <Text color={accent} style={{ fontSize: 10, fontWeight: 'bold' }} maxLines={1}>ANKI STREAK</Text>
-          <Row verticalAlignment="center">
-            <Text color="#F2FEFC" style={{ fontSize: 24, fontWeight: 'bold' }} maxLines={1}>
+          <Text color={accent} style={{ fontSize: 11, fontWeight: 'bold' }} maxLines={1}>ANKI STREAK</Text>
+          <Row verticalAlignment="center" modifiers={[padding(0, 2, 0, 3)]}>
+            {linked && (
+              <Image source={{ uri: 'streak_flame' }} modifiers={[size(22, 27), padding(0, 0, 3, 0)]} />
+            )}
+            <Text color="#F2FEFC" style={{ fontSize: 32, fontWeight: 'bold' }} maxLines={1}>
               {linked ? streak.toString() : '—'}
             </Text>
-            <Text color="#A4BFC1" style={{ fontSize: 11 }} modifiers={[padding(5, 0, 0, 0)]} maxLines={1}>
+            <Text color="#A4BFC1" style={{ fontSize: 12 }} modifiers={[padding(5, 0, 0, 0)]} maxLines={1}>
               {streak === 1 ? 'day' : 'days'}
             </Text>
           </Row>
@@ -50,16 +53,16 @@ function AnkiStreak({ mood, streak, today, history }: WidgetActivity) {
                   const intensity = count === 0 ? 0 : count < 5 ? 1 : count < 20 ? 2 : count < 50 ? 3 : 4;
                   const color = day === 44 ? (happy ? accent : '#42696A') : cellColors[intensity];
                   return (
-                    <Box key={column} modifiers={[size(13, 7)]}>
-                      <Box modifiers={[size(11, 5), background(color ?? '#1C3A40'), cornerRadius(2)]} />
+                    <Box key={column} modifiers={[size(16, 10)]}>
+                      <Box modifiers={[size(13, 7), background(color ?? '#1C3A40'), cornerRadius(2)]} />
                     </Box>
                   );
                 })}
               </Row>
             ))}
           </Column>
-          <Spacer modifiers={[height(3)]} />
-          <Text color={happy ? accent : '#A4BFC1'} style={{ fontSize: 10 }} maxLines={1}>
+          <Spacer modifiers={[height(5)]} />
+          <Text color={happy ? accent : '#A4BFC1'} style={{ fontSize: 11 }} maxLines={1}>
             {linked ? `${today} ${today === 1 ? 'card' : 'cards'} today` : 'Open Anki Streak to connect'}
           </Text>
         </Column>

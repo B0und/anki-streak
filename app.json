@@ -25,8 +25,8 @@
               "displayName": "Anki Streak",
               "description": "Your Anki review streak, activity, and Miku’s mood.",
               "android": {
-                "minWidth": 250,
-                "minHeight": 104,
+                "minWidth": 292,
+                "minHeight": 132,
                 "targetCellWidth": 4,
                 "targetCellHeight": 2,
                 "resizeMode": "none",

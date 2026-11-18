@@ -19,8 +19,8 @@ export type AnkiActivity =
 const anki = requireNativeModule<{
   readActivity(): Promise<unknown>;
   renderWidget(
-    streak: number | null,
-    today: number | null,
+    streak: number,
+    today: number,
     history: number[],
     dailyReviewed: number,
     dailyLearned: number,

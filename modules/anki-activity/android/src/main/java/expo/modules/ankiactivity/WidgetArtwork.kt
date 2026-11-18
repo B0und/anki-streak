@@ -22,11 +22,11 @@ internal const val HISTORY_DAYS = HISTORY_COLUMNS * HISTORY_ROWS
 
 internal fun renderWidgetArtwork(
   context: Context,
-  streak: Int?,
-  today: Int?,
+  streak: Int,
+  today: Int,
   history: List<Int>,
-  dailyReviewed: Int?,
-  dailyLearned: Int?
+  dailyReviewed: Int,
+  dailyLearned: Int
 ): String {
   val width = minOf(WIDTH, context.resources.displayMetrics.widthPixels)
   val scale = width.toFloat() / WIDTH
@@ -35,7 +35,7 @@ internal fun renderWidgetArtwork(
   try {
     val canvas = Canvas(bitmap).apply { scale(scale, scale) }
     val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
-    val happy = (today ?: 0) > 0
+    val happy = today > 0
 
     canvas.drawArtwork(
       context,
@@ -73,8 +73,8 @@ private fun Canvas.drawArtwork(context: Context, resource: Int, destination: Rec
   }
 }
 
-private fun Canvas.drawStreak(streak: Int?, paint: Paint) {
-  val label = streak?.toString() ?: "–"
+private fun Canvas.drawStreak(streak: Int, paint: Paint) {
+  val label = streak.toString()
   paint.typeface = Typeface.create("sans-serif-black", Typeface.NORMAL)
   paint.textSize = 204f
   if (paint.measureText(label) > 225f) {
@@ -129,8 +129,8 @@ private fun Canvas.drawHistory(history: List<Int>, happy: Boolean, paint: Paint)
   }
 }
 
-private fun Canvas.drawCount(count: Int?, center: Float, isNew: Boolean, paint: Paint) {
-  val label = count?.toString() ?: "–"
+private fun Canvas.drawCount(count: Int, center: Float, isNew: Boolean, paint: Paint) {
+  val label = count.toString()
   paint.typeface = Typeface.create("sans-serif", Typeface.BOLD)
   paint.textSize = 43f
   val halfWidth = maxOf(73f, (paint.measureText(label) + 88f) / 2)

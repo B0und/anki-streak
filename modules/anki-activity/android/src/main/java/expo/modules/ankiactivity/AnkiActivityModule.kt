@@ -31,7 +31,7 @@ class AnkiActivityModule : Module() {
       readActivity(context)
     }
 
-    AsyncFunction("renderWidget") { streak: Int?, today: Int?, history: List<Int>, dailyReviewed: Int?, dailyLearned: Int? ->
+    AsyncFunction("renderWidget") { streak: Int, today: Int, history: List<Int>, dailyReviewed: Int, dailyLearned: Int ->
       renderWidgetArtwork(context, streak, today, history, dailyReviewed, dailyLearned)
     }
 

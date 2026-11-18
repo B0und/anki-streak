@@ -23,6 +23,8 @@ class AnkiActivityModule : Module() {
   override fun definition() = ModuleDefinition {
     Name("AnkiActivity")
 
+    Constant("historyDays") { HISTORY_DAYS }
+
     Function("getWidgetTransparency") {
       widgetPreferences.getInt("transparency", 0)
     }

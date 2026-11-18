@@ -17,6 +17,7 @@ export type AnkiActivity =
   | { kind: 'unavailable' };
 
 const anki = requireNativeModule<{
+  readonly historyDays: number;
   getWidgetTransparency(): number;
   setWidgetTransparency(value: number): void;
   readActivity(): Promise<unknown>;
@@ -57,7 +58,7 @@ export async function readActivity(): Promise<AnkiActivity> {
           'today' in data && isCount(data.today) &&
           'streak' in data && isCount(data.streak) &&
           'history' in data && Array.isArray(data.history) &&
-          data.history.length === 102 && data.history.every(isCount) &&
+          data.history.length === anki.historyDays && data.history.every(isCount) &&
           'dailyReviewed' in data && isCount(data.dailyReviewed) &&
           'dailyLearned' in data && isCount(data.dailyLearned)
         ) {

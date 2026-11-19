@@ -24,15 +24,16 @@ jobs:
       - name: Verify staged APK and publish
         shell: bash
         run: |
-          set -euo pipefail
+          set -eEuo pipefail
+          trap 'echo "::error::Release command failed at line $LINENO: $BASH_COMMAND"' ERR
           tag=${RELEASE_BRANCH#release-assets/}
           [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
           mkdir release
           cd release
           gh api "repos/$GH_REPO/git/ref/tags/$tag" --jq '.ref' | grep -Fx "refs/tags/$tag"
           for file in Anki-Streak.apk SHA256SUMS.txt release-notes.md; do
-            gh api -H 'Accept: application/vnd.github.raw+json' \
-              "repos/$GH_REPO/contents/.release/$file?ref=$STAGING_COMMIT" > "$file"
+            curl --fail --silent --show-error --location --retry 2 \
+              "https://raw.githubusercontent.com/$GH_REPO/$STAGING_COMMIT/.release/$file" --output "$file"
           done
           [[ "$(cat SHA256SUMS.txt)" =~ ^[0-9a-f]{64}\ \ Anki-Streak\.apk$ ]]
           sha256sum -c SHA256SUMS.txt
@@ -45,7 +46,8 @@ jobs:
             exit 1
           fi
           echo "Release certificate verified"
-          package=$("$tools_dir/aapt2" dump badging Anki-Streak.apk | sed -n '1p')
+          badging=$("$tools_dir/aapt2" dump badging Anki-Streak.apk)
+          package=${badging%%$'\n'*}
           [[ "$package" == "package: name='com.ankistreak.anime' "* ]]
           [[ "$package" == *" versionName='${tag#v}' "* ]]
 

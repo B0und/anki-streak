@@ -12,6 +12,14 @@ Answering the same card multiple times counts as one card for that study day. Br
 
 Tap the widget to open Anki Streak. Choose **Miku**, **2B**, or **Emilia** in the app to change the artwork, palette, and launcher icon. Use **Background transparency** to fade the black panel behind the artwork and stats. Long-press the widget and drag a vertical resize handle for a larger layout. The theme and background setting apply to every Anki Streak widget on your phone.
 
+## Update the app
+
+Install an updater-enabled APK once to enable update checks. Anki Streak checks GitHub Releases when you open the app and checks again when you return after six hours. **Check for updates** runs a check immediately.
+
+When an update appears, tap **Download and install**. If Android opens its install permission settings, allow installs from Anki Streak, return to the app, and tap **Install update**. Confirm the update in the Android installer. In-place updates keep app settings and pinned widgets.
+
+The in-app updater is available on Android 8.0 or later with the project's release-signed APK. Development builds use a separate signing key and are updated with a matching development APK.
+
 ## Build an APK
 
 Use Bun, Node.js, JDK 21, and the Android SDK. Install Android SDK Platform 37.0, Build-Tools 37.0.0, NDK 27.1.12297006, and CMake 3.22.1. Set `JAVA_HOME` and `ANDROID_HOME`.
@@ -27,6 +35,8 @@ The APK is at `android/app/build/outputs/apk/release/app-release.apk` relative t
 
 Run `bun run lint` for Oxlint and `bun run typecheck` for TypeScript.
 
+For a GitHub release, set `expo.version` in `app.json` to the release version and increase `expo.android.versionCode`. Sign the APK with the existing release key. Publish a stable release tagged `vMAJOR.MINOR.PATCH` and upload the APK as `Anki-Streak.apk`. The updater reads the version from the tag and the SHA-256 digest from GitHub's asset metadata.
+
 ## State transitions
 
 The [glossary](GLOSSARY.md) defines the terms used below. TypeScript state lives in tagged unions. Android remains the source of truth for permissions, launcher components, widget dimensions, and background scheduling.
@@ -41,3 +51,4 @@ The [glossary](GLOSSARY.md) defines the terms used below. TypeScript state lives
 | Theme and launcher icon | [`AnkiActivityModule.kt`](modules/anki-activity/android/src/main/java/expo/modules/ankiactivity/AnkiActivityModule.kt) persists the selected theme before reconciling the enabled launcher alias in [`WidgetTheme.kt`](modules/anki-activity/android/src/main/java/expo/modules/ankiactivity/WidgetTheme.kt). Later reads retry reconciliation. The dashboard and widget use the saved theme. |
 | Background registration | [`widgetRefresh.ts`](src/widgetRefresh.ts) moves from `unchecked` to `registering` when the dashboard sees ready activity. It reuses an existing Expo registration, enters `registered` on success, and returns to `unchecked` on failure so a later refresh can retry. Expo and Android own subsequent runs. |
 | Widget layout and taps | [`AnkiWidget.tsx`](src/AnkiWidget.tsx) selects `compact` or `tall` from the launcher’s current dimensions. The Expo Widgets [patch](patches/expo-widgets@58.0.29.patch) forwards those dimensions and routes widget taps to the dashboard. Android owns the launcher layout and widget instances. |
+| App updates | [`AppUpdates.tsx`](src/AppUpdates.tsx) checks for a release and manages the download and installer handoff. The native module verifies the downloaded APK before opening the installer. Android owns install permissions and confirmation. |

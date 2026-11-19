@@ -1,5 +1,7 @@
 const { AndroidConfig, withAndroidManifest } = require('expo/config-plugins');
 
+const launcherEntry = 'expo.modules.ankiactivity.LauncherEntryActivity';
+
 const themes = [
   { id: 'miku', icon: '@mipmap/ic_launcher' },
   { id: '2b', icon: '@drawable/launcher_2b' },
@@ -18,10 +20,23 @@ module.exports = (config) => withAndroidManifest(config, (config) => {
   if (!launcher) throw new Error('Anki Streak launcher intent filter is missing');
 
   main['intent-filter'] = main['intent-filter']?.filter((filter) => !isLauncher(filter));
+  app.activity = [
+    ...(app.activity ?? []).filter((activity) => activity.$['android:name'] !== launcherEntry),
+    {
+      $: {
+        'android:name': launcherEntry,
+        'android:exported': 'false',
+        'android:excludeFromRecents': 'true',
+        'android:noHistory': 'true',
+        'android:taskAffinity': '',
+        'android:theme': '@android:style/Theme.NoDisplay',
+      },
+    },
+  ];
   const themedAliases = themes.map(({ id, icon }) => ({
     $: {
       'android:name': `.Launcher_${id}`,
-      'android:targetActivity': main.$['android:name'],
+      'android:targetActivity': launcherEntry,
       'android:exported': 'true',
       'android:enabled': String(id === 'miku'),
       'android:icon': icon,

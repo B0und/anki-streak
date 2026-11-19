@@ -1,0 +1,56 @@
+name: Publish signed APK
+
+on:
+  push:
+    branches:
+      - 'release-assets/v*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RELEASE_BRANCH: ${{ github.ref_name }}
+      STAGING_COMMIT: ${{ github.sha }}
+    steps:
+      - name: Verify staged APK and publish
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag=${RELEASE_BRANCH#release-assets/}
+          [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          mkdir release
+          cd release
+          gh api "repos/$GH_REPO/git/ref/tags/$tag" --jq '.ref' | grep -Fx "refs/tags/$tag"
+          for file in Anki-Streak.apk SHA256SUMS.txt release-notes.md; do
+            gh api -H 'Accept: application/vnd.github.raw+json' \
+              "repos/$GH_REPO/contents/.release/$file?ref=$STAGING_COMMIT" > "$file"
+          done
+          [[ "$(cat SHA256SUMS.txt)" =~ ^[0-9a-f]{64}\ \ Anki-Streak\.apk$ ]]
+          sha256sum -c SHA256SUMS.txt
+
+          tools_dir=$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)
+          signer=$("$tools_dir/apksigner" verify --print-certs Anki-Streak.apk)
+          grep -Fx 'V3.0 Signer: certificate SHA-256 digest: 15ccfdb1ab164994b925cbe9667218be7073815cf7892af5c43300fed06e9a13' <<< "$signer"
+          package=$("$tools_dir/aapt2" dump badging Anki-Streak.apk | sed -n '1p')
+          [[ "$package" == "package: name='com.ankistreak.anime' "* ]]
+          [[ "$package" == *" versionName='${tag#v}' "* ]]
+
+          if gh release view "$tag" --json isDraft --jq .isDraft | grep -qx false; then
+            gh release download "$tag" --pattern Anki-Streak.apk --output published.apk
+            cmp Anki-Streak.apk published.apk
+          else
+            if ! gh release view "$tag" >/dev/null 2>&1; then
+              gh release create "$tag" --verify-tag --draft --title "Anki Streak $tag" --notes-file release-notes.md
+            fi
+            gh release upload "$tag" Anki-Streak.apk SHA256SUMS.txt --clobber
+            gh release edit "$tag" --draft=false --latest
+          fi

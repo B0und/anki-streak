@@ -2,6 +2,9 @@ import { requireNativeModule } from 'expo';
 
 export const appearanceOptions = ['system', 'light', 'dark'] as const;
 export const languageOptions = ['system', 'en', 'ru'] as const;
+export const widgetSizes = ['compact', 'tall'] as const;
+export type WidgetSize = (typeof widgetSizes)[number];
+
 export const widgetLayouts = ['current', 'focus', 'first'] as const;
 export const milestones = ['firstReview', 'finishDue', 'reviewTarget', 'newTarget', 'streakTarget'] as const;
 
@@ -32,8 +35,12 @@ export function getLanguage() {
   return choice === 'system' ? (settings.getSystemLanguage() === 'ru' ? 'ru' : 'en') : choice;
 }
 
-export function getWidgetLayout() {
-  return preference('layout', widgetLayouts, 'current');
+export function getWidgetLayout(size: WidgetSize) {
+  return preference(`layout-${size}`, widgetLayouts, preference('layout', widgetLayouts, 'current'));
+}
+
+export function getWidgetLayouts(): Record<WidgetSize, WidgetLayout> {
+  return { compact: getWidgetLayout('compact'), tall: getWidgetLayout('tall') };
 }
 
 export function hasTarget(milestone: Milestone): milestone is keyof typeof defaultTargets {

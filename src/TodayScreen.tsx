@@ -2,7 +2,7 @@ import { Image, StyleSheet, Text, View, useWindowDimensions } from 'react-native
 
 import type { Palette } from './appearance';
 import { copy, type Language } from './messages';
-import { Action, CountUp, Laurel, Portrait, Section } from './studyComponents';
+import { Action, CountUp, Portrait, Section } from './studyComponents';
 import { themes } from './themes';
 import type { useDashboard } from './useDashboard';
 
@@ -21,17 +21,11 @@ export function TodayScreen({ dashboard, palette, language, celebration }: {
     <View style={[styles.hero, { borderColor: palette.line, backgroundColor: palette.hero }]}>
       <Portrait source={portrait} height={192} maxWidth={Math.min(width * .51, 228)} />
       <View style={styles.medal}>
-        <Laurel color={palette.accent} />
         <Text style={[styles.streak, { color: palette.text }]} adjustsFontSizeToFit numberOfLines={1}>
           <CountUp value={ready?.streak} delay={0} celebration={celebration} />
         </Text>
         <Text style={{ color: palette.accent, fontWeight: '700', fontSize: 14, textAlign: 'center' }}>{copy(language, 'streak')}</Text>
       </View>
-      {history && <View accessibilityLabel={copy(language, 'ribbon')} accessible style={[styles.ribbon, { backgroundColor: palette.surface, borderColor: palette.line }]}>
-        {history.slice(-18).map((count, index, days) => <View key={index} style={[styles.ribbonCell, {
-          backgroundColor: colorFor(count), borderColor: palette.accent, borderWidth: index === days.length - 1 ? 1 : 0,
-        }]} />)}
-      </View>}
     </View>
 
     {ready ? <>
@@ -93,10 +87,8 @@ export function TodayScreen({ dashboard, palette, language, celebration }: {
 
 const styles = StyleSheet.create({
   hero: { height: 208, borderRadius: 23, borderWidth: 1, overflow: 'hidden', justifyContent: 'center' },
-  medal: { width: '49%', alignItems: 'center', paddingBottom: 24, paddingHorizontal: 10 },
+  medal: { width: '49%', alignItems: 'center', paddingHorizontal: 10 },
   streak: { fontFamily: 'serif', fontWeight: 'bold', fontSize: 73, lineHeight: 82, includeFontPadding: false, maxWidth: '88%' },
-  ribbon: { position: 'absolute', flexDirection: 'row', padding: 6, gap: 3, left: 9, right: 9, bottom: 9, borderWidth: 1, borderRadius: 9 },
-  ribbonCell: { flex: 1, borderRadius: 2, height: 11 },
   stats: { flexDirection: 'row', borderRadius: 18, borderWidth: 1 },
   stat: { flex: 1, paddingVertical: 13, paddingHorizontal: 12, alignItems: 'center', gap: 2 },
   primaryNumber: { fontSize: 34, fontFamily: 'serif', fontWeight: 'bold', includeFontPadding: false },

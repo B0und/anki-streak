@@ -6,7 +6,7 @@ import { copy, type Language } from './messages';
 import { Section } from './studyComponents';
 import { appUpdater, checkForAppUpdate, type AppUpdate } from './appUpdateRelease';
 
-const automaticCheckIntervalMs = 6 * 60 * 60 * 1000;
+const automaticCheckIntervalMs = 5 * 60 * 1000;
 
 type UpdateState =
   | { kind: 'idle' }
@@ -20,7 +20,7 @@ type UpdateState =
   | { kind: 'permission'; update: AppUpdate }
   | { kind: 'ready'; update: AppUpdate };
 
-export function AppUpdates({ palette, language, visible }: { palette: Palette; language: Language; visible: boolean }) {
+export function useAppUpdates() {
   const [{ version, canUpdate }] = useState(() => appUpdater.getInstalledBuild());
   const [state, setState] = useState<UpdateState>({ kind: 'idle' });
   const busy = useRef(false);
@@ -35,7 +35,7 @@ export function AppUpdates({ palette, language, visible }: { palette: Palette; l
       const update = await checkForAppUpdate(version);
       if (!update) setState({ kind: 'current' });
       else setState((previous) =>
-        (previous.kind === 'ready' || previous.kind === 'permission') && previous.update.digest === update.digest
+        'update' in previous && previous.update.digest === update.digest
           ? previous
           : { kind: 'available', update }
       );
@@ -51,7 +51,8 @@ export function AppUpdates({ palette, language, visible }: { palette: Palette; l
     const listener = AppState.addEventListener('change', (activity) => {
       if (activity === 'active') void check(false);
     });
-    return () => listener.remove();
+    const timer = setInterval(() => { if (AppState.currentState === 'active') void check(false); }, automaticCheckIntervalMs);
+    return () => { listener.remove(); clearInterval(timer); };
   }, [check]);
 
   async function install(update: AppUpdate, alreadyDownloaded: boolean) {
@@ -84,7 +85,14 @@ export function AppUpdates({ palette, language, visible }: { palette: Palette; l
     }
   }
 
-  if (!canUpdate || !visible) return null;
+  return { state, version, canUpdate, check, install };
+}
+
+export function AppUpdates({ palette, language, updates }: {
+  palette: Palette; language: Language; updates: ReturnType<typeof useAppUpdates>;
+}) {
+  const { state, version, canUpdate, check, install } = updates;
+  if (!canUpdate) return null;
 
   const button = (label: string, action: () => void) => (
     <Pressable accessibilityRole="button" onPress={action} style={styles.button}>

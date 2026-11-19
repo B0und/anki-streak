@@ -1,0 +1,18 @@
+import { AppUpdates } from '../../AppUpdates';
+import { useDashboardContext } from '../../dashboardContext';
+import { copy } from '../../messages';
+import { Screen } from '../../Screen';
+import { SettingsScreen } from '../../SettingsScreen';
+
+export default function SettingsRoute() {
+  const preferences = useDashboardContext();
+  const { palette, language, updates } = preferences;
+  const available = 'update' in updates.state;
+  const updateSection = <AppUpdates palette={palette} language={language} updates={updates} />;
+
+  return <Screen title={copy(language, 'settings')}>
+    {available && updateSection}
+    <SettingsScreen {...preferences} />
+    {!available && updateSection}
+  </Screen>;
+}

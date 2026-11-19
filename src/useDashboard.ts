@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { AppState, Linking } from 'react-native';
+import { AppState, Linking, ToastAndroid } from 'react-native';
 
 import {
   getWidgetBackgroundTransparency, getWidgetTheme, openAnki, pinWidget, requestPermission, type ReviewMood,
 } from './activity';
-import type { Message } from './messages';
+import { copy, type Message } from './messages';
+import { getLanguage } from './preferences';
 import type { WidgetTheme } from './themes';
 import {
   changeWidgetBackgroundTransparency, changeWidgetTheme, enableBackgroundRefresh, flushWidgetAppearance,
@@ -133,27 +134,31 @@ export function useDashboard() {
 
   return {
     activity,
+    lastCheckedAt: completed?.checkedAt,
     widgetArtwork: completed?.publication.kind === 'reviews' ? completed.publication : null,
     themeId,
     transparency,
-    mood: preview.kind === 'preview' ? preview.mood : activity?.kind === 'ready' ? activity.mood : 'waiting',
+    mood: activity?.kind === 'ready' ? activity.mood : 'waiting',
     preview,
     notice: request.kind === 'notice' ? request.message : feedback ?? (widget.kind === 'failed' ? refreshError : null),
     refreshing: widget.kind === 'reading' || widget.kind === 'rendering',
     requesting: request.kind === 'running',
     clearPreview() { setPreview({ kind: 'live' }); },
-    togglePreview(mood: ReviewMood) {
-      setPreview((current) => current.kind === 'preview' && current.mood === mood
-        ? { kind: 'live' }
-        : { kind: 'preview', mood });
-    },
+    setPreviewMood(mood: ReviewMood) { setPreview({ kind: 'preview', mood }); },
     runAndroidRequest,
     selectTheme,
     changeTransparency,
-    refresh() {
+    async refresh() {
       setFeedback(null);
       if (activeRequest.current.kind === 'notice') transitionRequest({ kind: 'idle' });
-      return refresh();
+      let message: Message;
+      try {
+        const result = await refreshWidget();
+        message = result.kind === 'ready' ? 'refreshSuccess' : result.kind;
+      } catch {
+        message = 'refreshError';
+      }
+      ToastAndroid.show(copy(getLanguage(), message), ToastAndroid.LONG);
     },
   };
 }

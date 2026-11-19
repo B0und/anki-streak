@@ -7,7 +7,7 @@ import {
   setWidgetBackgroundTransparency, type AnkiActivity,
 } from './activity';
 import { copy } from './messages';
-import { getLanguage, getWidgetLayout } from './preferences';
+import { getLanguage, getWidgetLayouts, type WidgetLayout } from './preferences';
 import { recordReviewMilestone } from './celebration';
 import { themes, type WidgetTheme } from './themes';
 
@@ -19,7 +19,7 @@ type Publication =
   | { kind: 'setup'; waitingDrawable: string }
   | { kind: 'reviews'; artwork: WidgetArtwork; activity: Extract<AnkiActivity, { kind: 'ready' }>; theme: WidgetTheme; waitingDrawable: string };
 
-type CompletedRefresh = { activity: AnkiActivity; publication: Publication };
+type CompletedRefresh = { activity: AnkiActivity; publication: Publication; checkedAt: number };
 
 type RefreshState =
   | { kind: 'initial' }
@@ -62,7 +62,16 @@ function publish(publication: Publication) {
   const alpha = Math.round(255 * (1 - getWidgetBackgroundTransparency() / 100)).toString(16).padStart(2, '0');
   const language = getLanguage();
   const ready = publication.kind === 'reviews' ? publication : null;
-  const layout = getWidgetLayout();
+  const layouts = getWidgetLayouts();
+  const theme = ready ? themes[ready.theme] : null;
+  const cardFor = (layout: WidgetLayout) => ready && theme && layout !== 'current' ? {
+    value: String(layout === 'focus' ? ready.activity.today : ready.activity.streak),
+    label: copy(language, layout === 'focus' ? 'reviewed' : 'streak'),
+    secondary: layout === 'focus'
+      ? `${copy(language, 'streak')}: ${ready.activity.streak}`
+      : `${copy(language, 'reviewed')}: ${ready.activity.today}`,
+    accent: theme.accent,
+  } : null;
   AnkiWidget.updateSnapshot({
     artwork: ready?.artwork ?? null,
     description: ready ? copy(language, 'activityDescription', {
@@ -70,16 +79,10 @@ function publish(publication: Publication) {
       reviews: ready.activity.dailyReviewed, learned: ready.activity.dailyLearned,
     }) : '',
     waitingDrawable: publication.waitingDrawable,
-    backdrop: `${ready && layout !== 'current' ? themes[ready.theme].card : '#000000'}${alpha}`,
+    backdrop: `#000000${alpha}`,
+    cardBackdrop: theme ? `${theme.card}${alpha}` : `#000000${alpha}`,
     connectLabel: copy(language, 'connectWidget'),
-    card: ready && layout !== 'current' ? {
-      value: String(layout === 'focus' ? ready.activity.today : ready.activity.streak),
-      label: copy(language, layout === 'focus' ? 'reviewed' : 'streak'),
-      secondary: layout === 'focus'
-        ? `${copy(language, 'streak')}: ${ready.activity.streak}`
-        : `${copy(language, 'reviewed')}: ${ready.activity.today}`,
-      accent: themes[ready.theme].accent,
-    } : null,
+    cards: { compact: cardFor(layouts.compact), tall: cardFor(layouts.tall) },
   });
 }
 
@@ -169,7 +172,7 @@ export function refreshWidget(): Promise<AnkiActivity> {
       if (appearance.kind === 'scheduled') clearTimeout(appearance.timer);
       appearance = { kind: 'idle' };
       try { recordReviewMilestone(activity); } catch { /* Celebration is optional. */ }
-      transition({ kind: 'settled', result: { activity, publication } });
+      transition({ kind: 'settled', result: { activity, publication, checkedAt: Date.now() } });
       return activity;
     } catch (error) {
       transition({ kind: 'failed', previous, error });

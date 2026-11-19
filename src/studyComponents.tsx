@@ -75,21 +75,6 @@ export function CountUp({ value, delay, celebration }: {
     ? animated.value : value ?? '—';
 }
 
-export function Laurel({ color }: { color: string }) {
-  return <View accessible={false} pointerEvents="none" style={styles.laurel}>
-    {[false, true].map((mirror) => (
-      <View key={String(mirror)} style={[styles.branch, mirror && { transform: [{ scaleX: -1 }] }]}>
-        {Array.from({ length: 6 }, (_, i) => (
-          <View key={i} style={[styles.leaf, {
-            backgroundColor: color, opacity: .65 + i * .05, left: 1 + (i - 1) ** 2 * .9, top: i * 6,
-            transform: [{ rotate: `${-39 + i * 12}deg` }],
-          }]} />
-        ))}
-      </View>
-    ))}
-  </View>;
-}
-
 export function Portrait({ source, height, maxWidth }: {
   source: number; height: number; maxWidth: number;
 }) {
@@ -103,7 +88,4 @@ const styles = StyleSheet.create({
   choices: { flexDirection: 'row', padding: 4, gap: 4, borderRadius: 13 },
   choice: { flex: 1, minHeight: 42, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 3, borderRadius: 10 },
   section: { padding: 15, gap: 10, borderWidth: 1, borderRadius: 18 },
-  laurel: { flexDirection: 'row', justifyContent: 'space-between', position: 'absolute', left: 4, right: 4, bottom: 1 },
-  branch: { height: 39, width: 33 },
-  leaf: { position: 'absolute', width: 5, height: 11, borderTopLeftRadius: 6, borderBottomRightRadius: 6 },
 });

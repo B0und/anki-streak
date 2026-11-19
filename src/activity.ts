@@ -48,7 +48,7 @@ const anki = requireNativeModule<{
 }>('AnkiActivity');
 
 export const {
-  pinWidget, openAnki, requestPermission, getWidgetBackgroundTransparency, setWidgetBackgroundTransparency, setWidgetTheme,
+  historyDays, pinWidget, openAnki, requestPermission, getWidgetBackgroundTransparency, setWidgetBackgroundTransparency, setWidgetTheme,
 } = anki;
 
 export function renderWidget(

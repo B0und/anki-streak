@@ -1,3 +1,4 @@
+import { CheckCircle2, Circle } from 'lucide-react-native';
 import { useState } from 'react';
 import { Linking, Pressable, Switch, Text, TextInput, View } from 'react-native';
 
@@ -57,7 +58,7 @@ export function SettingsScreen({ palette, language, appearance, setAppearance, l
             minHeight: 44, padding: 8, gap: 9, flexDirection: 'row', alignItems: 'center',
             borderRadius: 9, backgroundColor: milestone === key ? palette.subtle : palette.surface,
           }}>
-          <Text style={{ color: palette.accent }}>{milestone === key ? '◉' : '○'}</Text>
+          {milestone === key ? <CheckCircle2 size={18} color={palette.accent} /> : <Circle size={18} color={palette.muted} />}
           <Text style={{ color: palette.text, flex: 1 }}>{copy(language, key)}</Text>
         </Pressable>
       ))}
@@ -90,7 +91,16 @@ export function SettingsScreen({ palette, language, appearance, setAppearance, l
       {blocked && <Action palette={palette} onPress={() => void Linking.openSettings().catch(() => {})}>{copy(language, 'notificationsBlocked')}</Action>}
       <Text style={{ color: palette.muted, lineHeight: 19 }}>{copy(language, 'rewardTiming')}</Text>
     </Section>
-    <Section title="AnkiDroid" palette={palette}>
+    <Section title={copy(language, 'sync')} palette={palette}>
+      <Text style={{ color: palette.muted, lineHeight: 20 }}>{copy(language, 'syncDetail')}</Text>
+      {dashboard.lastCheckedAt !== undefined && <Text style={{ color: palette.text }}>
+        {copy(language, 'lastCheck', {
+          time: new Date(dashboard.lastCheckedAt).toLocaleTimeString(language, { hour: '2-digit', minute: '2-digit' }),
+        })}
+      </Text>}
+      <Action palette={palette} disabled={dashboard.refreshing} onPress={() => void dashboard.refresh()}>
+        {copy(language, dashboard.refreshing ? 'refreshing' : 'refresh')}
+      </Action>
       {dashboard.activity?.kind === 'permission' && <Action palette={palette} primary disabled={dashboard.requesting}
         onPress={() => void dashboard.runAndroidRequest('permission')}>{copy(language, 'connect')}</Action>}
       <Action palette={palette} disabled={dashboard.requesting}

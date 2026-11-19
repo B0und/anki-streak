@@ -14,24 +14,30 @@ export type WidgetArtwork = {
   portraitAspect: number;
 };
 
+type WidgetCard = { value: string; label: string; secondary: string; accent: string };
+
 type WidgetProps = {
   artwork: WidgetArtwork | null;
   description: string;
   backdrop: string;
   waitingDrawable: string;
   connectLabel?: string;
-  card?: { value: string; label: string; secondary: string; accent: string } | null;
+  card?: WidgetCard | null;
+  cards?: { compact: WidgetCard | null; tall: WidgetCard | null };
+  cardBackdrop?: string;
 };
 
 type AndroidWidgetEnvironment = WidgetEnvironment & { width?: number; height?: number };
 
 function AnkiStreak(
-  { artwork, description, backdrop = '#000000', waitingDrawable = 'miku_waiting', connectLabel = 'Open Anki Streak to connect', card }: WidgetProps,
+  { artwork, description, backdrop = '#000000', waitingDrawable = 'miku_waiting', connectLabel = 'Open Anki Streak to connect', card: legacyCard, cards, cardBackdrop }: WidgetProps,
   { width: widgetWidth = 300, height = 80 }: AndroidWidgetEnvironment,
 ) {
   'widget';
 
-  const layout = height >= widgetWidth * 0.4 ? 'tall' : 'compact';
+  const layout = height >= 105 ? 'tall' : 'compact';
+  const card = cards ? cards[layout] : legacyCard;
+  const narrow = widgetWidth < 240;
   const stats = artwork && (layout === 'tall' ? artwork.tallStats : artwork.compactStats);
   const portraitAspect = artwork?.portraitAspect ?? 1;
   const portraitInset = 6;
@@ -43,7 +49,7 @@ function AnkiStreak(
   const statsHeight = stats ? Math.min(height, statsWidth / stats.aspect) : 0;
 
   return (
-    <Box contentAlignment="center" modifiers={[fillMaxSize(), background(backdrop), cornerRadius(20), { $type: 'openAppOnTap' }]}>
+    <Box contentAlignment="center" modifiers={[fillMaxSize(), background(card ? cardBackdrop ?? backdrop : backdrop), cornerRadius(20), { $type: 'openAppOnTap' }]}>
       {artwork && stats ? (
         <>
           <Box contentAlignment="bottomEnd" modifiers={[fillMaxSize(), padding(0, 0, portraitInset, 0)]}>
@@ -56,16 +62,16 @@ function AnkiStreak(
           <Box contentAlignment="centerStart" modifiers={[fillMaxSize()]}>
             {card ? (
               <Column modifiers={[padding(14, 0, 0, 0), width(Math.max(1, statsWidth - 14))]}>
-                {layout === 'tall' ? <>
-                  <Text color="#FFFFFF" style={{ fontSize: 48, fontWeight: 'bold' }} maxLines={1}>{card.value}</Text>
-                  <Text color="#FFFFFF" style={{ fontSize: 14 }} maxLines={2}>{card.label}</Text>
+                {layout === 'tall' || narrow ? <>
+                  <Text color="#FFFFFF" style={{ fontSize: layout === 'tall' ? 48 : 23, fontWeight: 'bold' }} maxLines={1}>{card.value}</Text>
+                  <Text color="#FFFFFF" style={{ fontSize: narrow ? 11 : 14 }} maxLines={narrow ? 1 : 2}>{card.label}</Text>
                 </> : (
                   <Row verticalAlignment="center">
                     <Text color="#FFFFFF" style={{ fontSize: 30, fontWeight: 'bold' }} maxLines={1}>{card.value}</Text>
                     <Text modifiers={[padding(7, 0, 0, 0)]} color="#FFFFFF" style={{ fontSize: 12 }} maxLines={2}>{card.label}</Text>
                   </Row>
                 )}
-                <Text color={card.accent} style={{ fontSize: layout === 'tall' ? 14 : 12 }} maxLines={1}>{card.secondary}</Text>
+                <Text color={card.accent} style={{ fontSize: layout === 'tall' ? 14 : narrow ? 10 : 12 }} maxLines={1}>{card.secondary}</Text>
               </Column>
             ) : <Image
               source={{ uri: stats.uri }}

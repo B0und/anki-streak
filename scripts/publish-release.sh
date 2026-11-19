@@ -23,4 +23,6 @@ checksum_blob=$(printf '%s  Anki-Streak.apk\n' "${checksum%% *}" | git hash-obje
 git update-index --add --cacheinfo 100644,"$checksum_blob",.release/SHA256SUMS.txt
 git update-index --add --cacheinfo 100644,"$(git hash-object -w "$notes")",.release/release-notes.md
 staging_commit=$(git commit-tree "$(git write-tree)" -p HEAD -m "Stage signed APK for $tag")
-git push origin "$staging_commit:refs/heads/release-assets/$tag"
+staging_ref="refs/heads/release-assets/$tag"
+previous_staging=$(git ls-remote origin "$staging_ref" | cut -f1)
+git push --force-with-lease="$staging_ref:$previous_staging" origin "$staging_commit:$staging_ref"

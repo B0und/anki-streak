@@ -141,3 +141,34 @@ new file mode 100644
 +    }
 +  }
 +}
+diff --git a/android/build.gradle b/android/build.gradle
+--- a/android/build.gradle
++++ b/android/build.gradle
+@@ -1,9 +1,20 @@
+ import org.apache.tools.ant.taskdefs.condition.Os
++
++buildscript {
++  repositories {
++    mavenCentral()
++  }
++  dependencies {
++    classpath("org.jetbrains.kotlin.plugin.compose:org.jetbrains.kotlin.plugin.compose.gradle.plugin:${kotlinVersion}")
++  }
++}
+
+ plugins {
+   id 'com.android.library'
+   id 'expo-module-gradle-plugin'
+ }
++
++apply plugin: 'org.jetbrains.kotlin.plugin.compose'
+
+ group = 'expo.modules.widgets'
+ version = '58.0.29'
+@@ -63,5 +74,6 @@
+   }
+
+   buildFeatures {
++    compose true
+     prefab true
+   }

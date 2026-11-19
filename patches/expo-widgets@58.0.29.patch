@@ -30,13 +30,14 @@ diff --git a/android/src/main/java/expo/modules/widgets/ExpoWidgetsPeekWidget.kt
 index edabde8f51b3bd9162b634e46f2f09686c3a3b8a..da3e7b5655520247515d414760230edcc3c7b124 100644
 --- a/android/src/main/java/expo/modules/widgets/ExpoWidgetsPeekWidget.kt
 +++ b/android/src/main/java/expo/modules/widgets/ExpoWidgetsPeekWidget.kt
-@@ -25,5 +25,8 @@ internal class ExpoWidgetsPeekWidget(
+@@ -25,5 +25,9 @@ internal class ExpoWidgetsPeekWidget(
      val layout = WidgetsLayoutRegistry.layout(appContext, widgetName)
        ?: return createErrorRoot("No layout found for $widgetName")
      val props = WidgetsLayoutRegistry.props(appContext, widgetName)
 -    val environment = getWidgetEnvironment(appContext)
 +    val environment = getWidgetEnvironment(appContext) + mapOf(
 +      "width" to size.width.value.toDouble(),
-+      "height" to size.height.value.toDouble()
++      "height" to size.height.value.toDouble(),
++      "screenHeight" to context.resources.configuration.screenHeightDp.toDouble()
 +    )
      val node = evaluateLayout(appContext, layout, props, environment)

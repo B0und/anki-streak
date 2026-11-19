@@ -34,15 +34,17 @@ type WidgetProps = {
   cardBackdrop?: string;
 };
 
-type AndroidWidgetEnvironment = WidgetEnvironment & { width?: number; height?: number };
+type AndroidWidgetEnvironment = WidgetEnvironment & { width?: number; height?: number; screenHeight?: number };
 
 function AnkiStreak(
   { artwork, description, backdrop = '#000000', waitingDrawable = 'miku_waiting', connectLabel = 'Open Anki Streak to connect', card: legacyCard, cards, cardBackdrop }: WidgetProps,
-  { width: widgetWidth = 300, height = 80 }: AndroidWidgetEnvironment,
+  { width: widgetWidth = 300, height = 80, screenHeight = 0 }: AndroidWidgetEnvironment,
 ) {
   'widget';
 
-  const layout = height >= 105 ? 'tall' : 'compact';
+  const minimumTallHeight = 105;
+  const compactScreenFraction = 0.24;
+  const layout = height >= Math.max(minimumTallHeight, screenHeight * compactScreenFraction) ? 'tall' : 'compact';
   const card = cards ? cards[layout] : legacyCard;
   const narrow = widgetWidth < 240;
   const stats = artwork && (layout === 'tall' ? artwork.tallStats : artwork.compactStats);

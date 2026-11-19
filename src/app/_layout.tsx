@@ -44,7 +44,7 @@ function Navigation() {
     } }}>
       <Stack screenOptions={{ headerShown: false }} />
     </ThemeProvider>
-    {dashboard.notice && <Text accessibilityLiveRegion="polite" style={[styles.notice, { color: palette.text, backgroundColor: palette.subtle }]}>
+    {dashboard.notice && <Text pointerEvents="none" accessibilityLiveRegion="polite" style={[styles.notice, { color: palette.text, backgroundColor: palette.subtle }]}>
       {copy(language, dashboard.notice)}
     </Text>}
   </SafeAreaView>;

@@ -72,6 +72,8 @@ function publish(publication: Publication) {
       : `${copy(language, 'reviewed')}: ${ready.activity.today}`,
     accent: theme.accent,
   } : null;
+  const compact = cardFor(layouts.compact);
+  const tall = cardFor(layouts.tall);
   AnkiWidget.updateSnapshot({
     artwork: ready?.artwork ?? null,
     description: ready ? copy(language, 'activityDescription', {
@@ -82,7 +84,7 @@ function publish(publication: Publication) {
     backdrop: `#000000${alpha}`,
     cardBackdrop: theme ? `${theme.card}${alpha}` : `#000000${alpha}`,
     connectLabel: copy(language, 'connectWidget'),
-    cards: { compact: cardFor(layouts.compact), tall: cardFor(layouts.tall) },
+    cards: { ...(compact && { compact }), ...(tall && { tall }) },
   });
 }
 
@@ -175,6 +177,7 @@ export function refreshWidget(): Promise<AnkiActivity> {
       transition({ kind: 'settled', result: { activity, publication, checkedAt: Date.now() } });
       return activity;
     } catch (error) {
+      console.warn('AnkiDroid refresh failed', error);
       transition({ kind: 'failed', previous, error });
       if (appearance.kind === 'waitingForRefresh') flushWidgetAppearance();
       throw error;

@@ -23,7 +23,7 @@ type WidgetProps = {
   waitingDrawable: string;
   connectLabel?: string;
   card?: WidgetCard | null;
-  cards?: { compact: WidgetCard | null; tall: WidgetCard | null };
+  cards?: { compact?: WidgetCard; tall?: WidgetCard };
   cardBackdrop?: string;
 };
 

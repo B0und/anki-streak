@@ -1,4 +1,5 @@
 import { setupI18n } from '@lingui/core';
+import { compileMessage } from '@lingui/message-utils/compileMessage';
 
 const en = {
   today: 'Today', themes: 'Themes', widget: 'Widget', settings: 'Settings',
@@ -94,6 +95,8 @@ const translators = {
   en: setupI18n({ locale: 'en', messages: { en } }),
   ru: setupI18n({ locale: 'ru', messages: { ru } }),
 };
+
+for (const translator of Object.values(translators)) translator.setMessagesCompiler(compileMessage);
 
 export function copy(language: Language, key: Message, values?: Record<string, string | number>): string {
   return translators[language]._(key, values);

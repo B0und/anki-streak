@@ -6,6 +6,9 @@ import {
   getWidgetTheme, getWidgetBackgroundTransparency, readActivity, renderWidget, setWidgetTheme,
   setWidgetBackgroundTransparency, type AnkiActivity,
 } from './activity';
+import { copy } from './messages';
+import { getLanguage, getWidgetLayout } from './preferences';
+import { recordReviewMilestone } from './celebration';
 import { themes, type WidgetTheme } from './themes';
 
 const taskName = 'refresh-anki-widget';
@@ -14,7 +17,7 @@ const appearanceDelayMs = 150;
 
 type Publication =
   | { kind: 'setup'; waitingDrawable: string }
-  | { kind: 'reviews'; artwork: WidgetArtwork; description: string; waitingDrawable: string };
+  | { kind: 'reviews'; artwork: WidgetArtwork; activity: Extract<AnkiActivity, { kind: 'ready' }>; theme: WidgetTheme; waitingDrawable: string };
 
 type CompletedRefresh = { activity: AnkiActivity; publication: Publication };
 
@@ -57,11 +60,26 @@ export function lastCompletedRefresh(current: RefreshState): CompletedRefresh | 
 
 function publish(publication: Publication) {
   const alpha = Math.round(255 * (1 - getWidgetBackgroundTransparency() / 100)).toString(16).padStart(2, '0');
+  const language = getLanguage();
+  const ready = publication.kind === 'reviews' ? publication : null;
+  const layout = getWidgetLayout();
   AnkiWidget.updateSnapshot({
-    artwork: publication.kind === 'reviews' ? publication.artwork : null,
-    description: publication.kind === 'reviews' ? publication.description : '',
+    artwork: ready?.artwork ?? null,
+    description: ready ? copy(language, 'activityDescription', {
+      name: themes[ready.theme].name, streak: ready.activity.streak, today: ready.activity.today,
+      reviews: ready.activity.dailyReviewed, learned: ready.activity.dailyLearned,
+    }) : '',
     waitingDrawable: publication.waitingDrawable,
-    backdrop: `#000000${alpha}`,
+    backdrop: `${ready && layout !== 'current' ? themes[ready.theme].card : '#000000'}${alpha}`,
+    connectLabel: copy(language, 'connectWidget'),
+    card: ready && layout !== 'current' ? {
+      value: String(layout === 'focus' ? ready.activity.today : ready.activity.streak),
+      label: copy(language, layout === 'focus' ? 'reviewed' : 'streak'),
+      secondary: layout === 'focus'
+        ? `${copy(language, 'streak')}: ${ready.activity.streak}`
+        : `${copy(language, 'reviewed')}: ${ready.activity.today}`,
+      accent: themes[ready.theme].accent,
+    } : null,
   });
 }
 
@@ -89,6 +107,12 @@ export function flushWidgetAppearance() {
   }
 }
 
+export function republishWidgetAppearance() {
+  if (appearance.kind === 'scheduled') clearTimeout(appearance.timer);
+  appearance = { kind: 'waitingForRefresh' };
+  flushWidgetAppearance();
+}
+
 export function changeWidgetBackgroundTransparency(value: number) {
   if (value === getWidgetBackgroundTransparency()) return;
   setWidgetBackgroundTransparency(value);
@@ -102,15 +126,15 @@ export function changeWidgetTheme(theme: WidgetTheme): Promise<AnkiActivity> {
 }
 
 async function preparePublication(activity: AnkiActivity, theme: WidgetTheme): Promise<Publication> {
-  const { name, waitingDrawable } = themes[theme];
+  const { waitingDrawable } = themes[theme];
   if (activity.kind !== 'ready') return { kind: 'setup', waitingDrawable };
 
-  const { streak, today, mood, history, dailyReviewed, dailyLearned } = activity;
+  const { streak, today, history, dailyReviewed, dailyLearned } = activity;
   const artwork = await renderWidget(streak, today, history, dailyReviewed, dailyLearned, theme);
   return {
     kind: 'reviews',
     artwork,
-    description: `${name} is ${mood}. ${streak}-day streak. ${today} cards reviewed today. Daily averages: ${dailyReviewed} cards reviewed, ${dailyLearned} new cards learned.`,
+    activity, theme,
     waitingDrawable,
   };
 }
@@ -144,6 +168,7 @@ export function refreshWidget(): Promise<AnkiActivity> {
       publish(publication);
       if (appearance.kind === 'scheduled') clearTimeout(appearance.timer);
       appearance = { kind: 'idle' };
+      try { recordReviewMilestone(activity); } catch { /* Celebration is optional. */ }
       transition({ kind: 'settled', result: { activity, publication } });
       return activity;
     } catch (error) {

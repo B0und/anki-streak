@@ -1,6 +1,7 @@
 import { requireNativeModule } from 'expo';
 
 import type { WidgetArtwork } from './AnkiWidget';
+import { getLanguage } from './preferences';
 import { themeOrder, type WidgetTheme } from './themes';
 
 export type ReviewMood = 'waiting' | 'happy';
@@ -8,6 +9,8 @@ export type ReviewMood = 'waiting' | 'happy';
 type ReadyActivity = {
   kind: 'ready';
   today: number;
+  newToday: number;
+  dueReviews: number;
   mood: ReviewMood;
   streak: number;
   history: number[];
@@ -36,6 +39,8 @@ const anki = requireNativeModule<{
     dailyReviewed: number,
     dailyLearned: number,
     theme: WidgetTheme,
+    purpose: 'widget' | 'preview',
+    language: 'en' | 'ru',
   ): Promise<WidgetArtwork>;
   requestPermission(): Promise<unknown>;
   pinWidget(): Promise<'requested' | 'use-picker'>;
@@ -43,8 +48,15 @@ const anki = requireNativeModule<{
 }>('AnkiActivity');
 
 export const {
-  pinWidget, openAnki, requestPermission, renderWidget, getWidgetBackgroundTransparency, setWidgetBackgroundTransparency, setWidgetTheme,
+  pinWidget, openAnki, requestPermission, getWidgetBackgroundTransparency, setWidgetBackgroundTransparency, setWidgetTheme,
 } = anki;
+
+export function renderWidget(
+  streak: number, today: number, history: number[], dailyReviewed: number, dailyLearned: number,
+  theme: WidgetTheme, purpose: 'widget' | 'preview' = 'widget',
+) {
+  return anki.renderWidget(streak, today, history, dailyReviewed, dailyLearned, theme, purpose, getLanguage());
+}
 
 export function getWidgetTheme(): WidgetTheme {
   const id = anki.getWidgetTheme();
@@ -70,6 +82,8 @@ export async function readActivity(): Promise<AnkiActivity> {
       case 'ready':
         if (
           'today' in data && isCount(data.today) &&
+          'newToday' in data && isCount(data.newToday) &&
+          'dueReviews' in data && isCount(data.dueReviews) &&
           'streak' in data && isCount(data.streak) &&
           'history' in data && Array.isArray(data.history) &&
           data.history.length === anki.historyDays && data.history.every(isCount) &&
@@ -77,7 +91,7 @@ export async function readActivity(): Promise<AnkiActivity> {
           'dailyLearned' in data && isCount(data.dailyLearned)
         ) {
           return {
-            kind: 'ready', today: data.today, mood: data.today > 0 ? 'happy' : 'waiting', streak: data.streak, history: data.history,
+            kind: 'ready', today: data.today, newToday: data.newToday, dueReviews: data.dueReviews, mood: data.today > 0 ? 'happy' : 'waiting', streak: data.streak, history: data.history,
             dailyReviewed: data.dailyReviewed, dailyLearned: data.dailyLearned,
           };
         }

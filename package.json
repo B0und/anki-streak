@@ -11,8 +11,10 @@
   },
   "dependencies": {
     "@expo/ui": "^58.0.29",
+    "@lingui/core": "^6.12.0",
     "expo": "58.0.26",
     "expo-background-task": "~58.0.13",
+    "expo-system-ui": "~58.0.7",
     "expo-task-manager": "~58.0.14",
     "expo-widgets": "58.0.29",
     "react": "19.3.0",

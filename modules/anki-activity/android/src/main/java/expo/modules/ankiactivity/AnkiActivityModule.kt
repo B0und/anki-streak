@@ -58,8 +58,8 @@ class AnkiActivityModule : Module() {
       readActivity(context)
     }
 
-    AsyncFunction("renderWidget") { streak: Int, today: Int, history: List<Int>, dailyReviewed: Int, dailyLearned: Int, theme: String ->
-      renderWidgetArtwork(context, streak, today, history, dailyReviewed, dailyLearned, WidgetTheme.fromId(theme))
+    AsyncFunction("renderWidget") { streak: Int, today: Int, history: List<Int>, dailyReviewed: Int, dailyLearned: Int, theme: String, purpose: String, language: String ->
+      renderWidgetArtwork(context, streak, today, history, dailyReviewed, dailyLearned, WidgetTheme.fromId(theme), purpose == "preview", language == "ru")
     }
 
     AsyncFunction("openAnki") {
@@ -121,6 +121,8 @@ class AnkiActivityModule : Module() {
       mapOf(
         "kind" to "ready",
         "today" to recent.first(),
+        "newToday" to countCards(context, "introduced:1"),
+        "dueReviews" to countCards(context, "is:due -is:suspended -is:buried"),
         "streak" to day - start,
         "history" to recent.reversed(),
         "dailyReviewed" to dailyReviewed,

@@ -27,19 +27,23 @@ internal fun renderWidgetArtwork(
   history: List<Int>,
   dailyReviewed: Int,
   dailyLearned: Int,
-  theme: WidgetTheme
+  theme: WidgetTheme,
+  preview: Boolean,
+  russian: Boolean
 ): Map<String, Any> {
-  val compact = writeStats(context, theme, "compact", COMPACT_STATS_HEIGHT) { canvas, paint ->
-    canvas.drawFlameAndStreak(context, streak, theme, paint)
+  val prefix = if (preview) "preview-" else ""
+  val streakLabel = if (russian) "дней подряд" else "day streak"
+  val compact = writeStats(context, theme, "${prefix}compact", COMPACT_STATS_HEIGHT) { canvas, paint ->
+    canvas.drawFlameAndStreak(context, streak, streakLabel, theme, paint)
     canvas.drawHistory(history, today > 0, theme, paint)
     canvas.drawCount(dailyReviewed, 652f, false, theme, paint)
     canvas.drawCount(dailyLearned, 902f, true, theme, paint)
   }
-  val tall = writeStats(context, theme, "tall", TALL_STATS_HEIGHT) { canvas, paint ->
+  val tall = writeStats(context, theme, "${prefix}tall", TALL_STATS_HEIGHT) { canvas, paint ->
     canvas.save()
     canvas.translate(66f, -102f)
     canvas.scale(1.5f, 1.5f)
-    canvas.drawFlameAndStreak(context, streak, theme, paint)
+    canvas.drawFlameAndStreak(context, streak, streakLabel, theme, paint)
     canvas.restore()
 
     canvas.save()
@@ -98,11 +102,11 @@ private fun writeStats(
   }
 }
 
-private fun Canvas.drawFlameAndStreak(context: Context, streak: Int, theme: WidgetTheme, paint: Paint) {
+private fun Canvas.drawFlameAndStreak(context: Context, streak: Int, streakLabel: String, theme: WidgetTheme, paint: Paint) {
   paint.colorFilter = theme.flameTint?.let { PorterDuffColorFilter(it, PorterDuff.Mode.SRC_IN) }
   drawArtwork(context, R.drawable.streak_flame, RectF(45f, 164f, 142f, 290f), paint)
   paint.colorFilter = null
-  drawStreak(streak, theme, paint)
+  drawStreak(streak, streakLabel, theme, paint)
 }
 
 private fun Canvas.drawArtwork(context: Context, resource: Int, destination: RectF, paint: Paint) {
@@ -114,7 +118,7 @@ private fun Canvas.drawArtwork(context: Context, resource: Int, destination: Rec
   }
 }
 
-private fun Canvas.drawStreak(streak: Int, theme: WidgetTheme, paint: Paint) {
+private fun Canvas.drawStreak(streak: Int, streakLabel: String, theme: WidgetTheme, paint: Paint) {
   val label = streak.toString()
   paint.style = Paint.Style.FILL
   paint.typeface = Typeface.create("sans-serif-condensed", Typeface.BOLD)
@@ -128,7 +132,7 @@ private fun Canvas.drawStreak(streak: Int, theme: WidgetTheme, paint: Paint) {
   paint.typeface = Typeface.create("sans-serif", Typeface.NORMAL)
   paint.textSize = 37f
   paint.color = theme.streakDark
-  drawText("day streak", 154f, 311f, paint)
+  drawText(streakLabel, 154f, 311f, paint)
   paint.clearShadowLayer()
 }
 

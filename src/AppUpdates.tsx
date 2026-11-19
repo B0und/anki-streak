@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AppState, Pressable, StyleSheet, Text, View } from 'react-native';
+import { AppState, Pressable, StyleSheet, Text } from 'react-native';
 
+import type { Palette } from './appearance';
+import { copy, type Language } from './messages';
+import { Section } from './studyComponents';
 import { appUpdater, checkForAppUpdate, type AppUpdate } from './appUpdateRelease';
 
 const automaticCheckIntervalMs = 6 * 60 * 60 * 1000;
@@ -17,7 +20,7 @@ type UpdateState =
   | { kind: 'permission'; update: AppUpdate }
   | { kind: 'ready'; update: AppUpdate };
 
-export function AppUpdates({ accent }: { accent: string }) {
+export function AppUpdates({ palette, language, visible }: { palette: Palette; language: Language; visible: boolean }) {
   const [{ version, canUpdate }] = useState(() => appUpdater.getInstalledBuild());
   const [state, setState] = useState<UpdateState>({ kind: 'idle' });
   const busy = useRef(false);
@@ -81,51 +84,45 @@ export function AppUpdates({ accent }: { accent: string }) {
     }
   }
 
-  if (!canUpdate) return null;
+  if (!canUpdate || !visible) return null;
 
   const button = (label: string, action: () => void) => (
     <Pressable accessibilityRole="button" onPress={action} style={styles.button}>
-      <Text style={[styles.buttonLabel, { color: accent }]}>{label}</Text>
+      <Text style={[styles.buttonLabel, { color: palette.accent }]}>{label}</Text>
     </Pressable>
   );
   const status = (message: string) => (
-    <Text accessibilityLiveRegion="polite" style={styles.detail}>{message}</Text>
+    <Text accessibilityLiveRegion="polite" style={[styles.detail, { color: palette.muted }]}>{message}</Text>
   );
 
   if (state.kind === 'available' || state.kind === 'download-failed' || state.kind === 'ready' || state.kind === 'permission' ||
     state.kind === 'downloading' || state.kind === 'opening-installer') {
     return (
-      <View style={styles.card}>
-        <Text style={styles.title}>Anki Streak {state.update.version} available</Text>
-        {state.kind === 'download-failed' && status('Couldn’t prepare the update. Try again.')}
-        {state.kind === 'downloading' && status('Downloading update…')}
-        {state.kind === 'opening-installer' && status('Opening Android installer…')}
-        {state.kind === 'permission' && status('Allow installs from Anki Streak in Android settings, then return and tap Install update.')}
+      <Section palette={palette} title={copy(language, 'updates')}>
+        <Text style={{ color: palette.text }}>{copy(language, 'updateAvailable', { version: state.update.version })}</Text>
+        {state.kind === 'download-failed' && status(copy(language, 'updateFailed'))}
+        {state.kind === 'downloading' && status(copy(language, 'downloading'))}
+        {state.kind === 'opening-installer' && status(copy(language, 'installer'))}
+        {state.kind === 'permission' && status(copy(language, 'installPermission'))}
         {(state.kind === 'available' || state.kind === 'download-failed') &&
-          button('Download and install', () => void install(state.update, false))}
+          button(copy(language, 'downloadInstall'), () => void install(state.update, false))}
         {(state.kind === 'ready' || state.kind === 'permission') &&
-          button('Install update', () => void install(state.update, true))}
-      </View>
+          button(copy(language, 'installUpdate'), () => void install(state.update, true))}
+      </Section>
     );
   }
 
   return (
-    <View style={styles.row}>
-      {status(state.kind === 'checking' ? 'Checking for updates…' :
-        state.kind === 'check-failed' ? 'Couldn’t check for updates. Try again.' :
-        state.kind === 'current' ? `Version ${version} is up to date.` : `Version ${version}`)}
-      {state.kind !== 'checking' && button('Check for updates', () => void check(true))}
-    </View>
+    <Section palette={palette} title={copy(language, 'updates')}>
+      {status(state.kind === 'checking' ? copy(language, 'checking') :
+        state.kind === 'check-failed' ? copy(language, 'checkFailed') :
+        state.kind === 'current' ? copy(language, 'upToDate', { version }) : copy(language, 'version', { version }))}
+      {state.kind !== 'checking' && button(copy(language, 'check'), () => void check(true))}
+    </Section>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    gap: 6, borderRadius: 17, borderWidth: 1, borderColor: '#25494D',
-    backgroundColor: '#0D1E24', paddingHorizontal: 14, paddingTop: 12,
-  },
-  title: { color: '#F2FEFC', fontSize: 15, fontWeight: '700' },
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 },
   detail: { color: '#A4BFC1', fontSize: 14, lineHeight: 20 },
   button: { alignSelf: 'flex-start', justifyContent: 'center', minHeight: 44 },
   buttonLabel: { fontSize: 14, fontWeight: '700' },

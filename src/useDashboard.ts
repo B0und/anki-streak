@@ -4,6 +4,7 @@ import { AppState, Linking } from 'react-native';
 import {
   getWidgetBackgroundTransparency, getWidgetTheme, openAnki, pinWidget, requestPermission, type ReviewMood,
 } from './activity';
+import type { Message } from './messages';
 import type { WidgetTheme } from './themes';
 import {
   changeWidgetBackgroundTransparency, changeWidgetTheme, enableBackgroundRefresh, flushWidgetAppearance,
@@ -15,18 +16,19 @@ type AndroidRequest = 'permission' | 'settings' | 'pin' | 'open';
 type RequestState =
   | { kind: 'idle' }
   | { kind: 'running'; request: AndroidRequest }
-  | { kind: 'notice'; request: AndroidRequest; message: string };
+  | { kind: 'notice'; request: AndroidRequest; message: Message };
 
-const pinFallback = 'Touch and hold your home screen, then choose Widgets → Anki Streak.';
-const refreshError = 'Couldn’t refresh the widget. Try again.';
+const pinFallback: Message = 'pinFallback';
+const refreshError: Message = 'refreshError';
 
 export function useDashboard() {
   const widget = useSyncExternalStore(subscribeToWidgetRefresh, getWidgetRefreshState);
-  const activity = lastCompletedRefresh(widget)?.activity ?? null;
+  const completed = lastCompletedRefresh(widget);
+  const activity = completed?.activity ?? null;
   const [preview, setPreview] = useState<MoodPreview>({ kind: 'live' });
   const [themeId, setThemeId] = useState(getWidgetTheme);
   const [transparency, setTransparency] = useState(getWidgetBackgroundTransparency);
-  const [feedback, setFeedback] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<Message | null>(null);
   const [request, setRequest] = useState<RequestState>({ kind: 'idle' });
   const activeRequest = useRef<RequestState>({ kind: 'idle' });
 
@@ -63,13 +65,13 @@ export function useDashboard() {
     transitionRequest({ kind: 'running', request: action });
     setFeedback(null);
 
-    let message: string | undefined;
+    let message: Message | undefined;
     switch (action) {
       case 'permission':
         try {
           await requestPermission();
         } catch {
-          message = 'Couldn’t open the permission prompt. Check the app’s Android permissions.';
+          message = 'permissionError';
         }
         if (!message) {
           try {
@@ -83,7 +85,7 @@ export function useDashboard() {
         try {
           await Linking.openSettings();
         } catch {
-          message = 'Couldn’t open Android settings.';
+          message = 'settingsError';
         }
         break;
       case 'pin':
@@ -95,9 +97,9 @@ export function useDashboard() {
         break;
       case 'open':
         try {
-          if (await openAnki() === 'missing') message = 'Install AnkiDroid to open your collection.';
+          if (await openAnki() === 'missing') message = 'missing';
         } catch {
-          message = 'Couldn’t open AnkiDroid.';
+          message = 'openError';
         }
         break;
     }
@@ -116,7 +118,7 @@ export function useDashboard() {
       // A later selection can become authoritative while this refresh is in flight.
       const selected = getWidgetTheme();
       setThemeId(selected);
-      if (selected === id) setFeedback('Couldn’t update the widget theme. Try refreshing.');
+      if (selected === id) setFeedback('themeError');
     }
   }
 
@@ -125,19 +127,21 @@ export function useDashboard() {
       changeWidgetBackgroundTransparency(value);
       setTransparency(value);
     } catch {
-      setFeedback('Couldn’t update the widget background. Try again.');
+      setFeedback('transparencyError');
     }
   }
 
   return {
     activity,
+    widgetArtwork: completed?.publication.kind === 'reviews' ? completed.publication : null,
     themeId,
     transparency,
     mood: preview.kind === 'preview' ? preview.mood : activity?.kind === 'ready' ? activity.mood : 'waiting',
     preview,
-    notice: request.kind === 'notice' ? request.message : feedback ?? (widget.kind === 'failed' ? refreshError : ''),
+    notice: request.kind === 'notice' ? request.message : feedback ?? (widget.kind === 'failed' ? refreshError : null),
     refreshing: widget.kind === 'reading' || widget.kind === 'rendering',
     requesting: request.kind === 'running',
+    clearPreview() { setPreview({ kind: 'live' }); },
     togglePreview(mood: ReviewMood) {
       setPreview((current) => current.kind === 'preview' && current.mood === mood
         ? { kind: 'live' }

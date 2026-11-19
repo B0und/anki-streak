@@ -1,5 +1,5 @@
 import { Box, Column, Image, Row, Text } from '@expo/ui/jetpack-compose';
-import { background, cornerRadius, fillMaxSize, padding, paddingAll, size, width as fixedWidth } from '@expo/ui/jetpack-compose/modifiers';
+import { background, cornerRadius, fillMaxSize, padding, paddingAll, size, width } from '@expo/ui/jetpack-compose/modifiers';
 import { createWidget, type WidgetEnvironment } from 'expo-widgets';
 
 type WidgetImage = {
@@ -27,19 +27,19 @@ type AndroidWidgetEnvironment = WidgetEnvironment & { width?: number; height?: n
 
 function AnkiStreak(
   { artwork, description, backdrop = '#000000', waitingDrawable = 'miku_waiting', connectLabel = 'Open Anki Streak to connect', card }: WidgetProps,
-  { width = 300, height = 80 }: AndroidWidgetEnvironment,
+  { width: widgetWidth = 300, height = 80 }: AndroidWidgetEnvironment,
 ) {
   'widget';
 
-  const layout = height >= width * 0.4 ? 'tall' : 'compact';
+  const layout = height >= widgetWidth * 0.4 ? 'tall' : 'compact';
   const stats = artwork && (layout === 'tall' ? artwork.tallStats : artwork.compactStats);
   const portraitAspect = artwork?.portraitAspect ?? 1;
   const portraitInset = 6;
-  const portraitMaxWidth = width * (layout === 'tall' ? 0.58 : 0.38);
+  const portraitMaxWidth = widgetWidth * (layout === 'tall' ? 0.58 : 0.38);
   const portraitHeight = Math.max(1, Math.min(height - 4, portraitMaxWidth / portraitAspect));
   const portraitWidth = portraitHeight * portraitAspect;
   const overlap = layout === 'tall' ? Math.min(12, portraitWidth * 0.08) : 0;
-  const statsWidth = Math.max(1, width - portraitWidth - portraitInset + (card ? 0 : overlap));
+  const statsWidth = Math.max(1, widgetWidth - portraitWidth - portraitInset + (card ? 0 : overlap));
   const statsHeight = stats ? Math.min(height, statsWidth / stats.aspect) : 0;
 
   return (
@@ -55,7 +55,7 @@ function AnkiStreak(
           </Box>
           <Box contentAlignment="centerStart" modifiers={[fillMaxSize()]}>
             {card ? (
-              <Column modifiers={[padding(14, 0, 0, 0), fixedWidth(Math.max(1, statsWidth - 14))]}>
+              <Column modifiers={[padding(14, 0, 0, 0), width(Math.max(1, statsWidth - 14))]}>
                 {layout === 'tall' ? <>
                   <Text color="#FFFFFF" style={{ fontSize: 48, fontWeight: 'bold' }} maxLines={1}>{card.value}</Text>
                   <Text color="#FFFFFF" style={{ fontSize: 14 }} maxLines={2}>{card.label}</Text>

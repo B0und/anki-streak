@@ -12,9 +12,15 @@ Answering the same card multiple times counts as one card for that study day. Br
 
 Tap the widget to open Anki Streak. Choose **Miku**, **2B**, or **Emilia** in the app to change the artwork, palette, and launcher icon. Use **Background transparency** to fade the black panel behind the artwork and stats. Long-press the widget and drag a vertical resize handle for a larger layout. The theme and background setting apply to every Anki Streak widget on your phone.
 
+## Today, themes, and widget layouts
+
+**Today** shows your streak, today's reviews and first-time answers, both daily averages, and the full heatmap. **Themes** changes the character across the dashboard and home-screen widget. **Widget** previews compact and tall sizes and lets you choose **Current**, **Daily Focus**, or **Streak First**. The Current layout includes review history. The other layouts highlight today's reviews or the streak.
+
+In **Settings**, follow Android's appearance and language or choose a light or dark appearance and English or Russian. You can also choose a celebration for the first review, clearing due reviews, a daily review target, a daily new-card target, or every set number of streak days. Set the target and turn notifications and the count-up animation on or off independently. The app celebrates once per day, using a 4 a.m. local reset for the reward. Android schedules background checks, so notifications can arrive after you finish studying.
+
 ## Update the app
 
-Install an updater-enabled APK once to enable update checks. Anki Streak checks GitHub Releases when you open the app and checks again when you return after six hours. **Check for updates** runs a check immediately.
+Install an updater-enabled APK once to enable update checks. Anki Streak checks GitHub Releases when you open the app and checks again when you return after six hours. **Check for updates** in Settings runs a check immediately.
 
 When an update appears, tap **Download and install**. If Android opens its install permission settings, allow installs from Anki Streak, return to the app, and tap **Install update**. Confirm the update in the Android installer. In-place updates keep app settings and pinned widgets.
 

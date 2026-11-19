@@ -110,8 +110,7 @@ export function AppUpdates({ accent }: { accent: string }) {
   }
 
   return (
-    <View style={styles.card}>
-      <Text style={styles.title}>App updates</Text>
+    <View style={styles.row}>
       {status(state.kind === 'checking' ? 'Checking for updates…' :
         state.kind === 'check-failed' ? 'Couldn’t check for updates. Try again.' :
         state.kind === 'current' ? `Version ${version} is up to date.` : `Version ${version}`)}
@@ -126,7 +125,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#0D1E24', paddingHorizontal: 14, paddingTop: 12,
   },
   title: { color: '#F2FEFC', fontSize: 15, fontWeight: '700' },
-  detail: { color: '#A4BFC1', fontSize: 14, lineHeight: 20, marginBottom: 6 },
+  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 },
+  detail: { color: '#A4BFC1', fontSize: 14, lineHeight: 20 },
   button: { alignSelf: 'flex-start', justifyContent: 'center', minHeight: 44 },
   buttonLabel: { fontSize: 14, fontWeight: '700' },
 });

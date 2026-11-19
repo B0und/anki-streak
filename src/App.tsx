@@ -60,6 +60,7 @@ function Dashboard() {
             style={[styles.portrait, { width: portraitHeight * portraitAspect, height: portraitHeight }]}
           />
         </View>
+        <AppUpdates accent={theme.accent} />
         <View style={styles.themes}>
           <Text style={styles.caption}>Theme</Text>
           <View style={styles.themeOptions}>
@@ -162,7 +163,6 @@ function Dashboard() {
           </View>
           {notice !== '' && <Text accessibilityLiveRegion="polite" style={styles.caption}>{notice}</Text>}
         </View>
-        <AppUpdates accent={theme.accent} />
       </ScrollView>
     </SafeAreaView>
   );

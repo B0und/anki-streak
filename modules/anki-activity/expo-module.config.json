@@ -1,6 +1,9 @@
 {
   "platforms": ["android"],
   "android": {
-    "modules": ["expo.modules.ankiactivity.AnkiActivityModule"]
+    "modules": [
+      "expo.modules.ankiactivity.AnkiActivityModule",
+      "expo.modules.ankiactivity.AppUpdateModule"
+    ]
   }
 }

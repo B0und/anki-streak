@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppUpdates } from './AppUpdates';
 import { themes, themeOrder } from './themes';
 import { useDashboard } from './useDashboard';
 
@@ -161,6 +162,7 @@ function Dashboard() {
           </View>
           {notice !== '' && <Text accessibilityLiveRegion="polite" style={styles.caption}>{notice}</Text>}
         </View>
+        <AppUpdates accent={theme.accent} />
       </ScrollView>
     </SafeAreaView>
   );

@@ -9,6 +9,7 @@ import android.os.Build
 import android.provider.Settings
 import androidx.core.content.FileProvider
 import androidx.core.content.pm.PackageInfoCompat
+import expo.modules.kotlin.functions.Coroutine
 import expo.modules.kotlin.functions.Queues
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
@@ -16,6 +17,8 @@ import java.io.File
 import java.net.URI
 import java.security.MessageDigest
 import javax.net.ssl.HttpsURLConnection
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 private const val RELEASE_CERTIFICATE = "15ccfdb1ab164994b925cbe9667218be7073815cf7892af5c43300fed06e9a13"
 private const val MIN_APK_BYTES = 1L
@@ -51,24 +54,26 @@ class AppUpdateModule : Module() {
       )
     }.runOnQueue(Queues.MAIN)
 
-    AsyncFunction("downloadUpdate") { tag: String, digest: String, size: Long ->
-      require(releaseTag.matches(tag))
-      require(sha256Hex.matches(digest))
-      require(size in MIN_APK_BYTES..MAX_APK_BYTES)
-      val installed = installedPackage()
-      require(installed.signerDigests() == setOf(RELEASE_CERTIFICATE))
+    AsyncFunction("downloadUpdate") Coroutine { tag: String, digest: String, size: Long ->
+      withContext(Dispatchers.IO) {
+        require(releaseTag.matches(tag))
+        require(sha256Hex.matches(digest))
+        require(size in MIN_APK_BYTES..MAX_APK_BYTES)
+        val installed = installedPackage()
+        require(installed.signerDigests() == setOf(RELEASE_CERTIFICATE))
 
-      val destination = updateFile
-      check(destination.parentFile?.let { it.isDirectory || it.mkdirs() } == true)
-      val pending = File.createTempFile("apk-", ".apk", context.cacheDir)
-      try {
-        downloadApk(tag, size, pending, digest)
-        validateUpdate(pending, installed, tag)
-        check(pending.renameTo(destination))
-      } finally {
-        pending.delete()
+        val destination = updateFile
+        check(destination.parentFile?.let { it.isDirectory || it.mkdirs() } == true)
+        val pending = File.createTempFile("apk-", ".apk", context.cacheDir)
+        try {
+          downloadApk(tag, size, pending, digest)
+          validateUpdate(pending, installed, tag)
+          check(pending.renameTo(destination))
+        } finally {
+          pending.delete()
+        }
+        Unit
       }
-      Unit
     }
 
     AsyncFunction("installUpdate") {

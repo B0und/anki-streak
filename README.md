@@ -14,7 +14,7 @@ Tap the widget to open Anki Streak. Choose **Miku**, **2B**, or **Emilia** in th
 
 ## Today, themes, and widget layouts
 
-**Today** shows your streak, today's reviews and first-time answers, both daily averages, and the full heatmap. **Themes** changes the character across the dashboard and home-screen widget. In **Widget**, tap **Compact** or **Tall** to see previews and choose **Current**, **Daily Focus**, or **Streak First** for that size. The portrait preview lets you inspect both expressions between reviews. The Current layout includes review history. The other layouts highlight today's reviews or the streak.
+**Today** shows your streak, today's reviews and first-time answers, both daily averages, and the full heatmap. In **Widget**, tap **Theme** to change the character across the app and home-screen widget. The live preview shows the selected Compact or Tall layout and responds to changes in background transparency and mood. Under **Widget layouts**, choose **Current**, **Daily Focus**, or **Streak First** for each size. The Current layout includes review history. The other layouts highlight today's reviews or the streak.
 
 In **Settings**, see how AnkiDroid sync works and check when Anki Streak last read your data. Follow Android's appearance and language or choose a light or dark appearance and English or Russian. You can also choose a celebration for the first review, clearing due reviews, a daily review target, a daily new-card target, or every set number of streak days. Set the target and turn notifications and the count-up animation on or off independently. The app celebrates once per day, using a 4 a.m. local reset for the reward. Android schedules background checks, so notifications can arrive after you finish studying.
 

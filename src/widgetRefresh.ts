@@ -7,9 +7,10 @@ import {
   setWidgetBackgroundTransparency, type AnkiActivity,
 } from './activity';
 import { copy } from './messages';
-import { getLanguage, getWidgetLayouts, type WidgetLayout } from './preferences';
+import { getLanguage, getWidgetLayouts } from './preferences';
 import { recordReviewMilestone } from './celebration';
 import { themes, type WidgetTheme } from './themes';
+import { widgetBackdrop, widgetCard } from './widgetDesign';
 
 const taskName = 'refresh-anki-widget';
 const backgroundIntervalMinutes = 15;
@@ -59,26 +60,13 @@ export function lastCompletedRefresh(current: RefreshState): CompletedRefresh | 
 }
 
 function publish(publication: Publication) {
-  const alpha = Math.round(255 * (1 - getWidgetBackgroundTransparency() / 100)).toString(16).padStart(2, '0');
+  const transparency = getWidgetBackgroundTransparency();
   const language = getLanguage();
   const ready = publication.kind === 'reviews' ? publication : null;
   const layouts = getWidgetLayouts();
   const theme = ready ? themes[ready.theme] : null;
-  function cardFor(layout: WidgetLayout) {
-    if (!ready || !theme || layout === 'current') return null;
-    const focus = layout === 'focus';
-    const secondary = focus ? ready.activity.streak : ready.activity.today;
-    return {
-      value: String(focus ? ready.activity.today : ready.activity.streak),
-      label: copy(language, focus ? 'reviewed' : 'streak'),
-      secondary: `${copy(language, focus ? 'streak' : 'reviewed')}: ${secondary}`,
-      shortLabel: copy(language, focus ? 'shortReviews' : 'shortStreak'),
-      shortSecondary: `${copy(language, focus ? 'shortStreak' : 'shortReviews')}: ${secondary}`,
-      accent: theme.accent,
-    };
-  }
-  const compact = cardFor(layouts.compact);
-  const tall = cardFor(layouts.tall);
+  const compact = ready && theme && widgetCard(layouts.compact, language, ready.activity, theme.accent);
+  const tall = ready && theme && widgetCard(layouts.tall, language, ready.activity, theme.accent);
   AnkiWidget.updateSnapshot({
     artwork: ready?.artwork ?? null,
     description: ready ? copy(language, 'activityDescription', {
@@ -86,8 +74,8 @@ function publish(publication: Publication) {
       reviews: ready.activity.dailyReviewed, learned: ready.activity.dailyLearned,
     }) : '',
     waitingDrawable: publication.waitingDrawable,
-    backdrop: `#000000${alpha}`,
-    cardBackdrop: theme ? `${theme.card}${alpha}` : `#000000${alpha}`,
+    backdrop: widgetBackdrop('#000000', transparency),
+    cardBackdrop: widgetBackdrop(theme?.card ?? '#000000', transparency),
     connectLabel: copy(language, 'connectWidget'),
     cards: { ...(compact && { compact }), ...(tall && { tall }) },
   });

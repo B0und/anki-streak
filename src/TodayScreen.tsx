@@ -5,6 +5,7 @@ import { copy, type Language } from './messages';
 import { Action, CountUp, Portrait, Section } from './studyComponents';
 import { themes } from './themes';
 import type { useDashboard } from './useDashboard';
+import { VictoryLaurels } from './VictoryLaurels';
 
 export function TodayScreen({ dashboard, palette, language, celebration }: {
   dashboard: ReturnType<typeof useDashboard>; palette: Palette; language: Language; celebration: number;
@@ -21,6 +22,7 @@ export function TodayScreen({ dashboard, palette, language, celebration }: {
     <View style={[styles.hero, { borderColor: palette.line, backgroundColor: palette.hero }]}>
       <Portrait source={portrait} height={192} maxWidth={Math.min(width * .51, 228)} />
       <View style={styles.medal}>
+        <VictoryLaurels color={palette.accent} />
         <Text style={[styles.streak, { color: palette.text }]} adjustsFontSizeToFit numberOfLines={1}>
           <CountUp value={ready?.streak} delay={0} celebration={celebration} />
         </Text>
@@ -88,7 +90,7 @@ export function TodayScreen({ dashboard, palette, language, celebration }: {
 const styles = StyleSheet.create({
   hero: { height: 208, borderRadius: 23, borderWidth: 1, overflow: 'hidden', justifyContent: 'center' },
   medal: { width: '49%', alignItems: 'center', paddingHorizontal: 10 },
-  streak: { fontFamily: 'serif', fontWeight: 'bold', fontSize: 73, lineHeight: 82, includeFontPadding: false, maxWidth: '88%' },
+  streak: { fontFamily: 'serif', fontWeight: 'bold', fontSize: 73, lineHeight: 82, includeFontPadding: false, maxWidth: '64%' },
   stats: { flexDirection: 'row', borderRadius: 18, borderWidth: 1 },
   stat: { flex: 1, paddingVertical: 13, paddingHorizontal: 12, alignItems: 'center', gap: 2 },
   primaryNumber: { fontSize: 34, fontFamily: 'serif', fontWeight: 'bold', includeFontPadding: false },

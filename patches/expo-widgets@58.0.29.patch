@@ -41,3 +41,103 @@ index edabde8f51b3bd9162b634e46f2f09686c3a3b8a..da3e7b5655520247515d414760230edc
 +      "screenHeight" to context.resources.configuration.screenHeightDp.toDouble()
 +    )
      val node = evaluateLayout(appContext, layout, props, environment)
+diff --git a/android/src/main/java/expo/modules/widgets/WidgetsModule.kt b/android/src/main/java/expo/modules/widgets/WidgetsModule.kt
+--- a/android/src/main/java/expo/modules/widgets/WidgetsModule.kt
++++ b/android/src/main/java/expo/modules/widgets/WidgetsModule.kt
+@@ -46,6 +46,18 @@
+
+     Function("reloadAllWidgets") {
+       WidgetsUpdater.reloadAll(context)
++    }
++
++    View(WidgetPreviewView::class) {
++      Prop("widgetName") { view: WidgetPreviewView, name: String ->
++        view.widgetName = name
++      }
++      Prop("propsJson") { view: WidgetPreviewView, props: String ->
++        view.propsJson = props
++      }
++      OnViewDidUpdateProps { view ->
++        view.render()
++      }
+     }
+
+     Class("Widget", WidgetObject::class) {
+diff --git a/android/src/main/java/expo/modules/widgets/WidgetPreviewView.kt b/android/src/main/java/expo/modules/widgets/WidgetPreviewView.kt
+new file mode 100644
+--- /dev/null
++++ b/android/src/main/java/expo/modules/widgets/WidgetPreviewView.kt
+@@ -0,0 +1,73 @@
++package expo.modules.widgets
++
++import android.annotation.SuppressLint
++import android.content.Context
++import android.util.Log
++import android.view.ViewGroup.LayoutParams
++import androidx.compose.ui.unit.DpSize
++import androidx.compose.ui.unit.dp
++import androidx.glance.appwidget.ExperimentalGlanceRemoteViewsApi
++import androidx.glance.appwidget.GlanceRemoteViews
++import expo.modules.kotlin.AppContext
++import expo.modules.kotlin.views.ExpoView
++import io.github.expo.peek.emittables.EmittableTree
++import kotlinx.coroutines.CancellationException
++import kotlinx.coroutines.CoroutineScope
++import kotlinx.coroutines.Dispatchers
++import kotlinx.coroutines.Job
++import kotlinx.coroutines.ensureActive
++import kotlinx.coroutines.launch
++
++@SuppressLint("RestrictedApi")
++@OptIn(ExperimentalGlanceRemoteViewsApi::class)
++class WidgetPreviewView(context: Context, appContext: AppContext) : ExpoView(context, appContext) {
++  override val shouldUseAndroidLayout = true
++  var widgetName = ""
++  var propsJson = ""
++  private var rendering: Job? = null
++
++  override fun onAttachedToWindow() {
++    super.onAttachedToWindow()
++    render()
++  }
++
++  override fun onSizeChanged(width: Int, height: Int, oldWidth: Int, oldHeight: Int) {
++    super.onSizeChanged(width, height, oldWidth, oldHeight)
++    render()
++  }
++
++  override fun onDetachedFromWindow() {
++    rendering?.cancel()
++    super.onDetachedFromWindow()
++  }
++
++  fun render() {
++    rendering?.cancel()
++    if (!isAttachedToWindow || width == 0 || height == 0 || propsJson.isEmpty()) return
++    val app = context.applicationContext
++    val density = resources.displayMetrics.density
++    val size = DpSize((width / density).dp, (height / density).dp)
++    val name = widgetName
++    val json = propsJson
++    rendering = CoroutineScope(Dispatchers.Main.immediate).launch {
++      try {
++        val layout = WidgetsLayoutRegistry.layout(app, name) ?: return@launch
++        val environment = getWidgetEnvironment(app) + mapOf(
++          "width" to size.width.value.toDouble(),
++          "height" to size.height.value.toDouble()
++        )
++        val node = evaluateLayout(app, layout, WidgetsJson.parseMap(json), environment)
++        val root = node.toPeekRoot(app, InteractionSource.Widget(name), size)
++        val views = GlanceRemoteViews().compose(context, size) { EmittableTree(root) }.remoteViews
++        ensureActive()
++        val preview = views.apply(context, this@WidgetPreviewView)
++        removeAllViews()
++        addView(preview, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
++      } catch (error: CancellationException) {
++        throw error
++      } catch (error: Exception) {
++        Log.w("ExpoWidgets", "Could not render widget preview", error)
++      }
++    }
++  }
++}

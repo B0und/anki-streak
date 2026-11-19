@@ -9,7 +9,7 @@ export default function WidgetRoute() {
   const { language } = useDashboardContext();
   const router = useRouter();
   return <Screen title={copy(language, 'widget')}>
-    <WidgetScreen openThemes={() => router.navigate('/themes')}
+    <WidgetScreen openThemes={() => router.push('/widget/themes')}
       openLayouts={(size) => router.push({ pathname: '/widget/layouts', params: { size } })} />
   </Screen>;
 }

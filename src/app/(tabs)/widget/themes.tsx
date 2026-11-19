@@ -1,16 +1,17 @@
+import { useRouter } from 'expo-router';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { useDashboardContext } from '../../dashboardContext';
-import { copy } from '../../messages';
-import { Screen } from '../../Screen';
-import { themeOrder, themes } from '../../themes';
+import { useDashboardContext } from '../../../dashboardContext';
+import { copy } from '../../../messages';
+import { Screen } from '../../../Screen';
+import { themeOrder, themes } from '../../../themes';
 
 const sources = { miku: 'Vocaloid', '2b': 'NieR:Automata', emilia: 'Re:Zero' };
 
 export default function ThemesRoute() {
   const { dashboard, palette, language } = useDashboardContext();
-  return <Screen title={copy(language, 'themes')}>
-    <Text style={{ color: palette.muted, fontSize: 14 }}>{copy(language, 'themeHeading')}</Text>
+  const router = useRouter();
+  return <Screen title={copy(language, 'themes')} onBack={() => router.canGoBack() ? router.back() : router.replace('/widget')}>
     {themeOrder.map((id) => {
       const theme = themes[id];
       const selected = id === dashboard.themeId;

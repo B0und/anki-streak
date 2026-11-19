@@ -14,7 +14,7 @@ export type WidgetArtwork = {
   portraitAspect: number;
 };
 
-type WidgetCard = {
+export type WidgetCard = {
   value: string;
   label: string;
   secondary: string;
@@ -23,7 +23,7 @@ type WidgetCard = {
   shortSecondary?: string;
 };
 
-type WidgetProps = {
+export type WidgetProps = {
   artwork: WidgetArtwork | null;
   description: string;
   backdrop: string;
@@ -32,19 +32,20 @@ type WidgetProps = {
   card?: WidgetCard | null;
   cards?: { compact?: WidgetCard; tall?: WidgetCard };
   cardBackdrop?: string;
+  previewSize?: 'compact' | 'tall';
 };
 
 type AndroidWidgetEnvironment = WidgetEnvironment & { width?: number; height?: number; screenHeight?: number };
 
 function AnkiStreak(
-  { artwork, description, backdrop = '#000000', waitingDrawable = 'miku_waiting', connectLabel = 'Open Anki Streak to connect', card: legacyCard, cards, cardBackdrop }: WidgetProps,
+  { artwork, description, backdrop = '#000000', waitingDrawable = 'miku_waiting', connectLabel = 'Open Anki Streak to connect', card: legacyCard, cards, cardBackdrop, previewSize }: WidgetProps,
   { width: widgetWidth = 300, height = 80, screenHeight = 0 }: AndroidWidgetEnvironment,
 ) {
   'widget';
 
   const minimumTallHeight = 105;
   const compactScreenFraction = 0.24;
-  const layout = height >= Math.max(minimumTallHeight, screenHeight * compactScreenFraction) ? 'tall' : 'compact';
+  const layout = previewSize ?? (height >= Math.max(minimumTallHeight, screenHeight * compactScreenFraction) ? 'tall' : 'compact');
   const card = cards ? cards[layout] : legacyCard;
   const narrow = widgetWidth < 240;
   const stats = artwork && (layout === 'tall' ? artwork.tallStats : artwork.compactStats);
@@ -58,7 +59,7 @@ function AnkiStreak(
   const statsHeight = stats ? Math.min(height, statsWidth / stats.aspect) : 0;
 
   return (
-    <Box contentAlignment="center" modifiers={[fillMaxSize(), background(card ? cardBackdrop ?? backdrop : backdrop), cornerRadius(20), { $type: 'openAppOnTap' }]}>
+    <Box contentAlignment="center" modifiers={[fillMaxSize(), background(card ? cardBackdrop ?? backdrop : backdrop), cornerRadius(20), ...(previewSize ? [] : [{ $type: 'openAppOnTap' }])]}>
       {artwork && stats ? (
         <>
           <Box contentAlignment="bottomEnd" modifiers={[fillMaxSize(), padding(0, 0, portraitInset, 0)]}>

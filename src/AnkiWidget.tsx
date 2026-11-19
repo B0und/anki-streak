@@ -14,7 +14,14 @@ export type WidgetArtwork = {
   portraitAspect: number;
 };
 
-type WidgetCard = { value: string; label: string; secondary: string; accent: string };
+type WidgetCard = {
+  value: string;
+  label: string;
+  secondary: string;
+  accent: string;
+  shortLabel?: string;
+  shortSecondary?: string;
+};
 
 type WidgetProps = {
   artwork: WidgetArtwork | null;
@@ -41,7 +48,7 @@ function AnkiStreak(
   const stats = artwork && (layout === 'tall' ? artwork.tallStats : artwork.compactStats);
   const portraitAspect = artwork?.portraitAspect ?? 1;
   const portraitInset = 6;
-  const portraitMaxWidth = widgetWidth * (layout === 'tall' ? 0.58 : 0.38);
+  const portraitMaxWidth = widgetWidth * (layout === 'tall' ? (narrow && card ? 0.48 : 0.58) : 0.38);
   const portraitHeight = Math.max(1, Math.min(height - 4, portraitMaxWidth / portraitAspect));
   const portraitWidth = portraitHeight * portraitAspect;
   const overlap = layout === 'tall' ? Math.min(12, portraitWidth * 0.08) : 0;
@@ -64,14 +71,14 @@ function AnkiStreak(
               <Column modifiers={[padding(14, 0, 0, 0), width(Math.max(1, statsWidth - 14))]}>
                 {layout === 'tall' || narrow ? <>
                   <Text color="#FFFFFF" style={{ fontSize: layout === 'tall' ? 48 : 23, fontWeight: 'bold' }} maxLines={1}>{card.value}</Text>
-                  <Text color="#FFFFFF" style={{ fontSize: narrow ? 11 : 14 }} maxLines={narrow ? 1 : 2}>{card.label}</Text>
+                  <Text color="#FFFFFF" style={{ fontSize: narrow ? 11 : 14 }} maxLines={narrow ? 1 : 2}>{narrow ? card.shortLabel ?? card.label : card.label}</Text>
                 </> : (
                   <Row verticalAlignment="center">
                     <Text color="#FFFFFF" style={{ fontSize: 30, fontWeight: 'bold' }} maxLines={1}>{card.value}</Text>
                     <Text modifiers={[padding(7, 0, 0, 0)]} color="#FFFFFF" style={{ fontSize: 12 }} maxLines={2}>{card.label}</Text>
                   </Row>
                 )}
-                <Text color={card.accent} style={{ fontSize: layout === 'tall' ? 14 : narrow ? 10 : 12 }} maxLines={1}>{card.secondary}</Text>
+                <Text color={card.accent} style={{ fontSize: narrow ? 11 : layout === 'tall' ? 14 : 12 }} maxLines={1}>{narrow ? card.shortSecondary ?? card.secondary : card.secondary}</Text>
               </Column>
             ) : <Image
               source={{ uri: stats.uri }}

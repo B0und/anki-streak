@@ -3,6 +3,7 @@ import { compileMessage } from '@lingui/message-utils/compileMessage';
 
 const en = {
   today: 'Today', themes: 'Themes', widget: 'Widget', settings: 'Settings',
+  shortStreak: 'Streak', shortReviews: 'Reviews',
   streak: 'Day streak', reviewed: 'Reviews today', learned: 'New cards today',
   avgReviews: 'Avg. reviews/day', avgNew: 'Avg. new cards/day', activity: 'Review history',
   less: 'Less', more: 'More', newCards: 'New', days102: '102 days',
@@ -47,6 +48,7 @@ const en = {
 
 const ru: Record<keyof typeof en, string> = {
   today: 'Сегодня', themes: 'Темы', widget: 'Виджет', settings: 'Настройки',
+  shortStreak: 'Серия', shortReviews: 'Повторы',
   streak: 'Дней подряд', reviewed: 'Повторено сегодня', learned: 'Новых сегодня',
   avgReviews: 'Повторов в день', avgNew: 'Новых в день', activity: 'История занятий',
   less: 'Меньше', more: 'Больше', newCards: 'Новые', days102: '102 дня',

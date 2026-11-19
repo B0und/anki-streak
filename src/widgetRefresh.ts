@@ -64,14 +64,19 @@ function publish(publication: Publication) {
   const ready = publication.kind === 'reviews' ? publication : null;
   const layouts = getWidgetLayouts();
   const theme = ready ? themes[ready.theme] : null;
-  const cardFor = (layout: WidgetLayout) => ready && theme && layout !== 'current' ? {
-    value: String(layout === 'focus' ? ready.activity.today : ready.activity.streak),
-    label: copy(language, layout === 'focus' ? 'reviewed' : 'streak'),
-    secondary: layout === 'focus'
-      ? `${copy(language, 'streak')}: ${ready.activity.streak}`
-      : `${copy(language, 'reviewed')}: ${ready.activity.today}`,
-    accent: theme.accent,
-  } : null;
+  function cardFor(layout: WidgetLayout) {
+    if (!ready || !theme || layout === 'current') return null;
+    const focus = layout === 'focus';
+    const secondary = focus ? ready.activity.streak : ready.activity.today;
+    return {
+      value: String(focus ? ready.activity.today : ready.activity.streak),
+      label: copy(language, focus ? 'reviewed' : 'streak'),
+      secondary: `${copy(language, focus ? 'streak' : 'reviewed')}: ${secondary}`,
+      shortLabel: copy(language, focus ? 'shortReviews' : 'shortStreak'),
+      shortSecondary: `${copy(language, focus ? 'shortStreak' : 'shortReviews')}: ${secondary}`,
+      accent: theme.accent,
+    };
+  }
   const compact = cardFor(layouts.compact);
   const tall = cardFor(layouts.tall);
   AnkiWidget.updateSnapshot({

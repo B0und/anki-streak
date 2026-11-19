@@ -1,4 +1,4 @@
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider, usePathname, useRouter } from 'expo-router';
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Download, X } from 'lucide-react-native';
 import { useState } from 'react';
@@ -12,7 +12,6 @@ export const unstable_settings = { initialRouteName: '(tabs)' };
 
 function Navigation() {
   const { palette, mode, language, updates, dashboard } = useDashboardContext();
-  const pathname = usePathname();
   const router = useRouter();
   const [dismissed, setDismissed] = useState<string>();
   const update = updates.state.kind === 'available' ? updates.state.update : null;
@@ -20,9 +19,12 @@ function Navigation() {
 
   return <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: palette.background }}>
     <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
-    {update && update.digest !== dismissed && pathname !== '/settings' &&
+    {update && update.digest !== dismissed &&
       <View style={[styles.banner, { backgroundColor: palette.subtle, borderColor: palette.line }]}>
-        <Pressable accessibilityRole="button" style={styles.update} onPress={() => router.navigate('/settings')}>
+        <Pressable accessibilityRole="button" style={styles.update} onPress={() => {
+          setDismissed(update.digest);
+          router.navigate({ pathname: '/settings', params: { update: update.tag } });
+        }}>
           <Download color={palette.accent} size={20} />
           <View style={{ flex: 1 }}>
             <Text accessibilityLiveRegion="polite" style={{ color: palette.text, fontWeight: '700' }}>

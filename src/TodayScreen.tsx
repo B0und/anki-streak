@@ -1,3 +1,4 @@
+import { ArrowUpRight, Check } from 'lucide-react-native';
 import { useWindowDimensions } from 'react-native';
 import { Text, View, XStack, YStack } from 'tamagui';
 
@@ -7,28 +8,39 @@ import { copy, weekdays, type Language } from './messages';
 import { Action, CountUp, Portrait, Section } from './studyComponents';
 import { themes } from './themes';
 import type { useDashboard } from './useDashboard';
+import { VictoryLaurels } from './VictoryLaurels';
 
 export function TodayScreen({ dashboard, palette, language, celebration }: {
   dashboard: ReturnType<typeof useDashboard>; palette: Palette; language: Language; celebration: number;
 }) {
-  const { width, fontScale } = useWindowDimensions();
+  const { width } = useWindowDimensions();
   const { activity, themeId } = dashboard;
   const ready = activity?.kind === 'ready' ? activity : null;
   const portrait = themes[themeId][ready?.mood ?? 'waiting'];
   return <>
     <YStack minH={208} rounded={22} bg="hero" overflow="hidden" justify="center">
       <Portrait source={portrait} height={198} maxWidth={Math.min(width * .47, 240)} />
-      <YStack w="53%" px={18} py={20} gap={4}>
-        <Text color="color" fontFamily="display" fontWeight="700" fontSize={68} letterSpacing={-2}
-          fontVariant={['tabular-nums']} style={{ includeFontPadding: false }} adjustsFontSizeToFit numberOfLines={1}>
-          <CountUp value={ready?.streak} delay={0} celebration={celebration} />
-        </Text>
-        <Text color="color" fontWeight="700" fontSize={17}>{copy(language, 'streak')}</Text>
-        <Text color="color" fontSize={13} lineHeight="18px" numberOfLines={3} style={{ height: 54 * fontScale }}>
-          {ready && copy(language, celebration ? 'rewardToast' : ready.today ? 'cheers' : 'waiting')}
-        </Text>
+      <YStack w="53%" px={10} py={20} items="center">
+        <YStack w="100%" maxW={192} items="center" justify="center" minH={112}>
+          <VictoryLaurels color={palette.accent} />
+          <Text color="color" fontFamily="display" fontWeight="700" fontSize={60} letterSpacing={-1}
+            w="58%" text="center" fontVariant={['tabular-nums']} style={{ includeFontPadding: false }}
+            adjustsFontSizeToFit numberOfLines={1}>
+            <CountUp value={ready?.streak} delay={0} celebration={celebration} />
+          </Text>
+          <Text color="accent" fontWeight="700" fontSize={14} text="center" style={{ marginTop: -4 }}>{copy(language, 'streak')}</Text>
+        </YStack>
       </YStack>
     </YStack>
+
+    {ready && <XStack minH={56} rounded={14} bg={ready.dueReviews === 0 ? 'subtle' : 'accent'} px={16}
+      gap={12} items="center" accessibilityRole="button" accessibilityState={{ disabled: ready.dueReviews === 0 || dashboard.requesting }}
+      onPress={ready.dueReviews === 0 || dashboard.requesting ? undefined : () => void dashboard.runAndroidRequest('open')}>
+      <Text flex={1} fontSize={16} fontWeight="700" color={ready.dueReviews === 0 ? 'color' : 'on-accent'}>
+        {copy(language, ready.dueReviews === 0 ? 'reviewsComplete' : 'startReviews')}
+      </Text>
+      {ready.dueReviews === 0 ? <Check color={palette.accent} size={22} /> : <ArrowUpRight color={palette.onAccent} size={22} />}
+    </XStack>}
 
     {ready ? <>
       <XStack bg="surface" borderColor="border-color" borderWidth={1} rounded={16}>
@@ -51,13 +63,6 @@ export function TodayScreen({ dashboard, palette, language, celebration }: {
         onPress={() => void dashboard.runAndroidRequest('permission')}>{copy(language, 'connect')}</Action>}
     </Section>}
 
-    <XStack gap={8} flexWrap="wrap">
-      {activity?.kind !== 'missing' && <Action primary disabled={dashboard.requesting}
-        onPress={() => void dashboard.runAndroidRequest('open')}>{copy(language, 'openAnki')}</Action>}
-      <Action disabled={dashboard.refreshing} onPress={() => void dashboard.refresh()}>
-          {copy(language, 'refresh')}
-      </Action>
-    </XStack>
     {ready && <ActivityHeatmap history={ready.history} palette={palette} language={language} />}
   </>;
 }

@@ -145,7 +145,7 @@ const dashboardMachine = dashboardSetup.createMachine({
       enq(() => {
         try {
           setWidgetTheme(event.value);
-          requestRefresh();
+          republishWidgetAppearance();
         } catch {
           self.send({ type: 'storage.failed', notice: 'themeError' });
         }

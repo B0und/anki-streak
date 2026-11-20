@@ -9,7 +9,7 @@ export default function SettingsRoute() {
   const { language, updates } = preferences;
 
   return <Screen title={copy(language, 'settings')}>
-    <AppUpdates language={language} updates={updates} />
+    <AppUpdates accent={preferences.palette.accent} language={language} updates={updates} />
     <SettingsScreen {...preferences} />
   </Screen>;
 }

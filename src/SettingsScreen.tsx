@@ -1,5 +1,5 @@
-import { CheckCircle2, Circle } from 'lucide-react-native';
-import { Input, Switch, Text, XStack } from 'tamagui';
+import { Bell, CheckCircle2, Circle, Globe2, Medal, Palette as PaletteIcon, RefreshCcw, Sparkles } from 'lucide-react-native';
+import { Input, Switch, Text, XStack, YStack } from 'tamagui';
 
 import type { Palette } from './appearance';
 import { DueReviewDecks } from './DueReviewDecks';
@@ -9,7 +9,7 @@ import {
   type Appearance, type LanguagePreference,
 } from './preferences';
 import { useRewardSettings } from './rewardSettingsMachine';
-import { Action, Choices, Section } from './studyComponents';
+import { Action, Choices } from './studyComponents';
 import type { useDashboard } from './useDashboard';
 
 export function SettingsScreen({ palette, language, appearance, setAppearance, languagePreference, setLanguage, dashboard }: {
@@ -20,20 +20,20 @@ export function SettingsScreen({ palette, language, appearance, setAppearance, l
   const { milestone, draft, notifications, animate, blocked, send } = useRewardSettings();
 
   return <>
-    <Section title={copy(language, 'appearance')}>
+    <SettingsGroup title={copy(language, 'appearance')} icon={PaletteIcon} color={palette.accent}>
       <Choices<Appearance> choices={appearanceOptions} value={appearance} onChange={setAppearance}
         label={(key) => copy(language, key)} />
-    </Section>
-    <Section title={copy(language, 'language')}>
+    </SettingsGroup>
+    <SettingsGroup title={copy(language, 'language')} icon={Globe2} color={palette.accent}>
       <Choices<LanguagePreference> choices={languageOptions} value={languagePreference} onChange={setLanguage}
         label={(key) => key === 'system' ? copy(language, key) : key === 'en' ? 'English' : 'Русский'} />
-    </Section>
-    <Section title={copy(language, 'rewards')}>
+    </SettingsGroup>
+    <SettingsGroup title={copy(language, 'rewards')} icon={Medal} color={palette.accent}>
       <Text color="muted" fontWeight="600">{copy(language, 'milestone')}</Text>
       {milestones.map((key) => (
         <XStack accessibilityRole="radio" accessibilityState={{ checked: milestone === key }} key={key}
           onPress={() => send({ type: 'milestone', value: key })} minH={48} px={10} py={8} gap={10} items="center"
-          rounded={9} bg={milestone === key ? 'subtle' : 'surface'} opacity="press:0.75">
+          rounded={8} bg={milestone === key ? 'subtle' : 'transparent'} opacity="press:0.75">
           {milestone === key ? <CheckCircle2 size={18} color={palette.accent} /> : <Circle size={18} color={palette.muted} />}
           <Text color="color" flex={1}>{copy(language, key)}</Text>
         </XStack>
@@ -54,6 +54,7 @@ export function SettingsScreen({ palette, language, appearance, setAppearance, l
       ] as const).map(([key, value, action]) => (
         <XStack key={key} gap={10} minH={48} items="center" justify="space-between">
           <Text color="color" flex={1}>{copy(language, key)}</Text>
+          {key === 'notifications' ? <Bell size={18} color={palette.muted} /> : <Sparkles size={18} color={palette.muted} />}
           <Switch accessibilityLabel={copy(language, key)} hitSlop={8} checked={value} onCheckedChange={action}
             bg={value ? 'accent' : 'border-color'} borderColor="transparent">
             <Switch.Thumb bg={value ? 'on-accent' : 'surface'} />
@@ -62,8 +63,8 @@ export function SettingsScreen({ palette, language, appearance, setAppearance, l
       ))}
       {blocked && <Action disabled={dashboard.requesting} onPress={() => dashboard.runAndroidRequest('notifications')}>{copy(language, 'notificationsBlocked')}</Action>}
       <Text color="muted" lineHeight="19px">{copy(language, 'rewardTiming')}</Text>
-    </Section>
-    <Section title={copy(language, 'sync')}>
+    </SettingsGroup>
+    <SettingsGroup title={copy(language, 'sync')} icon={RefreshCcw} color={palette.accent}>
       <Text color="muted" lineHeight="20px">{copy(language, 'syncDetail')}</Text>
       <Text color="color">
         {copy(language, 'lastCheck', {
@@ -71,13 +72,26 @@ export function SettingsScreen({ palette, language, appearance, setAppearance, l
             : new Date(dashboard.lastCheckedAt).toLocaleTimeString(language, { hour: '2-digit', minute: '2-digit' }),
         })}
       </Text>
-      <Action disabled={dashboard.refreshing} onPress={() => void dashboard.refresh()}>
-        {copy(language, 'refresh')}
-      </Action>
       {dashboard.activity?.kind === 'permission' && <Action primary disabled={dashboard.requesting}
         onPress={() => void dashboard.runAndroidRequest('permission')}>{copy(language, 'connect')}</Action>}
       <Action disabled={dashboard.requesting}
         onPress={() => void dashboard.runAndroidRequest('settings')}>{copy(language, 'permissions')}</Action>
-    </Section>
+    </SettingsGroup>
   </>;
+}
+
+
+export function SettingsGroup({ title, icon: Icon, color, children }: {
+  title: string;
+  icon: typeof Medal;
+  color: string;
+  children: React.ReactNode;
+}) {
+  return <YStack gap={10} pt={14} pb={10} borderTopWidth={1} borderTopColor="border-color">
+    <XStack gap={10} items="center">
+      <Icon size={20} color={color} />
+      <Text accessibilityRole="header" color="color" fontSize={17} fontWeight="700">{title}</Text>
+    </XStack>
+    {children}
+  </YStack>;
 }

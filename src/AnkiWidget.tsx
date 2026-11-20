@@ -2,44 +2,26 @@ import { Box, Column, Image, Row, Text } from '@expo/ui/jetpack-compose';
 import { background, cornerRadius, fillMaxSize, padding, size, width } from '@expo/ui/jetpack-compose/modifiers';
 import { createWidget, type WidgetEnvironment } from 'expo-widgets';
 
-type WidgetImage = {
-  uri: string;
-  aspect: number;
-};
-
-export type WidgetArtwork = {
-  compactStats: WidgetImage;
-  portraitDrawable: string;
-  portraitAspect: number;
-  alternatePortraitAspect?: number;
-};
-
 export type WidgetCard = {
   value: string;
   label: string;
   secondary: string;
-  accent: string;
+  accent: `#${string}`;
   shortLabel?: string;
   shortSecondary?: string;
-};
-
-export type TallCurrent = {
-  value: string;
-  label: string;
-  streak: string;
-  accent: `#${string}`;
-  days: ReadonlyArray<{ label: string; state: 'reviewed' | 'missed' | 'today' | 'today-reviewed' | 'future' }>;
+  averages?: string;
+  days?: ReadonlyArray<{ label: string; state: 'reviewed' | 'missed' | 'today' | 'today-reviewed' | 'future' }>;
 };
 
 export type WidgetProps = {
-  artwork: WidgetArtwork | null;
+  happy?: boolean;
   description: string;
   backdrop: string;
   waitingDrawable: string;
   happyDrawable?: string;
+  portraitAspect?: { waiting: number; happy: number };
   connectLabel?: string;
   cards?: { compact?: WidgetCard; tall?: WidgetCard };
-  tallCurrent?: TallCurrent;
   cardBackdrop?: string;
 };
 
@@ -51,134 +33,81 @@ type AndroidWidgetEnvironment = WidgetEnvironment & {
 };
 
 function AnkiStreak(
-  { artwork, description, backdrop = '#000000', waitingDrawable = 'miku_waiting', happyDrawable,
-    connectLabel = 'Open Anki Streak to connect', cards, tallCurrent, cardBackdrop }: WidgetProps,
+  { happy, backdrop, waitingDrawable, happyDrawable, portraitAspect, cards, cardBackdrop,
+    connectLabel = 'Open Anki Streak to connect' }: WidgetProps,
   { width: widgetWidth = 300, height = 80, sizeClass: layout = 'compact', previewMood }: AndroidWidgetEnvironment,
 ) {
   'widget';
 
   const card = cards?.[layout];
+  const tall = layout === 'tall';
   const narrow = widgetWidth < 240;
-  const short = height < 78;
-  const tallOverview = layout === 'tall' && !card ? tallCurrent : undefined;
-  const surface = card || tallOverview ? cardBackdrop ?? backdrop : backdrop;
-  const openApp = previewMood ? [] : [{ $type: 'openAppOnTap' }];
-  const livePortrait = artwork?.portraitDrawable ?? waitingDrawable;
-  const portrait = previewMood === 'happy' ? happyDrawable ?? livePortrait
-    : previewMood === 'waiting' ? waitingDrawable : livePortrait;
-  const portraitAspect = (portrait === livePortrait ? undefined : artwork?.alternatePortraitAspect)
-    ?? artwork?.portraitAspect ?? 1;
-  const portraitInset = 6;
-  const inset = narrow ? 10 : 16;
-  const labelSize = narrow || short ? 11 : 13;
-  if (artwork && tallOverview) {
-    const { value, label, streak, accent, days } = tallOverview;
-    const footerHeight = narrow ? 36 : 44;
-    const heroHeight = height - footerHeight;
-    const portraitPanelWidth = Math.round(widgetWidth * 0.53);
-    const portraitHeight = Math.max(1, Math.min(heroHeight - portraitInset, (portraitPanelWidth - portraitInset) / portraitAspect));
-    const tallyWidth = widgetWidth - portraitPanelWidth - inset;
-    const tallySize = Math.min(narrow || heroHeight < 104 ? 32 : 44, tallyWidth / Math.max(1, value.length * 0.62));
-    const dayWidth = Math.floor((widgetWidth - inset * 2) / 7);
-    const markWidth = dayWidth - (narrow ? 5 : 9);
-    const markHeight = narrow ? 5 : 7;
-    const empty = accent + '33';
+  const short = height < 100;
+  const portraitHappy = previewMood === 'happy' || (previewMood !== 'waiting' && happy);
+  const portrait = portraitHappy ? happyDrawable ?? waitingDrawable : waitingDrawable;
+  const aspect = (portraitHappy ? portraitAspect?.happy : portraitAspect?.waiting) ?? 1;
+  const margin = narrow ? 10 : 16;
+  const footer = tall && card?.days ? (narrow ? 34 : 42) : 0;
+  const available = height - footer;
+  const stacked = tall && available >= Math.max(230, widgetWidth * 0.82);
+  const textHeight = stacked ? available * 0.42 : available;
+  const imageWidthLimit = widgetWidth * (stacked ? 0.88 : tall ? 0.59 : 0.46);
+  const imageHeightLimit = stacked ? available - textHeight : available - 10;
+  const imageHeight = Math.max(1, Math.min(imageHeightLimit, (imageWidthLimit - 6) / aspect));
+  const imageWidth = imageHeight * aspect;
+  const textWidth = Math.max(1, widgetWidth - (stacked ? margin : imageWidthLimit) - margin);
+  const numberMax = tall ? (narrow ? 42 : 64) : short ? 34 : 52;
+  const valueSize = Math.min(numberMax, textWidth / Math.max(1, (card?.value.length ?? 1) * 0.63), textHeight * (short ? card?.averages ? 0.29 : 0.35 : 0.45));
+  const labelSize = narrow || short ? 11 : 15;
+  const surface = cardBackdrop ?? backdrop ?? '#000000';
+  const actions = previewMood ? [] : [{ $type: 'openAppOnTap' }];
 
-    return (
-      <Box modifiers={[fillMaxSize(), background(surface), cornerRadius(20), ...openApp]}>
-        <Column modifiers={[fillMaxSize()]}>
-          <Box modifiers={[size(widgetWidth, heroHeight)]}>
-            <Box contentAlignment="bottomEnd" modifiers={[fillMaxSize(), padding(0, 0, portraitInset, 0)]}>
-              <Image source={{ uri: portrait }} contentScale="fit"
-                modifiers={[size(portraitHeight * portraitAspect, portraitHeight)]} />
+  return (
+    <Box contentAlignment="center" modifiers={[fillMaxSize(), background(surface), cornerRadius(20), ...actions]}>
+      {card ? (
+        <Column>
+          <Box modifiers={[size(widgetWidth, available)]} contentAlignment="topStart">
+            <Box modifiers={[fillMaxSize(), padding(0, 0, 6, 0)]} contentAlignment="bottomEnd">
+              <Image source={{ uri: portrait }} contentScale="fit" modifiers={[size(imageWidth, imageHeight)]} />
             </Box>
-            <Box contentAlignment="centerStart" modifiers={[fillMaxSize(), padding(inset, 0, 0, 0)]}>
-              <Column modifiers={[width(tallyWidth)]}>
-                <Text color="#FFFFFF" style={{ fontSize: tallySize, fontWeight: 'bold' }} maxLines={1}>{value}</Text>
-                <Text color="#FFFFFF" style={{ fontSize: labelSize, fontWeight: '500' }} maxLines={2}>{label}</Text>
-                <Text color={accent} style={{ fontSize: labelSize, fontWeight: '500' }}
-                  modifiers={[padding(0, heroHeight < 104 ? 4 : 7, 0, 0)]} maxLines={2}>{streak}</Text>
+            <Box modifiers={[size(widgetWidth, textHeight), padding(margin, 0, 0, 0)]} contentAlignment="centerStart">
+              <Column modifiers={[width(textWidth)]}>
+                <Text color="#FFFDF8" style={{ fontSize: valueSize, fontWeight: 'bold' }} maxLines={1}>{card.value}</Text>
+                <Text color="#DDD7CF" style={{ fontSize: labelSize }} maxLines={narrow && !short ? 2 : 1}>
+                  {narrow && short ? card.shortLabel ?? card.label : card.label}
+                </Text>
+                <Text color={card.accent} style={{ fontSize: short ? 11 : narrow ? 14 : 18, fontWeight: 'bold' }}
+                  modifiers={[padding(0, short ? 4 : 12, 0, 0)]} maxLines={short ? 1 : 2}>
+                  {narrow && short ? card.shortSecondary ?? card.secondary : card.secondary}
+                </Text>
+                {card.averages && !footer && <Text color="#DDD7CF" style={{ fontSize: 10 }}
+                  modifiers={[padding(0, short ? 0 : 4, 0, 0)]} maxLines={1}>{card.averages}</Text>}
               </Column>
             </Box>
           </Box>
-          <Box modifiers={[size(widgetWidth, 1), background(empty)]} />
-          <Row horizontalArrangement="center" verticalAlignment="center" modifiers={[size(widgetWidth, footerHeight - 1)]}>
-            {days.map(({ label: day, state }) => {
-              const current = state === 'today' || state === 'today-reviewed';
-              const reviewed = state === 'reviewed' || state === 'today-reviewed';
-              const fill = reviewed ? accent : state === 'future' ? accent + '1A' : empty;
-              return (
-                <Column key={day} horizontalAlignment="center" modifiers={[width(dayWidth)]}>
-                  <Box contentAlignment="center" modifiers={[size(markWidth, markHeight), background(current ? accent : fill)]}>
-                    {state === 'today' && <Box modifiers={[size(markWidth - 2, markHeight - 2), background(surface)]} />}
+          {footer > 0 && card.days && <Column>
+            <Box modifiers={[size(widgetWidth, 1), background(card.accent + '33')]} />
+            <Row horizontalArrangement="center" verticalAlignment="center" modifiers={[size(widgetWidth, footer - 1)]}>
+              {card.days.map(({ label, state }) => {
+                const dayWidth = Math.floor((widgetWidth - 2 * margin) / 7);
+                const current = state === 'today' || state === 'today-reviewed';
+                const reviewed = state === 'reviewed' || state === 'today-reviewed';
+                const fill = reviewed ? card.accent : state === 'future' ? card.accent + '1A' : card.accent + '44';
+                return <Column key={label} horizontalAlignment="center" modifiers={[width(dayWidth)]}>
+                  <Box contentAlignment="center" modifiers={[size(dayWidth - 6, current ? 6 : 4), background(current ? card.accent : fill)]}>
+                    {state === 'today' && <Box modifiers={[size(dayWidth - 8, 4), background(surface)]} />}
                   </Box>
-                  <Text color={current ? accent : '#FFFFFF'} style={{ fontSize: narrow ? 9 : 11, fontWeight: current ? '500' : 'normal' }}
-                    modifiers={[padding(0, 4, 0, 0)]} maxLines={1}>{day}</Text>
-                </Column>
-              );
-            })}
-          </Row>
+                  <Text color={current ? card.accent : '#FFFDF8'} style={{ fontSize: narrow ? 9 : 11, fontWeight: current ? 'bold' : 'normal' }}
+                    modifiers={[padding(0, 4, 0, 0)]} maxLines={1}>{label}</Text>
+                </Column>;
+              })}
+            </Row>
+          </Column>}
         </Column>
-      </Box>
-    );
-  }
-
-  const stats = artwork?.compactStats;
-  const portraitMaxWidth = widgetWidth * (layout === 'tall' ? (narrow && card ? 0.44 : 0.53) : 0.36);
-  const portraitHeight = Math.max(1, Math.min(height - portraitInset, portraitMaxWidth / portraitAspect));
-  const portraitWidth = portraitHeight * portraitAspect;
-  const statsWidth = Math.max(1, widgetWidth - portraitWidth - portraitInset);
-  const statsHeight = stats ? Math.min(height, statsWidth / stats.aspect) : 0;
-  const cardWidth = Math.max(1, statsWidth - inset);
-  const inlineCard = layout === 'compact' && short && !narrow;
-  const valueMax = layout === 'tall' ? (narrow ? 32 : 44) : (short ? 24 : 32);
-  const valueWidth = inlineCard ? cardWidth * 0.50 : cardWidth;
-  const valueSize = Math.min(valueMax, valueWidth / Math.max(1, (card?.value.length ?? 1) * 0.62));
-
-  return (
-    <Box contentAlignment="center" modifiers={[fillMaxSize(), background(surface), cornerRadius(20), ...openApp]}>
-      {artwork && stats ? (
-        <>
-          <Box contentAlignment="bottomEnd" modifiers={[fillMaxSize(), padding(0, 0, portraitInset, 0)]}>
-            <Image
-              source={{ uri: portrait }}
-              contentScale="fit"
-              modifiers={[size(portraitWidth, portraitHeight)]}
-            />
-          </Box>
-          <Box contentAlignment="centerStart" modifiers={[fillMaxSize()]}>
-            {card ? (
-              <Box modifiers={[padding(inset, 0, 0, 0)]}>
-                <Column modifiers={[width(cardWidth)]}>
-                  {inlineCard ? (
-                    <Row verticalAlignment="center">
-                      <Text color="#FFFFFF" style={{ fontSize: valueSize, fontWeight: 'bold' }} maxLines={1}>{card.value}</Text>
-                      <Text modifiers={[padding(6, 0, 0, 0)]} color="#FFFFFF" style={{ fontSize: labelSize, fontWeight: '500' }} maxLines={2}>{card.label}</Text>
-                    </Row>
-                  ) : <>
-                    <Text color="#FFFFFF" style={{ fontSize: valueSize, fontWeight: 'bold' }} maxLines={1}>{card.value}</Text>
-                    <Text color="#FFFFFF" style={{ fontSize: labelSize, fontWeight: '500' }} maxLines={short ? 1 : 2}>
-                      {narrow && short ? card.shortLabel ?? card.label : card.label}
-                    </Text>
-                  </>}
-                  <Text color={card.accent}
-                    modifiers={[padding(0, short ? 2 : 6, 0, 0)]} style={{ fontSize: labelSize, fontWeight: '500' }} maxLines={short ? 1 : 2}>
-                    {narrow ? card.shortSecondary ?? card.secondary : card.secondary}
-                  </Text>
-                </Column>
-              </Box>
-            ) : <Image
-              source={{ uri: stats.uri }}
-              contentDescription={description}
-              contentScale="fit"
-              modifiers={[size(statsHeight * stats.aspect, statsHeight)]}
-            />}
-          </Box>
-        </>
       ) : (
         <Row verticalAlignment="center" modifiers={[width(Math.min(260, widgetWidth - 16))]}>
           <Image source={{ uri: portrait }} contentScale="fit" modifiers={[size(narrow ? 49 : 65, 48)]} />
-          <Text color="#FFFFFF" modifiers={[padding(8, 0, 0, 0)]} style={{ fontSize: 13 }} maxLines={3}>{connectLabel}</Text>
+          <Text color="#FFFDF8" modifiers={[padding(8, 0, 0, 0)]} style={{ fontSize: 13 }} maxLines={3}>{connectLabel}</Text>
         </Row>
       )}
     </Box>
@@ -186,5 +115,5 @@ function AnkiStreak(
 }
 
 export default createWidget<WidgetProps>('AnkiStreak', AnkiStreak, {
-  artwork: null, description: '', backdrop: '#000000', waitingDrawable: 'miku_waiting',
+  description: '', backdrop: '#000000', waitingDrawable: 'miku_waiting',
 });

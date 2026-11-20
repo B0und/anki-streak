@@ -1,6 +1,6 @@
 import { useActor } from '@xstate/react';
-import { ChevronRight } from 'lucide-react-native';
-import { Image, Slider, Text, XStack, YStack } from 'tamagui';
+import { ChevronRight, Frown, Smile, ScanFace } from 'lucide-react-native';
+import { Image, Slider, Text, View, XStack, YStack } from 'tamagui';
 
 import { useDashboardContext } from './dashboardContext';
 import { copy } from './messages';
@@ -8,9 +8,7 @@ import { widgetSizes, type WidgetSize } from './preferences';
 import { Action, Choices, Section } from './studyComponents';
 import { themes } from './themes';
 import { WidgetPreview } from './WidgetPreview';
-import { widgetSizeActor } from './widgetSizeActor';
-
-const moods = ['live', 'waiting', 'happy'] as const;
+import { previewBounds, widgetSizeActor } from './widgetSizeActor';
 
 export function WidgetScreen({ openLayouts, openThemes }: {
   openLayouts(size: WidgetSize): void; openThemes(): void;
@@ -19,16 +17,40 @@ export function WidgetScreen({ openLayouts, openThemes }: {
   const [selection, select] = useActor(widgetSizeActor, { input: {} });
   const { size, sizes, selectedWidgetId } = selection.context;
   const candidates = sizes.filter((bounds) => bounds.size === size);
+  const showDimensions = widgetSizes.some((key) => sizes.filter((item) => item.size === key).length > 1);
+  const bounds = previewBounds(candidates, selectedWidgetId);
   const theme = themes[dashboard.themeId];
   const mood = dashboard.previewMood ?? 'live';
+  const MoodIcon = mood === 'waiting' ? Frown : mood === 'happy' ? Smile : ScanFace;
 
   return <>
     <YStack gap={10}>
       <Choices<WidgetSize> choices={widgetSizes} value={size} onChange={(size) => select({ type: 'select', size })} label={(key) => copy(language, key)} />
-      <WidgetPreview sizes={candidates} selected={selectedWidgetId} onSelect={(widgetId) => select({ type: 'bounds', widgetId })} />
+      <XStack items="center" justify="space-between" minH={48}>
+        <Text color="muted" flex={1} numberOfLines={1}>
+          {bounds?.widgetId === undefined ? copy(language, 'exampleWidgetSize') : ''}
+        </Text>
+        <View accessibilityRole="button" accessibilityLabel={copy(language, 'themePreview')}
+          accessibilityValue={{ text: copy(language, mood === 'live' ? 'live' : mood === 'happy' ? 'happyMood' : 'waitingMood') }}
+          w={48} h={48} items="center" justify="center" rounded={12} bg="subtle"
+          onPress={() => mood === 'happy' ? dashboard.clearPreview() : dashboard.setPreviewMood(mood === 'live' ? 'waiting' : 'happy')}>
+          <MoodIcon color={palette.accent} size={22} />
+        </View>
+      </XStack>
+      <YStack h={188}>
+        {bounds && <WidgetPreview bounds={bounds} />}
+      </YStack>
+      {showDimensions && <YStack h={56} overflow="hidden">
+        {candidates.length > 1 && <Choices choices={candidates.map((item) => String(item.widgetId))}
+          value={String(bounds?.widgetId)} onChange={(id) => select({ type: 'bounds', widgetId: Number(id) })}
+          label={(id) => {
+            const item = candidates.find((entry) => String(entry.widgetId) === id);
+            return item ? `${Math.round(item.width)} × ${Math.round(item.height)}` : '';
+          }} />}
+      </YStack>}
       <Action primary disabled={dashboard.requesting}
         onPress={() => void dashboard.runAndroidRequest('pin')}>{copy(language, 'addWidget')}</Action>
-      {size === 'tall' && candidates[0]?.widgetId === undefined && <Text color="muted" fontSize={13}>{copy(language, 'resizeWidget')}</Text>}
+
     </YStack>
     <Section title={copy(language, 'appearance')}>
       <XStack accessibilityRole="button" onPress={openThemes} minH={54} py={5}
@@ -67,10 +89,6 @@ export function WidgetScreen({ openLayouts, openThemes }: {
           }}
           bg="accent" borderColor="accent" />
       </Slider>
-      <Text color="color" fontWeight="600">{copy(language, 'themePreview')}</Text>
-      <Choices choices={moods} value={mood}
-        onChange={(value) => value === 'live' ? dashboard.clearPreview() : dashboard.setPreviewMood(value)}
-        label={(value) => copy(language, value === 'live' ? value : value === 'happy' ? 'happyMood' : 'waitingMood')} />
     </Section>
   </>;
 }

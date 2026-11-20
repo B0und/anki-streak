@@ -1,5 +1,5 @@
 import type { ReviewHistory } from './activity';
-import type { TallCurrent, WidgetArtwork, WidgetCard, WidgetProps } from './AnkiWidget';
+import type { WidgetCard, WidgetProps } from './AnkiWidget';
 import { copy, weekdays, type Language } from './messages';
 import type { WidgetLayout, WidgetSize } from './preferences';
 import { themes, type WidgetTheme } from './themes';
@@ -9,44 +9,37 @@ function widgetBackdrop(color: `#${string}`, transparency: number): `#${string}`
   return `${color}${alpha}`;
 }
 
-function widgetCard(layout: WidgetLayout, language: Language, stats: { today: number; streak: number }, accent: string): WidgetCard | undefined {
-  if (layout === 'current') return;
-  const focus = layout === 'focus';
+function widgetCard(layout: WidgetLayout, language: Language, stats: WidgetStats, accent: `#${string}`): WidgetCard {
+  const focus = layout !== 'first';
   const secondary = focus ? stats.streak : stats.today;
   return {
     value: String(focus ? stats.today : stats.streak),
     label: copy(language, focus ? 'reviewed' : 'streak'),
-    secondary: focus ? copy(language, 'widgetStreak', { count: secondary }) : `${copy(language, 'reviewed')}: ${secondary}`,
+    secondary: focus ? copy(language, 'widgetStreak', { count: secondary }) : `${copy(language, 'shortReviews')}: ${secondary}`,
     shortLabel: copy(language, focus ? 'shortReviews' : 'shortStreak'),
+    averages: layout === 'current' ? copy(language, 'widgetAverages', { reviews: stats.dailyReviewed, learned: stats.dailyLearned }) : undefined,
     shortSecondary: `${copy(language, focus ? 'shortStreak' : 'shortReviews')}: ${secondary}`,
     accent,
   };
 }
 
-function currentTall(language: Language, stats: { today: number; streak: number; history: ReviewHistory }, accent: `#${string}`): TallCurrent {
+function widgetWeek(language: Language, stats: { today: number; history: ReviewHistory }): NonNullable<WidgetCard["days"]> {
   const { counts, todayRow } = stats.history;
   const monday = counts.length - 1 - todayRow;
-  return {
-    value: String(stats.today),
-    label: copy(language, 'reviewed'),
-    streak: copy(language, 'widgetStreak', { count: stats.streak }),
-    accent,
-    days: weekdays[language].map((label, index) => {
-      if (index > todayRow) {
-        return { label, state: 'future' };
-      }
-      if (index === todayRow) {
-        return { label, state: stats.today > 0 ? 'today-reviewed' : 'today' };
-      }
-      return { label, state: (counts[monday + index] ?? 0) > 0 ? 'reviewed' : 'missed' };
-    }),
-  };
+  return weekdays[language].map((label, index) => {
+    if (index > todayRow) {
+      return { label, state: 'future' };
+    }
+    if (index === todayRow) {
+      return { label, state: stats.today > 0 ? 'today-reviewed' : 'today' };
+    }
+    return { label, state: (counts[monday + index] ?? 0) > 0 ? 'reviewed' : 'missed' };
+  });
 }
 
 type WidgetStats = { today: number; streak: number; history: ReviewHistory; dailyReviewed: number; dailyLearned: number };
 
-export function widgetProps({ artwork, stats, language, themeId, layouts, transparency }: {
-  artwork: WidgetArtwork | null;
+export function widgetProps({ stats, language, themeId, layouts, transparency }: {
   stats: WidgetStats | null;
   language: Language;
   themeId: WidgetTheme;
@@ -55,7 +48,8 @@ export function widgetProps({ artwork, stats, language, themeId, layouts, transp
 }): WidgetProps {
   const theme = themes[themeId];
   return {
-    artwork,
+    happy: !!stats && stats.today > 0,
+    portraitAspect: theme.portraitAspect,
     description: stats ? copy(language, 'activityDescription', {
       name: theme.name, streak: stats.streak, today: stats.today,
       reviews: stats.dailyReviewed, learned: stats.dailyLearned,
@@ -67,8 +61,8 @@ export function widgetProps({ artwork, stats, language, themeId, layouts, transp
     connectLabel: copy(language, 'connectWidget'),
     cards: stats ? {
       compact: widgetCard(layouts.compact, language, stats, theme.accent),
-      tall: widgetCard(layouts.tall, language, stats, theme.accent),
+      tall: { ...widgetCard(layouts.tall, language, stats, theme.accent),
+        days: layouts.tall === 'current' ? widgetWeek(language, stats) : undefined },
     } : undefined,
-    tallCurrent: stats && layouts.tall === 'current' ? currentTall(language, stats, theme.accent) : undefined,
   };
 }

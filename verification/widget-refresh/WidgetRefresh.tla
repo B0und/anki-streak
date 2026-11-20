@@ -1,53 +1,44 @@
 --------------------------- MODULE WidgetRefresh ---------------------------
 CONSTANT SkipFreshnessCheck
 
-VARIABLES current, rendering, submitted, expectedAtHandoff
+VARIABLES current, queued, submitted, expectedAtHandoff
 
-NoArtwork == [reviews |-> "none", theme |-> "none", language |-> "none"]
+NoSnapshot == [reviews |-> "none", theme |-> "none", language |-> "none"]
 
 Init ==
     /\ current = [reviews |-> "earlier", theme |-> "miku", language |-> "en"]
-    /\ rendering = NoArtwork
-    /\ submitted = NoArtwork
-    /\ expectedAtHandoff = NoArtwork
+    /\ queued = NoSnapshot
+    /\ submitted = NoSnapshot
+    /\ expectedAtHandoff = NoSnapshot
 
 ChangeReviews ==
     /\ current.reviews = "earlier"
     /\ current' = [current EXCEPT !.reviews = "later"]
-    /\ UNCHANGED <<rendering, submitted, expectedAtHandoff>>
+    /\ UNCHANGED <<queued, submitted, expectedAtHandoff>>
 
 ChangeTheme ==
     /\ current.theme = "miku"
     /\ current' = [current EXCEPT !.theme = "emilia"]
-    /\ UNCHANGED <<rendering, submitted, expectedAtHandoff>>
+    /\ UNCHANGED <<queued, submitted, expectedAtHandoff>>
 
 ChangeLanguage ==
     /\ current.language = "en"
     /\ current' = [current EXCEPT !.language = "ru"]
-    /\ UNCHANGED <<rendering, submitted, expectedAtHandoff>>
+    /\ UNCHANGED <<queued, submitted, expectedAtHandoff>>
 
-StartRender ==
-    /\ rendering = NoArtwork
-    /\ rendering' = current
-    /\ UNCHANGED <<current, submitted, expectedAtHandoff>>
-
-RestartStaleRender ==
-    /\ ~SkipFreshnessCheck
-    /\ rendering # NoArtwork
-    /\ rendering # current
-    /\ rendering' = current
+QueuePublication ==
+    /\ queued = NoSnapshot
+    /\ queued' = current
     /\ UNCHANGED <<current, submitted, expectedAtHandoff>>
 
 SubmitSnapshot ==
-    /\ rendering # NoArtwork
-    /\ SkipFreshnessCheck \/ rendering = current
-    /\ submitted' = rendering
+    /\ queued # NoSnapshot
+    /\ submitted' = IF SkipFreshnessCheck THEN queued ELSE current
     /\ expectedAtHandoff' = current
-    /\ rendering' = NoArtwork
+    /\ queued' = NoSnapshot
     /\ UNCHANGED current
 
-Next == ChangeReviews \/ ChangeTheme \/ ChangeLanguage \/ StartRender
-        \/ RestartStaleRender \/ SubmitSnapshot
+Next == ChangeReviews \/ ChangeTheme \/ ChangeLanguage \/ QueuePublication \/ SubmitSnapshot
 
 NoStalePublication == submitted = expectedAtHandoff
 

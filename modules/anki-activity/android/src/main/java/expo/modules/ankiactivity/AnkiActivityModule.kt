@@ -77,10 +77,6 @@ class AnkiActivityModule : Module() {
       widgetPreferences.edit().putStringSet(DUE_REVIEW_EXCLUDED_DECKS, ids.toSet()).apply()
     }
 
-    AsyncFunction("renderWidget") { streak: Int, today: Int, history: ReviewHistory, dailyReviewed: Int, dailyLearned: Int, theme: String, purpose: String, language: String ->
-      renderWidgetArtwork(context, streak, today, history, dailyReviewed, dailyLearned, WidgetTheme.fromId(theme), purpose == "preview", language == "ru")
-    }
-
     AsyncFunction("openAnki") {
       val intent = context.packageManager.getLaunchIntentForPackage(ANKI_PACKAGE)
       if (intent == null) {

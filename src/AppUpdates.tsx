@@ -1,12 +1,13 @@
+import { Download } from 'lucide-react-native';
 import { useWindowDimensions } from 'react-native';
-import { Text, View } from 'tamagui';
+import { Text, View, XStack } from 'tamagui';
 
 import { copy, type Language } from './messages';
-import { Section } from './studyComponents';
+import { SettingsGroup } from './SettingsScreen';
 import type { useAppUpdates } from './updateMachine';
 
-export function AppUpdates({ language, updates }: {
-  language: Language; updates: ReturnType<typeof useAppUpdates>;
+export function AppUpdates({ language, updates, accent }: {
+  accent: string; language: Language; updates: ReturnType<typeof useAppUpdates>;
 }) {
   const { fontScale } = useWindowDimensions();
   const { kind, update, version, canUpdate, check, install } = updates;
@@ -23,15 +24,16 @@ export function AppUpdates({ language, updates }: {
     : update ? copy(language, 'updateAvailable', { version: update.version })
     : copy(language, kind === 'current' ? 'upToDate' : 'version', { version });
 
-  return <Section title={copy(language, 'updates')}>
-    <Text accessibilityLiveRegion="polite" color="muted" fontSize={14} lineHeight="20px"
-      numberOfLines={3} style={{ height: 60 * fontScale, includeFontPadding: false }}>{status}</Text>
-    <View accessibilityRole="button" accessibilityState={{ disabled: busy }}
-      onPress={busy ? undefined : update ? install : check}
-      self="flex-start" justify="center" h={Math.max(44, 38 * fontScale)} opacity={busy ? 0.55 : 'press:0.75'}>
-      <Text color="accent" fontSize={14} fontWeight="700" numberOfLines={2}>
-        {copy(language, update ? installReady ? 'installUpdate' : 'downloadInstall' : 'check')}
-      </Text>
-    </View>
-  </Section>;
+  return <SettingsGroup title={copy(language, 'updates')} icon={Download} color={accent}>
+    <XStack items="center" gap={12} h={Math.max(52, 40 * fontScale)}>
+      <Text accessibilityLiveRegion="polite" color="muted" fontSize={13} flex={1} numberOfLines={2}>{status}</Text>
+      <View accessibilityRole="button" accessibilityState={{ disabled: busy }}
+        onPress={busy ? undefined : update ? install : check}
+        w="43%" justify="center" h="100%" opacity={busy ? 0.55 : 'press:0.75'}>
+        <Text color="accent" fontSize={13} fontWeight="700" numberOfLines={2} text="right">
+          {copy(language, update ? installReady ? 'installUpdate' : 'downloadInstall' : 'check')}
+        </Text>
+      </View>
+    </XStack>
+  </SettingsGroup>;
 }

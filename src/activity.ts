@@ -1,8 +1,6 @@
 import { Effect, Schema } from 'effect';
 import { requireNativeModule } from 'expo';
 
-import type { WidgetArtwork } from './AnkiWidget';
-import { getLanguage } from './preferences';
 import { themeOrder, type WidgetTheme } from './themes';
 
 export type ReviewMood = 'waiting' | 'happy';
@@ -18,16 +16,6 @@ const anki = requireNativeModule<{
   readDecks(): Promise<unknown>;
   getDueReviewExcludedDecks(): string[];
   setDueReviewExcludedDecks(ids: readonly string[]): void;
-  renderWidget(
-    streak: number,
-    today: number,
-    history: ReviewHistory,
-    dailyReviewed: number,
-    dailyLearned: number,
-    theme: WidgetTheme,
-    purpose: 'widget' | 'preview',
-    language: 'en' | 'ru',
-  ): Promise<WidgetArtwork>;
   requestPermission(): Promise<unknown>;
   pinWidget(): Promise<'requested' | 'use-picker'>;
   openAnki(): Promise<'opened' | 'missing'>;
@@ -51,13 +39,6 @@ export const readDecks = Effect.tryPromise(() => anki.readDecks()).pipe(
 export const requestAnkiPermission = Effect.tryPromise(() => anki.requestPermission()).pipe(
   Effect.flatMap(Schema.decodeUnknownEffect(Schema.Struct({ granted: Schema.Boolean, canAskAgain: Schema.Boolean }))),
 );
-
-export function renderWidget(
-  streak: number, today: number, history: ReviewHistory, dailyReviewed: number, dailyLearned: number,
-  theme: WidgetTheme, purpose: 'widget' | 'preview' = 'widget', language = getLanguage(),
-) {
-  return anki.renderWidget(streak, today, history, dailyReviewed, dailyLearned, theme, purpose, language);
-}
 
 export function getWidgetTheme(): WidgetTheme {
   const id = anki.getWidgetTheme();

@@ -1,8 +1,8 @@
 import { createEffectActor, createEffectLogic, join } from '@xstate/effect';
 import { useActor } from '@xstate/react';
-import { Effect, Schema } from 'effect';
+import { Effect, Option, Schema } from 'effect';
 import { requireNativeView } from 'expo';
-import { StyleSheet, View, type ViewProps } from 'react-native';
+import { StyleSheet, Text, View, type ViewProps } from 'react-native';
 import { createAsyncLogic, types } from 'xstate';
 
 import { historyDays, renderWidget } from './activity';
@@ -36,7 +36,11 @@ const sampleArtwork = createEffectLogic({
 const galleryArtwork = createAsyncLogic({
   schemas: { input: types<typeof sampleInput.Type>() },
   run: ({ input, signal }) => Effect.runPromise(
-    createEffectActor(sampleArtwork, { input }).pipe(Effect.flatMap(join), Effect.scoped), { signal },
+    createEffectActor(sampleArtwork, { input }).pipe(
+      Effect.flatMap(join), Effect.scoped,
+      Effect.tapError((error) => Effect.logWarning('Sample widget artwork unavailable', error)),
+      Effect.option,
+    ), { signal },
   ),
 });
 
@@ -44,13 +48,16 @@ type PreviewContent = {
   artwork?: WidgetArtwork;
   stats?: typeof sampleStats;
   sample?: boolean;
+  unavailable?: boolean;
+  revision?: number;
 };
 
 export function useWidgetPreview(): PreviewContent {
   const { dashboard } = useDashboardContext();
   const live = dashboard.widgetArtwork;
   return {
-    artwork: live?.theme === dashboard.themeId ? live.artwork : undefined,
+    artwork: live?.theme === dashboard.themeId && live.activity === dashboard.activity ? live.artwork : undefined,
+    revision: live?.revision,
     stats: dashboard.activity?.kind === 'ready' ? dashboard.activity : undefined,
   };
 }
@@ -58,7 +65,12 @@ export function useWidgetPreview(): PreviewContent {
 export function SampleWidgetPreviews({ render }: { render(content: PreviewContent): React.ReactNode }) {
   const { dashboard, language } = useDashboardContext();
   const [sample] = useActor(galleryArtwork, { input: { theme: dashboard.themeId, language } });
-  return render({ artwork: sample.output, stats: sampleStats, sample: true });
+  return render({
+    artwork: sample.output ? Option.getOrUndefined(sample.output) : undefined,
+    stats: sampleStats,
+    sample: true,
+    unavailable: sample.output !== undefined && Option.isNone(sample.output),
+  });
 }
 
 export function WidgetPreview({ layout, size, content }: {
@@ -87,12 +99,14 @@ export function WidgetPreview({ layout, size, content }: {
   return <View style={[styles.frame, { aspectRatio: 1 / previewAspect[size], backgroundColor: palette.hero }]}>
     <View pointerEvents="none" style={[styles.wallpaper, { backgroundColor: palette.line }]} />
     <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: backdrop }]} />
-    <NativePreview pointerEvents="none" style={StyleSheet.absoluteFill}
-      widgetName="AnkiStreak" propsJson={JSON.stringify(payload)} />
+    {content.unavailable ? <Text style={[styles.placeholder, { color: palette.text }]}>{copy(language, 'previewUnavailable')}</Text>
+      : <NativePreview pointerEvents="none" style={StyleSheet.absoluteFill}
+      widgetName="AnkiStreak" propsJson={JSON.stringify({ ...payload, revision: content.revision })} />}
   </View>;
 }
 
 const styles = StyleSheet.create({
-  frame: { borderRadius: 20, overflow: 'hidden' },
+  placeholder: { textAlign: 'center', margin: 'auto' },
+  frame: { justifyContent: 'center', borderRadius: 20, overflow: 'hidden' },
   wallpaper: { position: 'absolute', width: '125%', height: '125%', left: '-35%', top: '48%', transform: [{ rotate: '-14deg' }] },
 });

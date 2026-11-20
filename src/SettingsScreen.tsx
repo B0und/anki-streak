@@ -1,5 +1,5 @@
 import { CheckCircle2, Circle } from 'lucide-react-native';
-import { Linking, Pressable, Switch, Text, TextInput, View } from 'react-native';
+import { Pressable, Switch, Text, TextInput, View } from 'react-native';
 
 import type { Palette } from './appearance';
 import { copy, type Language } from './messages';
@@ -58,7 +58,7 @@ export function SettingsScreen({ palette, language, appearance, setAppearance, l
             trackColor={{ true: palette.accent, false: palette.line }} thumbColor={value ? palette.onAccent : palette.surface} />
         </View>
       ))}
-      {blocked && <Action palette={palette} onPress={() => void Linking.openSettings().catch(() => {})}>{copy(language, 'notificationsBlocked')}</Action>}
+      {blocked && <Action palette={palette} disabled={dashboard.requesting} onPress={() => dashboard.runAndroidRequest('notifications')}>{copy(language, 'notificationsBlocked')}</Action>}
       <Text style={{ color: palette.muted, lineHeight: 19 }}>{copy(language, 'rewardTiming')}</Text>
     </Section>
     <Section title={copy(language, 'sync')} palette={palette}>

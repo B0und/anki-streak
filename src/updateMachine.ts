@@ -58,6 +58,15 @@ const updatesMachine = updatesSetup.createMachine({
     current: { on: { check: startCheck('current') } },
     'check-failed': { on: { check: startCheck('check-failed') } },
     checking: {
+      on: {
+        check: ({ context, event }) => {
+          if (event.manual) return { context: { ...context, manual: true } };
+        },
+        install: ({ context }) => {
+          if (!context.update) return;
+          return { target: context.resume === 'permission' || context.resume === 'ready' ? 'opening-installer' : 'downloading' };
+        },
+      },
       invoke: updatesSetup.createInvoke({
         schemas: { input: types<string>() },
         src: ({ input, signal }): Promise<AppUpdate | null> => Effect.runPromise(checkForAppUpdate(input), { signal }),
@@ -106,7 +115,7 @@ const updatesMachine = updatesSetup.createMachine({
 
 export function useAppUpdates() {
   const [snapshot, send] = useActor(updatesMachine);
-  const kind = snapshot.matches('checking') && !snapshot.context.manual ? snapshot.context.resume : snapshot.value;
+  const kind = snapshot.value;
   return {
     ...snapshot.context,
     kind,

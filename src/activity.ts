@@ -30,8 +30,12 @@ const anki = requireNativeModule<{
 }>('AnkiActivity');
 
 export const {
-  historyDays, pinWidget, openAnki, requestPermission, getWidgetBackgroundTransparency, setWidgetBackgroundTransparency, setWidgetTheme,
+  historyDays, pinWidget, openAnki, getWidgetBackgroundTransparency, setWidgetBackgroundTransparency, setWidgetTheme,
 } = anki;
+
+export const requestAnkiPermission = Effect.tryPromise(() => anki.requestPermission()).pipe(
+  Effect.flatMap(Schema.decodeUnknownEffect(Schema.Struct({ granted: Schema.Boolean, canAskAgain: Schema.Boolean }))),
+);
 
 export function renderWidget(
   streak: number, today: number, history: readonly number[], dailyReviewed: number, dailyLearned: number,
@@ -69,5 +73,7 @@ export const readActivityEffect = Effect.tryPromise(() => anki.readActivity()).p
   Effect.map((data): AnkiActivity => data.kind === 'ready'
     ? { ...data, mood: data.today > 0 ? 'happy' : 'waiting' }
     : data),
-  Effect.catch(() => Effect.succeed<AnkiActivity>({ kind: 'unavailable' })),
+  Effect.catch((error) => Effect.logWarning('AnkiDroid activity unavailable', error).pipe(
+    Effect.as<AnkiActivity>({ kind: 'unavailable' }),
+  )),
 );

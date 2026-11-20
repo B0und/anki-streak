@@ -21,6 +21,7 @@ export const settings = requireNativeModule<{
   getSystemLanguage(): string;
   getNotificationAccess(): boolean;
   requestNotificationAccess(): Promise<void>;
+  openNotificationSettings(): Promise<void>;
   recordMilestone(day: string, animate: boolean, notify: boolean, title: string, body: string, channel: string): void;
   takeCelebration(day: string): boolean;
 }>('StudyPreferences');

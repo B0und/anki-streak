@@ -4,7 +4,7 @@ import { AppState, Linking, ToastAndroid } from 'react-native';
 import { createAsyncLogic, createCallbackLogic, setup, types } from 'xstate';
 
 import {
-  getWidgetBackgroundTransparency, getWidgetTheme, openAnki, pinWidget, requestPermission, setWidgetTheme, type ReviewMood,
+  getWidgetBackgroundTransparency, getWidgetTheme, openAnki, pinWidget, requestAnkiPermission, setWidgetTheme, type ReviewMood,
 } from './activity';
 import { copy, type Message } from './messages';
 import { appearanceOptions, getLanguage, getWidgetLayouts, languageOptions, preference, settings, type Appearance,
@@ -13,18 +13,28 @@ import type { WidgetTheme } from './themes';
 import { changeWidgetBackgroundTransparency, refreshAfterPermissionRequest, refreshWidget,
   republishWidgetAppearance, widgetRefreshActor } from './widgetRefresh';
 
-type AndroidRequest = 'permission' | 'settings' | 'pin' | 'open';
+type AndroidRequest = 'permission' | 'settings' | 'notifications' | 'pin' | 'open';
 
 const androidRequest = Effect.fnUntraced(function*(request: AndroidRequest): Effect.fn.Return<Message | null> {
   switch (request) {
     case 'permission': {
-      const allowed = yield* Effect.tryPromise(() => requestPermission()).pipe(Effect.as(true), Effect.orElseSucceed(() => false));
-      if (!allowed) return 'permissionError';
-      yield* Effect.tryPromise(refreshAfterPermissionRequest).pipe(Effect.ignore);
+      const response = yield* requestAnkiPermission.pipe(Effect.orElseSucceed(() => null));
+      if (!response) return 'permissionError';
+      if (!response.granted) {
+        if (response.canAskAgain) return 'permission';
+        return yield* Effect.tryPromise(() => Linking.openSettings()).pipe(
+          Effect.as(null), Effect.orElseSucceed(() => 'settingsError' as const),
+        );
+      }
+      yield* Effect.tryPromise(() => refreshAfterPermissionRequest()).pipe(Effect.ignore);
       return null;
     }
     case 'settings':
       return yield* Effect.tryPromise(() => Linking.openSettings()).pipe(Effect.as(null), Effect.orElseSucceed(() => 'settingsError' as const));
+    case 'notifications':
+      return yield* Effect.tryPromise(() => settings.openNotificationSettings()).pipe(
+        Effect.as(null), Effect.orElseSucceed(() => 'settingsError' as const),
+      );
     case 'pin':
       return yield* Effect.tryPromise(() => pinWidget()).pipe(
         Effect.map((result) => result === 'use-picker' ? 'pinFallback' as const : null),
@@ -173,17 +183,18 @@ export function useDashboard() {
   const [snapshot, send] = useActor(dashboardMachine);
   const widget = useSelector(widgetRefreshActor, (value) => value);
   const { context } = snapshot;
-  const { completed, backgroundError } = widget.context;
-  const activity = completed?.activity ?? null;
+  const { activity, check, artwork, appearanceError, backgroundError } = widget.context;
 
   return {
     ...context,
     activity,
-    lastCheckedAt: completed?.checkedAt,
-    widgetArtwork: completed?.publication.kind === 'reviews' ? completed.publication : null,
+    lastCheckedAt: check?.checkedAt,
+    widgetArtwork: artwork,
     mood: activity?.kind === 'ready' ? activity.mood : 'waiting' as const,
-    notice: context.notice ?? (widget.matches({ data: 'failed' }) || backgroundError ? 'refreshError' as const : null),
-    refreshing: widget.matches({ data: 'reading' }),
+    notice: context.notice ?? (appearanceError ? 'widgetAppearanceFailed' as const
+      : widget.matches({ data: 'failed' }) || backgroundError ? 'refreshError' as const
+      : check?.activity.kind === 'unavailable' && activity?.kind === 'ready' ? 'unavailable' as const : null),
+    refreshing: widget.matches({ data: 'reading' }) || widget.matches({ data: 'publishing' }),
     requesting: snapshot.matches('requesting'),
     clearPreview() { send({ type: 'widget.preview', value: null }); },
     setPreviewMood(value: ReviewMood) { send({ type: 'widget.preview', value }); },

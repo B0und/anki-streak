@@ -44,10 +44,14 @@ index edabde8f51b3bd9162b634e46f2f09686c3a3b8a..da3e7b5655520247515d414760230edc
 diff --git a/android/src/main/java/expo/modules/widgets/WidgetsModule.kt b/android/src/main/java/expo/modules/widgets/WidgetsModule.kt
 --- a/android/src/main/java/expo/modules/widgets/WidgetsModule.kt
 +++ b/android/src/main/java/expo/modules/widgets/WidgetsModule.kt
-@@ -46,6 +46,18 @@
+@@ -46,6 +46,22 @@
 
      Function("reloadAllWidgets") {
        WidgetsUpdater.reloadAll(context)
++    }
++
++    AsyncFunction("publishSnapshot") Coroutine { name: String, props: String ->
++      WidgetsUpdater.publish(context.applicationContext, name, props)
 +    }
 +
 +    View(WidgetPreviewView::class) {
@@ -188,4 +192,45 @@ diff --git a/android/build.gradle b/android/build.gradle
    buildFeatures {
 +    compose true
      prefab true
+   }
+diff --git a/android/src/main/java/expo/modules/widgets/WidgetsStorage.kt b/android/src/main/java/expo/modules/widgets/WidgetsStorage.kt
+--- a/android/src/main/java/expo/modules/widgets/WidgetsStorage.kt
++++ b/android/src/main/java/expo/modules/widgets/WidgetsStorage.kt
+@@ -18,6 +18,13 @@
+     set(context, key, WidgetsJson.stringifyList(value))
+   }
+
++  fun replaceSnapshot(context: Context, name: String, props: String?) {
++    val key = "__expo_widgets_${name}_props"
++    check(preferences(context).edit().putString(key, props).commit()) {
++      "Could not save the widget snapshot"
++    }
++  }
++
+   fun getString(context: Context, key: String): String? {
+     return preferences(context).getString(key, null)
+   }
+diff --git a/android/src/main/java/expo/modules/widgets/WidgetsUpdater.kt b/android/src/main/java/expo/modules/widgets/WidgetsUpdater.kt
+--- a/android/src/main/java/expo/modules/widgets/WidgetsUpdater.kt
++++ b/android/src/main/java/expo/modules/widgets/WidgetsUpdater.kt
+@@ -23,6 +23,20 @@
+     updateScope.launch {
+       updateMutex.withLock {
+         updateWidget(appContext, name)
++      }
++    }
++  }
++
++  suspend fun publish(context: Context, name: String, props: String) {
++    updateMutex.withLock {
++      val previous = WidgetsStorage.getString(context, "__expo_widgets_${name}_props")
++      try {
++        WidgetsStorage.replaceSnapshot(context, name, props)
++        updateWidget(context, name)
++      } catch (error: Exception) {
++        runCatching { WidgetsStorage.replaceSnapshot(context, name, previous) }
++          .exceptionOrNull()?.let(error::addSuppressed)
++        throw error
+       }
+     }
    }

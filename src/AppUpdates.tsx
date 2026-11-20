@@ -24,6 +24,7 @@ export function AppUpdates({ palette, language, updates }: {
     return (
       <Section palette={palette} title={copy(language, 'updates')}>
         <Text style={{ color: palette.text }}>{copy(language, 'updateAvailable', { version: update.version })}</Text>
+        {kind === 'checking' && status(copy(language, 'checking'))}
         {kind === 'download-failed' && status(copy(language, 'updateFailed'))}
         {kind === 'downloading' && status(copy(language, 'downloading'))}
         {kind === 'opening-installer' && status(copy(language, 'installer'))}

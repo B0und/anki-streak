@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: publish-${{ github.ref }}
+  group: publish-android-stable
   cancel-in-progress: false
 
 jobs:
@@ -51,10 +51,26 @@ jobs:
           [[ "$package" == "package: name='com.ankistreak.anime' "* ]]
           [[ "$package" == *" versionName='${tag#v}' "* ]]
 
+          apk_version_code() {
+            local metadata
+            metadata=$("$tools_dir/aapt2" dump badging "$1")
+            sed -nE "1s/^package: .*versionCode='([0-9]+)'.*$/\1/p" <<< "$metadata"
+          }
+          version_code=$(apk_version_code Anki-Streak.apk)
+          [[ "$version_code" =~ ^[1-9][0-9]*$ ]]
+
           if gh release view "$tag" --json isDraft --jq .isDraft | grep -qx false; then
             gh release download "$tag" --pattern Anki-Streak.apk --output published.apk
             cmp Anki-Streak.apk published.apk
           else
+            previous_tag=$(gh api "repos/$GH_REPO/releases/latest" --jq .tag_name)
+            gh release download "$previous_tag" --pattern Anki-Streak.apk --output previous.apk
+            previous_code=$(apk_version_code previous.apk)
+            [[ "$previous_code" =~ ^[1-9][0-9]*$ ]]
+            if (( version_code <= previous_code )); then
+              echo "::error::APK versionCode $version_code must exceed $previous_tag versionCode $previous_code"
+              exit 1
+            fi
             if ! gh release view "$tag" >/dev/null 2>&1; then
               gh release create "$tag" --verify-tag --draft --title "Anki Streak $tag" --notes-file release-notes.md
             fi

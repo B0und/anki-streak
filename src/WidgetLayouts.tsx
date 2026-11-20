@@ -1,20 +1,21 @@
 import { CheckCircle2, Circle } from 'lucide-react-native';
-import { useState } from 'react';
+import { useActor } from '@xstate/react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useDashboardContext } from './dashboardContext';
 import { copy } from './messages';
 import { widgetLayouts, widgetSizes, type WidgetSize } from './preferences';
 import { Choices } from './studyComponents';
-import { useWidgetPreview, WidgetPreview } from './WidgetPreview';
+import { SampleWidgetPreviews, useWidgetPreview, WidgetPreview } from './WidgetPreview';
+import { widgetSizeActor } from './widgetSizeActor';
 
 export function WidgetLayouts({ initialSize }: { initialSize: WidgetSize }) {
-  const { palette, language, layouts, setLayout } = useDashboardContext();
-  const [size, setSize] = useState(initialSize);
-  const content = useWidgetPreview(true);
+  const { dashboard, palette, language, layouts, setLayout } = useDashboardContext();
+  const [selection, select] = useActor(widgetSizeActor, { input: initialSize });
+  const size = selection.context;
+  const content = useWidgetPreview();
 
-  return <>
-    <Choices<WidgetSize> palette={palette} choices={widgetSizes} value={size} onChange={setSize} label={(option) => copy(language, option)} />
+  const options = (content: ReturnType<typeof useWidgetPreview>) => <>
     {content.sample && <Text style={{ color: palette.muted }}>{copy(language, 'sampleData')}</Text>}
     {widgetLayouts.map((layout) => {
       const selected = layout === layouts[size];
@@ -32,6 +33,10 @@ export function WidgetLayouts({ initialSize }: { initialSize: WidgetSize }) {
         <WidgetPreview layout={layout} size={size} content={content} />
       </Pressable>;
     })}
+  </>;
+  return <>
+    <Choices<WidgetSize> palette={palette} choices={widgetSizes} value={size} onChange={(size) => select({ type: 'select', size })} label={(option) => copy(language, option)} />
+    {content.stats ? options(content) : <SampleWidgetPreviews key={`${dashboard.themeId}-${language}`} render={options} />}
   </>;
 }
 

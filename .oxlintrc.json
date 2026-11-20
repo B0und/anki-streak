@@ -1,0 +1,13 @@
+{
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      { "name": "react", "importNames": ["useState", "useEffect"], "message": "Use an XState actor for app state and lifecycle." }
+    ],
+    "no-restricted-properties": [
+      "error",
+      { "object": "React", "property": "useState", "message": "Use an XState actor for app state." },
+      { "object": "React", "property": "useEffect", "message": "Use an XState actor for app lifecycle." }
+    ]
+  }
+}

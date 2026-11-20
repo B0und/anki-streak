@@ -1,13 +1,13 @@
 import { CheckCircle2, Circle } from 'lucide-react-native';
-import { useState } from 'react';
 import { Linking, Pressable, Switch, Text, TextInput, View } from 'react-native';
 
 import type { Palette } from './appearance';
 import { copy, type Language } from './messages';
 import {
-  appearanceOptions, getTarget, hasTarget, languageOptions, milestones, preference, settings,
-  type Appearance, type LanguagePreference, type Milestone,
+  appearanceOptions, hasTarget, languageOptions, milestones,
+  type Appearance, type LanguagePreference,
 } from './preferences';
+import { useRewardSettings } from './rewardSettingsMachine';
 import { Action, Choices, Section } from './studyComponents';
 import type { useDashboard } from './useDashboard';
 
@@ -16,30 +16,7 @@ export function SettingsScreen({ palette, language, appearance, setAppearance, l
   languagePreference: LanguagePreference; setLanguage(value: LanguagePreference): void;
   dashboard: ReturnType<typeof useDashboard>;
 }) {
-  const [milestone, setMilestone] = useState(() => preference('milestone', milestones, 'firstReview'));
-  const [draft, setDraft] = useState(() => hasTarget(milestone) ? String(getTarget(milestone)) : '');
-  const [notifications, setNotifications] = useState(() => settings.getPreference('notifications') === 'on');
-  const [animate, setAnimate] = useState(() => settings.getPreference('animate') !== 'off');
-  const [blocked, setBlocked] = useState(() => notifications && !settings.getNotificationAccess());
-
-  function selectMilestone(value: Milestone) {
-    settings.setPreference('milestone', value);
-    setMilestone(value);
-    setDraft(hasTarget(value) ? String(getTarget(value)) : '');
-  }
-
-  async function toggleNotifications(value: boolean) {
-    setNotifications(value);
-    settings.setPreference('notifications', value ? 'on' : 'off');
-    if (!value) {
-      setBlocked(false);
-      return;
-    }
-    if (!settings.getNotificationAccess()) {
-      await settings.requestNotificationAccess().catch(() => {});
-      setBlocked(!settings.getNotificationAccess());
-    }
-  }
+  const { milestone, draft, notifications, animate, blocked, send } = useRewardSettings();
 
   return <>
     <Section palette={palette} title={copy(language, 'appearance')}>
@@ -54,7 +31,7 @@ export function SettingsScreen({ palette, language, appearance, setAppearance, l
       <Text style={{ color: palette.muted }}>{copy(language, 'milestone')}</Text>
       {milestones.map((key) => (
         <Pressable accessibilityRole="radio" accessibilityState={{ checked: milestone === key }} key={key}
-          onPress={() => selectMilestone(key)} style={{
+          onPress={() => send({ type: 'milestone', value: key })} style={{
             minHeight: 44, padding: 8, gap: 9, flexDirection: 'row', alignItems: 'center',
             borderRadius: 9, backgroundColor: milestone === key ? palette.subtle : palette.surface,
           }}>
@@ -68,19 +45,12 @@ export function SettingsScreen({ palette, language, appearance, setAppearance, l
           keyboardType="number-pad" selectTextOnFocus
           style={{ minHeight: 44, minWidth: 66, paddingHorizontal: 9, textAlign: 'center',
             borderColor: palette.line, borderWidth: 1, borderRadius: 9, color: palette.text }}
-          onChangeText={(value) => {
-            const digits = value.replace(/[^0-9]/g, '');
-            setDraft(digits);
-            if (Number(digits) > 0) settings.setPreference(milestone, digits);
-          }}
-          onBlur={() => setDraft(String(getTarget(milestone)))} />
-      </View>}
+          onChangeText={(value) => send({ type: 'draft', value })}
+          onBlur={() => send({ type: 'finishEditing' })} />
+    </View>}
       {([
-        ['notifications', notifications, (value: boolean) => void toggleNotifications(value)],
-        ['animate', animate, (value: boolean) => {
-          setAnimate(value);
-          settings.setPreference('animate', value ? 'on' : 'off');
-        }],
+        ['notifications', notifications, (enabled: boolean) => send({ type: 'notifications', enabled })],
+        ['animate', animate, (enabled: boolean) => send({ type: 'animate', enabled })],
       ] as const).map(([key, value, action]) => (
         <View key={key} style={{ flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'space-between' }}>
           <Text style={{ color: palette.text, flex: 1 }}>{copy(language, key)}</Text>

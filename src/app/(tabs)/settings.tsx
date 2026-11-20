@@ -10,7 +10,7 @@ export default function SettingsRoute() {
   const { update } = useLocalSearchParams<{ update?: string }>();
   const preferences = useDashboardContext();
   const { palette, language, updates } = preferences;
-  const available = 'update' in updates.state;
+  const available = Boolean(updates.update);
   const updateSection = <AppUpdates palette={palette} language={language} updates={updates} />;
 
   return <Screen key={update} title={copy(language, 'settings')}>

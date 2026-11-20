@@ -1,3 +1,4 @@
+import { Effect, Schema } from 'effect';
 import { requireNativeModule } from 'expo';
 
 import type { WidgetArtwork } from './AnkiWidget';
@@ -5,25 +6,6 @@ import { getLanguage } from './preferences';
 import { themeOrder, type WidgetTheme } from './themes';
 
 export type ReviewMood = 'waiting' | 'happy';
-
-type ReadyActivity = {
-  kind: 'ready';
-  today: number;
-  newToday: number;
-  dueReviews: number;
-  mood: ReviewMood;
-  streak: number;
-  history: number[];
-  dailyReviewed: number;
-  dailyLearned: number;
-};
-
-export type AnkiActivity =
-  | ReadyActivity
-  | { kind: 'permission' }
-  | { kind: 'missing' }
-  | { kind: 'unsupported' }
-  | { kind: 'unavailable' };
 
 const anki = requireNativeModule<{
   readonly historyDays: number;
@@ -35,7 +17,7 @@ const anki = requireNativeModule<{
   renderWidget(
     streak: number,
     today: number,
-    history: number[],
+    history: readonly number[],
     dailyReviewed: number,
     dailyLearned: number,
     theme: WidgetTheme,
@@ -52,10 +34,10 @@ export const {
 } = anki;
 
 export function renderWidget(
-  streak: number, today: number, history: number[], dailyReviewed: number, dailyLearned: number,
-  theme: WidgetTheme, purpose: 'widget' | 'preview' = 'widget',
+  streak: number, today: number, history: readonly number[], dailyReviewed: number, dailyLearned: number,
+  theme: WidgetTheme, purpose: 'widget' | 'preview' = 'widget', language = getLanguage(),
 ) {
-  return anki.renderWidget(streak, today, history, dailyReviewed, dailyLearned, theme, purpose, getLanguage());
+  return anki.renderWidget(streak, today, history, dailyReviewed, dailyLearned, theme, purpose, language);
 }
 
 export function getWidgetTheme(): WidgetTheme {
@@ -63,44 +45,29 @@ export function getWidgetTheme(): WidgetTheme {
   return themeOrder.find((theme) => theme === id) ?? 'miku';
 }
 
-function isCount(value: unknown): value is number {
-  return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
-}
+const count = Schema.Int.check(Schema.isGreaterThanOrEqualTo(0), Schema.isLessThanOrEqualTo(Number.MAX_SAFE_INTEGER));
+const providerActivity = Schema.Union([
+  Schema.Struct({
+    kind: Schema.Literal('ready'),
+    today: count,
+    newToday: count,
+    dueReviews: count,
+    streak: count,
+    history: Schema.Array(count).check(Schema.isMinLength(historyDays), Schema.isMaxLength(historyDays)),
+    dailyReviewed: count,
+    dailyLearned: count,
+  }),
+  Schema.Struct({ kind: Schema.Literals(['permission', 'missing', 'unsupported']) }),
+]);
+type ProviderActivity = typeof providerActivity.Type;
+export type AnkiActivity = (Extract<ProviderActivity, { kind: 'ready' }> & { mood: ReviewMood })
+  | Exclude<ProviderActivity, { kind: 'ready' }>
+  | { kind: 'unavailable' };
 
-export async function readActivity(): Promise<AnkiActivity> {
-  try {
-    const data = await anki.readActivity();
-    if (typeof data !== 'object' || data === null || !('kind' in data)) {
-      return { kind: 'unavailable' };
-    }
-
-    switch (data.kind) {
-      case 'missing':
-      case 'permission':
-      case 'unsupported':
-        return { kind: data.kind };
-      case 'ready':
-        if (
-          'today' in data && isCount(data.today) &&
-          'newToday' in data && isCount(data.newToday) &&
-          'dueReviews' in data && isCount(data.dueReviews) &&
-          'streak' in data && isCount(data.streak) &&
-          'history' in data && Array.isArray(data.history) &&
-          data.history.length === anki.historyDays && data.history.every(isCount) &&
-          'dailyReviewed' in data && isCount(data.dailyReviewed) &&
-          'dailyLearned' in data && isCount(data.dailyLearned)
-        ) {
-          return {
-            kind: 'ready', today: data.today, newToday: data.newToday, dueReviews: data.dueReviews, mood: data.today > 0 ? 'happy' : 'waiting', streak: data.streak, history: data.history,
-            dailyReviewed: data.dailyReviewed, dailyLearned: data.dailyLearned,
-          };
-        }
-        break;
-    }
-  } catch {
-    return { kind: 'unavailable' };
-  }
-
-  return { kind: 'unavailable' };
-}
-
+export const readActivityEffect = Effect.tryPromise(() => anki.readActivity()).pipe(
+  Effect.flatMap(Schema.decodeUnknownEffect(providerActivity)),
+  Effect.map((data): AnkiActivity => data.kind === 'ready'
+    ? { ...data, mood: data.today > 0 ? 'happy' : 'waiting' }
+    : data),
+  Effect.catch(() => Effect.succeed<AnkiActivity>({ kind: 'unavailable' })),
+);

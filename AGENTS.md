@@ -5,3 +5,7 @@ Publish a new stable GitHub release for every completed app change. Follow the [
 # Pixel ADB
 
 Check `adb devices -l`, then SDK `adb mdns services` for `_adb-tls-connect._tcp`. If discovery fails, use `adb connect pixel-9-pro-xl:<port>` with the current main Wireless debugging screen port. A rotated port keeps existing pairing.
+
+# App state
+
+Use XState actors instead of React `useState` or `useEffect`. Read `node_modules/effect/AGENTS.md` before writing Effect code.

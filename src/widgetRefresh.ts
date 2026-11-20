@@ -1,9 +1,11 @@
 import * as BackgroundTask from 'expo-background-task';
 import * as TaskManager from 'expo-task-manager';
+import { DateTime, Effect } from 'effect';
+import { createActor, createAsyncLogic, setup, types, waitFor } from 'xstate';
 
 import AnkiWidget, { type WidgetArtwork } from './AnkiWidget';
 import {
-  getWidgetTheme, getWidgetBackgroundTransparency, readActivity, renderWidget, setWidgetTheme,
+  getWidgetTheme, getWidgetBackgroundTransparency, readActivityEffect, renderWidget,
   setWidgetBackgroundTransparency, type AnkiActivity,
 } from './activity';
 import { copy } from './messages';
@@ -21,43 +23,6 @@ type Publication =
   | { kind: 'reviews'; artwork: WidgetArtwork; activity: Extract<AnkiActivity, { kind: 'ready' }>; theme: WidgetTheme; waitingDrawable: string };
 
 type CompletedRefresh = { activity: AnkiActivity; publication: Publication; checkedAt: number };
-
-type RefreshState =
-  | { kind: 'initial' }
-  | { kind: 'reading'; previous: CompletedRefresh | null; work: Promise<AnkiActivity> }
-  | { kind: 'rendering'; previous: CompletedRefresh | null; work: Promise<AnkiActivity>; theme: WidgetTheme }
-  | { kind: 'settled'; result: CompletedRefresh }
-  | { kind: 'failed'; previous: CompletedRefresh | null; error: unknown };
-
-let state: RefreshState = { kind: 'initial' };
-const listeners = new Set<() => void>();
-
-export function subscribeToWidgetRefresh(listener: () => void) {
-  listeners.add(listener);
-  return () => { listeners.delete(listener); };
-}
-
-export function getWidgetRefreshState(): RefreshState {
-  return state;
-}
-
-function transition(next: RefreshState) {
-  state = next;
-  listeners.forEach((listener) => listener());
-}
-
-export function lastCompletedRefresh(current: RefreshState): CompletedRefresh | null {
-  switch (current.kind) {
-    case 'initial':
-      return null;
-    case 'settled':
-      return current.result;
-    case 'reading':
-    case 'rendering':
-    case 'failed':
-      return current.previous;
-  }
-}
 
 function publish(publication: Publication) {
   const transparency = getWidgetBackgroundTransparency();
@@ -81,103 +46,150 @@ function publish(publication: Publication) {
   });
 }
 
-type AppearanceUpdate =
-  | { kind: 'idle' }
-  | { kind: 'scheduled'; timer: ReturnType<typeof setTimeout> }
-  | { kind: 'waitingForRefresh' };
+const preparePublication = Effect.fnUntraced(function*(activity: AnkiActivity, theme: WidgetTheme, language: ReturnType<typeof getLanguage>) {
+  const { waitingDrawable } = themes[theme];
+  if (activity.kind !== 'ready') return { kind: 'setup', waitingDrawable } satisfies Publication;
+  const { streak, today, history, dailyReviewed, dailyLearned } = activity;
+  const artwork = yield* Effect.tryPromise(() => renderWidget(streak, today, history, dailyReviewed, dailyLearned, theme, 'widget', language));
+  return { kind: 'reviews', artwork, activity, theme, waitingDrawable } satisfies Publication;
+});
 
-let appearance: AppearanceUpdate = { kind: 'idle' };
+const readAndPublish = Effect.gen(function*() {
+  const activity = yield* readActivityEffect;
+  let publication: Publication;
+  let theme: WidgetTheme;
+  let language: ReturnType<typeof getLanguage>;
+  do {
+    theme = getWidgetTheme();
+    language = getLanguage();
+    publication = yield* preparePublication(activity, theme, language);
+  } while (theme !== getWidgetTheme() || language !== getLanguage());
+  yield* Effect.try(() => publish(publication));
+  yield* Effect.try(() => recordReviewMilestone(activity)).pipe(Effect.ignore);
+  const checkedAt = DateTime.toEpochMillis(yield* DateTime.now);
+  return { activity, publication, checkedAt } satisfies CompletedRefresh;
+});
 
-export function flushWidgetAppearance() {
-  if (appearance.kind === 'idle') return;
-  if (appearance.kind === 'scheduled') clearTimeout(appearance.timer);
-  if (state.kind === 'reading' || state.kind === 'rendering') {
-    appearance = { kind: 'waitingForRefresh' };
-    return;
+const register = Effect.gen(function*() {
+  if (!(yield* Effect.tryPromise(() => TaskManager.isTaskRegisteredAsync(taskName)))) {
+    yield* Effect.tryPromise(() => BackgroundTask.registerTaskAsync(taskName, { minimumInterval: backgroundIntervalMinutes }));
   }
-  appearance = { kind: 'idle' };
-  const last = lastCompletedRefresh(state);
-  if (!last) return;
+});
+
+const refreshSetup = setup({
+  schemas: {
+    context: types<{ completed: CompletedRefresh | null; error: unknown; backgroundError: boolean }>(),
+    events: {
+      refresh: types<void>(),
+      scheduleAppearance: types<void>(),
+      flushAppearance: types<void>(),
+      registerBackground: types<void>(),
+    },
+  },
+});
+
+const refreshMachine = refreshSetup.createMachine({
+  id: 'widgetRefresh',
+  type: 'parallel',
+  context: { completed: null, error: null, backgroundError: false },
+  states: {
+    data: {
+      initial: 'idle',
+      states: {
+        idle: { on: { refresh: { target: 'reading' } } },
+        reading: {
+          entry: ({ context }) => ({ context: { ...context, error: null } }),
+          invoke: refreshSetup.createInvoke({
+            src: ({ signal }): Promise<CompletedRefresh> => Effect.runPromise(readAndPublish, { signal }),
+            onDone: ({ context, event }, enq) => {
+              if (event.output.activity.kind === 'ready') enq.raise({ type: 'registerBackground' });
+              return { target: 'idle', context: { ...context, completed: event.output } };
+            },
+            onError: ({ context, event }, enq) => {
+              enq.raise({ type: 'flushAppearance' });
+              return { target: 'failed', context: { ...context, error: event.error } };
+            },
+          }),
+        },
+        failed: { on: { refresh: { target: 'reading' } } },
+      },
+    },
+    appearance: {
+      initial: 'quiet',
+      states: {
+        quiet: {
+          on: {
+            scheduleAppearance: { target: 'debouncing' },
+            flushAppearance: (_, enq) => { enq(publishLatestAppearance); },
+          },
+        },
+        debouncing: {
+          on: {
+            scheduleAppearance: { target: 'debouncing', reenter: true },
+            flushAppearance: (_, enq) => {
+              enq(publishLatestAppearance);
+              return { target: 'quiet' };
+            },
+          },
+          after: {
+            [appearanceDelayMs]: (_, enq) => {
+              enq(publishLatestAppearance);
+              return { target: 'quiet' };
+            },
+          },
+        },
+      },
+    },
+    background: {
+      initial: 'idle',
+      states: {
+        idle: { on: { registerBackground: { target: 'registering' } } },
+        registering: {
+          invoke: refreshSetup.createInvoke({
+            src: createAsyncLogic({ run: ({ signal }) => Effect.runPromise(register, { signal }) }),
+            onDone: ({ context }) => ({ target: 'registered', context: { ...context, backgroundError: false } }),
+            onError: ({ context }) => ({ target: 'idle', context: { ...context, backgroundError: true } }),
+          }),
+        },
+        registered: {},
+      },
+    },
+  },
+});
+
+export const widgetRefreshActor = createActor(refreshMachine).start();
+
+function publishLatestAppearance() {
+  const snapshot = widgetRefreshActor.getSnapshot();
+  if (snapshot.matches({ data: 'reading' }) || !snapshot.context.completed) return;
   try {
-    publish(last.publication);
+    publish(snapshot.context.completed.publication);
   } catch (error) {
-    transition({ kind: 'failed', previous: last, error });
+    console.warn('Could not publish widget appearance', error);
   }
 }
 
 export function republishWidgetAppearance() {
-  if (appearance.kind === 'scheduled') clearTimeout(appearance.timer);
-  appearance = { kind: 'waitingForRefresh' };
-  flushWidgetAppearance();
+  widgetRefreshActor.send({ type: 'flushAppearance' });
 }
 
 export function changeWidgetBackgroundTransparency(value: number) {
   if (value === getWidgetBackgroundTransparency()) return;
   setWidgetBackgroundTransparency(value);
-  if (appearance.kind === 'scheduled') clearTimeout(appearance.timer);
-  appearance = { kind: 'scheduled', timer: setTimeout(flushWidgetAppearance, appearanceDelayMs) };
+  widgetRefreshActor.send({ type: 'scheduleAppearance' });
 }
 
-export function changeWidgetTheme(theme: WidgetTheme): Promise<AnkiActivity> {
-  setWidgetTheme(theme);
-  return refreshWidget();
-}
-
-async function preparePublication(activity: AnkiActivity, theme: WidgetTheme): Promise<Publication> {
-  const { waitingDrawable } = themes[theme];
-  if (activity.kind !== 'ready') return { kind: 'setup', waitingDrawable };
-
-  const { streak, today, history, dailyReviewed, dailyLearned } = activity;
-  const artwork = await renderWidget(streak, today, history, dailyReviewed, dailyLearned, theme);
-  return {
-    kind: 'reviews',
-    artwork,
-    activity, theme,
-    waitingDrawable,
-  };
+export async function refreshWidget(): Promise<AnkiActivity> {
+  widgetRefreshActor.send({ type: 'refresh' });
+  const result = await waitFor(widgetRefreshActor, (snapshot) => !snapshot.matches({ data: 'reading' }));
+  if (result.matches({ data: 'failed' })) throw result.context.error;
+  if (!result.context.completed) throw new Error('Widget refresh completed without activity');
+  return result.context.completed.activity;
 }
 
 export async function refreshAfterPermissionRequest(): Promise<AnkiActivity> {
-  if (state.kind === 'reading' || state.kind === 'rendering') {
-    try {
-      await state.work;
-    } catch {
-      // The permission result needs a fresh read even if the earlier refresh failed.
-    }
-  }
+  await waitFor(widgetRefreshActor, (snapshot) => !snapshot.matches({ data: 'reading' }));
   return refreshWidget();
-}
-
-export function refreshWidget(): Promise<AnkiActivity> {
-  if (state.kind === 'reading' || state.kind === 'rendering') return state.work;
-
-  const previous = lastCompletedRefresh(state);
-  const work: Promise<AnkiActivity> = Promise.resolve().then(async () => {
-    try {
-      const activity = await readActivity();
-      let theme: WidgetTheme;
-      let publication: Publication;
-      do {
-        theme = getWidgetTheme();
-        transition({ kind: 'rendering', previous, work, theme });
-        publication = await preparePublication(activity, theme);
-      } while (theme !== getWidgetTheme());
-
-      publish(publication);
-      if (appearance.kind === 'scheduled') clearTimeout(appearance.timer);
-      appearance = { kind: 'idle' };
-      try { recordReviewMilestone(activity); } catch { /* Celebration is optional. */ }
-      transition({ kind: 'settled', result: { activity, publication, checkedAt: Date.now() } });
-      return activity;
-    } catch (error) {
-      console.warn('AnkiDroid refresh failed', error);
-      transition({ kind: 'failed', previous, error });
-      if (appearance.kind === 'waitingForRefresh') flushWidgetAppearance();
-      throw error;
-    }
-  });
-  transition({ kind: 'reading', previous, work });
-  return work;
 }
 
 TaskManager.defineTask(taskName, async () => {
@@ -190,34 +202,3 @@ TaskManager.defineTask(taskName, async () => {
     return BackgroundTask.BackgroundTaskResult.Failed;
   }
 });
-
-type BackgroundRegistration =
-  | { kind: 'unchecked' }
-  | { kind: 'registering'; work: Promise<void> }
-  | { kind: 'registered' };
-
-let registration: BackgroundRegistration = { kind: 'unchecked' };
-
-export function enableBackgroundRefresh(): Promise<void> {
-  switch (registration.kind) {
-    case 'registered':
-      return Promise.resolve();
-    case 'registering':
-      return registration.work;
-    case 'unchecked': {
-      const work = (async () => {
-        try {
-          if (!(await TaskManager.isTaskRegisteredAsync(taskName))) {
-            await BackgroundTask.registerTaskAsync(taskName, { minimumInterval: backgroundIntervalMinutes });
-          }
-          registration = { kind: 'registered' };
-        } catch (error) {
-          registration = { kind: 'unchecked' };
-          throw error;
-        }
-      })();
-      registration = { kind: 'registering', work };
-      return work;
-    }
-  }
-}

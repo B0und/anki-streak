@@ -67,13 +67,13 @@ diff --git a/android/src/main/java/expo/modules/widgets/WidgetPreviewView.kt b/a
 new file mode 100644
 --- /dev/null
 +++ b/android/src/main/java/expo/modules/widgets/WidgetPreviewView.kt
-@@ -0,0 +1,73 @@
+@@ -0,0 +1,74 @@
 +package expo.modules.widgets
 +
 +import android.annotation.SuppressLint
 +import android.content.Context
 +import android.util.Log
-+import android.view.ViewGroup.LayoutParams
++import android.widget.LinearLayout.LayoutParams
 +import androidx.compose.ui.unit.DpSize
 +import androidx.compose.ui.unit.dp
 +import androidx.glance.appwidget.ExperimentalGlanceRemoteViewsApi
@@ -133,6 +133,7 @@ new file mode 100644
 +        val preview = views.apply(app, this@WidgetPreviewView)
 +        removeAllViews()
 +        addView(preview, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
++        post { if (preview.parent === this@WidgetPreviewView) measureAndLayout() }
 +      } catch (error: CancellationException) {
 +        throw error
 +      } catch (error: Exception) {

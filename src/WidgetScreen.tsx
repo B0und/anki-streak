@@ -1,7 +1,7 @@
 import { Host, Slider } from '@expo/ui/jetpack-compose';
 import { fillMaxWidth, semantics } from '@expo/ui/jetpack-compose/modifiers';
 import { ChevronRight } from 'lucide-react-native';
-import { useState } from 'react';
+import { useActor } from '@xstate/react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useDashboardContext } from './dashboardContext';
@@ -10,6 +10,7 @@ import { widgetSizes, type WidgetSize } from './preferences';
 import { Action, Choices, Section } from './studyComponents';
 import { themes } from './themes';
 import { useWidgetPreview, WidgetPreview } from './WidgetPreview';
+import { widgetSizeActor } from './widgetSizeActor';
 
 const moods = ['live', 'waiting', 'happy'] as const;
 
@@ -17,9 +18,10 @@ export function WidgetScreen({ openLayouts, openThemes }: {
   openLayouts(size: WidgetSize): void; openThemes(): void;
 }) {
   const { dashboard, palette, language, layouts } = useDashboardContext();
-  const [size, setSize] = useState<WidgetSize>('compact');
+  const [selection, select] = useActor(widgetSizeActor, { input: 'compact' });
+  const size = selection.context;
   const theme = themes[dashboard.themeId];
-  const mood = dashboard.preview.kind === 'preview' ? dashboard.preview.mood : 'live';
+  const mood = dashboard.previewMood ?? 'live';
   const content = useWidgetPreview();
 
   return <>
@@ -35,7 +37,7 @@ export function WidgetScreen({ openLayouts, openThemes }: {
       <ChevronRight size={18} color={palette.accent} />
     </Pressable>
     <Section title={copy(language, 'preview')} palette={palette}>
-      <Choices<WidgetSize> palette={palette} choices={widgetSizes} value={size} onChange={setSize} label={(key) => copy(language, key)} />
+      <Choices<WidgetSize> palette={palette} choices={widgetSizes} value={size} onChange={(size) => select({ type: 'select', size })} label={(key) => copy(language, key)} />
       <WidgetPreview layout={layouts[size]} size={size} content={content} />
       <View style={styles.transparency}>
         <Text style={{ flex: 1, color: palette.text }}>{copy(language, 'transparency')}</Text>

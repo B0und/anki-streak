@@ -1,7 +1,9 @@
-import { useEffect, useState, type ReactNode } from 'react';
-import { AccessibilityInfo, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useActor } from '@xstate/react';
+import type { ReactNode } from 'react';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { Palette } from './appearance';
+import { countUpMachine } from './countUpMachine';
 
 export function Action({ children, onPress, palette, primary, disabled }: {
   children: ReactNode; onPress(): void; palette: Palette; primary?: boolean; disabled?: boolean;
@@ -43,36 +45,17 @@ export function Section({ title, palette, children }: { title: string; palette: 
   );
 }
 
+function AnimatedCount({ value, delay }: { value: number; delay: number }) {
+  const [snapshot] = useActor(countUpMachine, { input: { value, delay } });
+  return snapshot.context.value;
+}
+
 export function CountUp({ value, delay, celebration }: {
   value: number | undefined; delay: number; celebration: number;
 }) {
-  const [animated, setAnimated] = useState<{ token: number; value: number } | null>(null);
-  useEffect(() => {
-    if (!celebration || value === undefined) return;
-    let active = true;
-    let frame = 0;
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    void AccessibilityInfo.isReduceMotionEnabled().then((reduced) => {
-      if (!active || reduced) return;
-      setAnimated({ token: celebration, value: 0 });
-      timer = setTimeout(() => {
-        const start = Date.now();
-        const tick = () => {
-          const progress = Math.min(1, (Date.now() - start) / 620);
-          setAnimated({ token: celebration, value: Math.round(value * (1 - (1 - progress) ** 3)) });
-          if (progress < 1) frame = requestAnimationFrame(tick);
-        };
-        frame = requestAnimationFrame(tick);
-      }, delay);
-    }).catch(() => {});
-    return () => {
-      active = false;
-      clearTimeout(timer);
-      cancelAnimationFrame(frame);
-    };
-  }, [value, delay, celebration]);
-  return animated?.token === celebration && animated?.value !== undefined
-    ? animated.value : value ?? '—';
+  if (value === undefined) return '—';
+  if (!celebration) return value;
+  return <AnimatedCount key={value} value={value} delay={delay} />;
 }
 
 export function Portrait({ source, height, maxWidth }: {

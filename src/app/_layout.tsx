@@ -1,7 +1,6 @@
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Download, X } from 'lucide-react-native';
-import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -13,16 +12,15 @@ export const unstable_settings = { initialRouteName: '(tabs)' };
 function Navigation() {
   const { palette, mode, language, updates, dashboard } = useDashboardContext();
   const router = useRouter();
-  const [dismissed, setDismissed] = useState<string>();
-  const update = updates.state.kind === 'available' ? updates.state.update : null;
+  const update = updates.kind === 'available' ? updates.update : null;
   const base = mode === 'dark' ? DarkTheme : DefaultTheme;
 
   return <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: palette.background }}>
     <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
-    {update && update.digest !== dismissed &&
+    {update && update.digest !== updates.dismissed &&
       <View style={[styles.banner, { backgroundColor: palette.subtle, borderColor: palette.line }]}>
         <Pressable accessibilityRole="button" style={styles.update} onPress={() => {
-          setDismissed(update.digest);
+          updates.dismiss(update.digest);
           router.navigate({ pathname: '/settings', params: { update: update.tag } });
         }}>
           <Download color={palette.accent} size={20} />
@@ -34,7 +32,7 @@ function Navigation() {
           </View>
         </Pressable>
         <Pressable accessibilityRole="button" accessibilityLabel={copy(language, 'dismiss')}
-          style={styles.dismiss} onPress={() => setDismissed(update.digest)}>
+          style={styles.dismiss} onPress={() => updates.dismiss(update.digest)}>
           <X color={palette.muted} size={19} />
         </Pressable>
       </View>}

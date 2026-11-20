@@ -13,6 +13,9 @@
     "@expo/ui": "^58.0.29",
     "@lingui/core": "^6.12.0",
     "@lingui/message-utils": "6.12.0",
+    "@xstate/effect": "1.0.0-beta.2",
+    "@xstate/react": "7.0.0-beta.0",
+    "effect": "4.1.4",
     "expo": "58.0.26",
     "expo-background-task": "~58.0.13",
     "expo-constants": "~58.0.16",
@@ -27,7 +30,8 @@
     "react-native": "^0.88.1",
     "react-native-safe-area-context": "^5.11.1",
     "react-native-screens": "~4.30.1",
-    "react-native-svg": "15.16.0"
+    "react-native-svg": "15.16.0",
+    "xstate": "6.0.0-beta.3"
   },
   "devDependencies": {
     "@types/react": "^19.3.0",

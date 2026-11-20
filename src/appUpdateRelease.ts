@@ -1,3 +1,4 @@
+import { Effect, Schema } from 'effect';
 import { requireNativeModule } from 'expo';
 
 export const appUpdater = requireNativeModule<{
@@ -33,42 +34,48 @@ function isNewer(candidate: Version, installed: Version): boolean {
 
 export type AppUpdate = { tag: string; version: string; digest: string; size: number };
 
-export async function checkForAppUpdate(installed: string): Promise<AppUpdate | null> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), requestTimeoutMs);
-  try {
-    const response = await fetch(`https://api.github.com/repos/${repository}/releases/latest`, {
-      headers: { Accept: 'application/vnd.github+json' },
-      signal: controller.signal,
-    });
-    if (!response.ok) throw new Error(`GitHub release check failed with HTTP ${response.status}`);
-    const release: unknown = await response.json();
-    if (!isRecord(release) || release.draft !== false || release.prerelease !== false ||
-      typeof release.tag_name !== 'string' || !Array.isArray(release.assets)) {
-      throw new Error('Invalid GitHub release metadata');
-    }
+const apkMetadata = Schema.Struct({
+  browser_download_url: Schema.String,
+  state: Schema.Literal('uploaded'),
+  digest: Schema.String.check(Schema.isPattern(/^sha256:[0-9a-f]{64}$/)),
+  size: Schema.Int.check(Schema.isGreaterThan(0), Schema.isLessThanOrEqualTo(128 * 1024 * 1024)),
+});
+const releaseWithAssets = Schema.Struct({
+  draft: Schema.Literal(false),
+  prerelease: Schema.Literal(false),
+  tag_name: Schema.String,
+  assets: Schema.Array(Schema.Struct({ name: Schema.String, browser_download_url: Schema.optionalKey(Schema.Unknown),
+    state: Schema.optionalKey(Schema.Unknown), digest: Schema.optionalKey(Schema.Unknown), size: Schema.optionalKey(Schema.Unknown) })),
+});
 
-    const tag = release.tag_name;
-    if (tag === 'v0') return null;
-    const version = tag.slice(1);
-    const candidate = tag.startsWith('v') && parseVersion(version);
-    const current = parseVersion(installed);
-    if (!candidate || !current) throw new Error('Invalid app version');
-    if (!isNewer(candidate, current)) return null;
+class ReleaseCheckError extends Schema.TaggedError<ReleaseCheckError>()('ReleaseCheckError', {
+  reason: Schema.String,
+}) {}
 
-    const apk: unknown = release.assets.find((asset: unknown) => isRecord(asset) && asset.name === apkName);
-    const downloadUrl = `https://github.com/${repository}/releases/download/${tag}/${apkName}`;
-    if (!isRecord(apk) || apk.browser_download_url !== downloadUrl || apk.state !== 'uploaded' ||
-      typeof apk.digest !== 'string' || !/^sha256:[0-9a-f]{64}$/.test(apk.digest) ||
-      typeof apk.size !== 'number' || !Number.isSafeInteger(apk.size) || apk.size <= 0) {
-      throw new Error('Missing verified release APK');
-    }
-    return { tag, version, digest: apk.digest.slice('sha256:'.length), size: apk.size };
-  } finally {
-    clearTimeout(timeout);
+export const checkForAppUpdate = Effect.fnUntraced(function*(installed: string) {
+  const body = yield* Effect.tryPromise({
+    try: async (signal) => {
+      const response = await fetch(`https://api.github.com/repos/${repository}/releases/latest`, {
+        headers: { Accept: 'application/vnd.github+json' },
+        signal,
+      });
+      if (!response.ok) throw new Error(`GitHub returned HTTP ${response.status}`);
+      return response.json();
+    },
+    catch: (cause) => new ReleaseCheckError({ reason: String(cause) }),
+  });
+  const release = yield* Schema.decodeUnknownEffect(releaseWithAssets)(body);
+  const tag = release.tag_name;
+  if (tag === 'v0') return null;
+  const version = tag.slice(1);
+  const candidate = tag.startsWith('v') && parseVersion(version);
+  const current = parseVersion(installed);
+  if (!candidate || !current) return yield* new ReleaseCheckError({ reason: 'Invalid app version' });
+  if (!isNewer(candidate, current)) return null;
+
+  const apk = yield* Schema.decodeUnknownEffect(apkMetadata)(release.assets.find((asset) => asset.name === apkName));
+  if (apk.browser_download_url !== `https://github.com/${repository}/releases/download/${tag}/${apkName}`) {
+    return yield* new ReleaseCheckError({ reason: 'Unexpected release APK address' });
   }
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
+  return { tag, version, digest: apk.digest.slice('sha256:'.length), size: apk.size } satisfies AppUpdate;
+}, Effect.timeout(requestTimeoutMs));

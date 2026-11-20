@@ -1,164 +1,198 @@
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useActor, useSelector } from '@xstate/react';
+import { Effect } from 'effect';
 import { AppState, Linking, ToastAndroid } from 'react-native';
+import { createAsyncLogic, createCallbackLogic, setup, types } from 'xstate';
 
 import {
-  getWidgetBackgroundTransparency, getWidgetTheme, openAnki, pinWidget, requestPermission, type ReviewMood,
+  getWidgetBackgroundTransparency, getWidgetTheme, openAnki, pinWidget, requestPermission, setWidgetTheme, type ReviewMood,
 } from './activity';
 import { copy, type Message } from './messages';
-import { getLanguage } from './preferences';
+import { appearanceOptions, getLanguage, getWidgetLayouts, languageOptions, preference, settings, type Appearance,
+  type LanguagePreference, type WidgetLayout, type WidgetSize } from './preferences';
 import type { WidgetTheme } from './themes';
-import {
-  changeWidgetBackgroundTransparency, changeWidgetTheme, enableBackgroundRefresh, flushWidgetAppearance,
-  getWidgetRefreshState, lastCompletedRefresh, refreshAfterPermissionRequest, refreshWidget, subscribeToWidgetRefresh,
-} from './widgetRefresh';
+import { changeWidgetBackgroundTransparency, refreshAfterPermissionRequest, refreshWidget,
+  republishWidgetAppearance, widgetRefreshActor } from './widgetRefresh';
 
-type MoodPreview = { kind: 'live' } | { kind: 'preview'; mood: ReviewMood };
 type AndroidRequest = 'permission' | 'settings' | 'pin' | 'open';
-type RequestState =
-  | { kind: 'idle' }
-  | { kind: 'running'; request: AndroidRequest }
-  | { kind: 'notice'; request: AndroidRequest; message: Message };
 
-const pinFallback: Message = 'pinFallback';
-const refreshError: Message = 'refreshError';
+const androidRequest = Effect.fnUntraced(function*(request: AndroidRequest): Effect.fn.Return<Message | null> {
+  switch (request) {
+    case 'permission': {
+      const allowed = yield* Effect.tryPromise(() => requestPermission()).pipe(Effect.as(true), Effect.orElseSucceed(() => false));
+      if (!allowed) return 'permissionError';
+      yield* Effect.tryPromise(refreshAfterPermissionRequest).pipe(Effect.ignore);
+      return null;
+    }
+    case 'settings':
+      return yield* Effect.tryPromise(() => Linking.openSettings()).pipe(Effect.as(null), Effect.orElseSucceed(() => 'settingsError' as const));
+    case 'pin':
+      return yield* Effect.tryPromise(pinWidget).pipe(
+        Effect.map((result) => result === 'use-picker' ? 'pinFallback' as const : null),
+        Effect.orElseSucceed(() => 'pinFallback' as const),
+      );
+    case 'open':
+      return yield* Effect.tryPromise(openAnki).pipe(
+        Effect.map((result) => result === 'missing' ? 'missing' as const : null),
+        Effect.orElseSucceed(() => 'openError' as const),
+      );
+  }
+});
+
+function readPreferences() {
+  return {
+    appearance: preference('appearance', appearanceOptions, 'system'),
+    languagePreference: preference('language', languageOptions, 'system'),
+    language: getLanguage(),
+    layouts: getWidgetLayouts(),
+    themeId: getWidgetTheme(),
+    transparency: getWidgetBackgroundTransparency(),
+    previewMood: null as ReviewMood | null,
+    notice: null as Message | null,
+    request: 'open' as AndroidRequest,
+  };
+}
+
+const lifecycle = createCallbackLogic({
+  run: ({ sendBack }) => {
+    const update = (state: string) => sendBack({ type: 'visibility', active: state === 'active', language: getLanguage() });
+    const listener = AppState.addEventListener('change', update);
+    update(AppState.currentState ?? 'active');
+    return () => listener.remove();
+  },
+});
+
+function requestRefresh() {
+  void refreshWidget().catch((error) => console.warn('AnkiDroid refresh failed', error));
+}
+
+function manualRefresh() {
+  void Effect.runPromise(
+    Effect.tryPromise(refreshWidget).pipe(
+      Effect.map((activity): Message => activity.kind === 'ready' ? 'refreshSuccess' : activity.kind),
+      Effect.orElseSucceed(() => 'refreshError' as const),
+      Effect.tap((message) => Effect.sync(() => ToastAndroid.show(copy(getLanguage(), message), ToastAndroid.LONG))),
+    ),
+  );
+}
+
+const dashboardSetup = setup({
+  schemas: {
+    context: types<ReturnType<typeof readPreferences>>(),
+    events: {
+      visibility: types<{ active: boolean; language: ReturnType<typeof getLanguage> }>(),
+      'appearance.select': types<{ value: Appearance }>(),
+      'language.select': types<{ value: LanguagePreference }>(),
+      'widget.layout': types<{ size: WidgetSize; value: WidgetLayout }>(),
+      'widget.theme': types<{ value: WidgetTheme }>(),
+      'widget.transparency': types<{ value: number }>(),
+      'widget.preview': types<{ value: ReviewMood | null }>(),
+      'anki.refresh': types<void>(),
+      'android.request': types<{ request: AndroidRequest }>(),
+      'storage.failed': types<{ notice: Message }>(),
+    },
+  },
+});
+
+const dashboardMachine = dashboardSetup.createMachine({
+  id: 'dashboard',
+  context: readPreferences,
+  invoke: { src: lifecycle },
+  initial: 'idle',
+  on: {
+    visibility: ({ context, event }, enq) => {
+      enq(event.active ? requestRefresh : republishWidgetAppearance);
+      return { context: { ...context, language: event.language } };
+    },
+    'appearance.select': ({ context, event }, enq) => {
+      enq(settings.setPreference, 'appearance', event.value);
+      return { context: { ...context, appearance: event.value } };
+    },
+    'language.select': ({ context, event }, enq) => {
+      enq(settings.setPreference, 'language', event.value);
+      enq(requestRefresh);
+      return { context: { ...context, languagePreference: event.value,
+        language: event.value === 'system' ? (settings.getSystemLanguage() === 'ru' ? 'ru' : 'en') : event.value } };
+    },
+    'widget.layout': ({ context, event }, enq) => {
+      enq(settings.setPreference, `layout-${event.size}`, event.value);
+      enq(republishWidgetAppearance);
+      return { context: { ...context, layouts: { ...context.layouts, [event.size]: event.value } } };
+    },
+    'widget.theme': ({ context, event, self }, enq) => {
+      if (context.themeId === event.value) return;
+      enq(() => {
+        try {
+          setWidgetTheme(event.value);
+          requestRefresh();
+        } catch {
+          self.send({ type: 'storage.failed', notice: 'themeError' });
+        }
+      });
+      return { context: { ...context, themeId: event.value, notice: null } };
+    },
+    'widget.transparency': ({ context, event, self }, enq) => {
+      enq(() => {
+        try {
+          changeWidgetBackgroundTransparency(event.value);
+        } catch {
+          self.send({ type: 'storage.failed', notice: 'transparencyError' });
+        }
+      });
+      return { context: { ...context, transparency: event.value } };
+    },
+    'widget.preview': ({ context, event }) => ({ context: { ...context, previewMood: event.value } }),
+    'storage.failed': ({ context, event }) => ({
+      context: { ...context, notice: event.notice, themeId: getWidgetTheme(), transparency: getWidgetBackgroundTransparency() },
+    }),
+    'anki.refresh': ({ context }, enq) => {
+      enq(manualRefresh);
+      return { context: { ...context, notice: null } };
+    },
+  },
+  states: {
+    idle: {
+      on: {
+        'android.request': ({ context, event }) => ({
+          target: 'requesting', context: { ...context, request: event.request, notice: null },
+        }),
+      },
+    },
+    requesting: {
+      invoke: dashboardSetup.createInvoke({
+        src: createAsyncLogic({ run: ({ input, signal }: { input: AndroidRequest; signal: AbortSignal }) =>
+          Effect.runPromise(androidRequest(input), { signal }) }),
+        input: ({ context }) => context.request,
+        onDone: ({ context, event }) => ({ target: 'idle', context: { ...context, notice: event.output } }),
+        onError: { target: 'idle' },
+      }),
+    },
+  },
+});
 
 export function useDashboard() {
-  const widget = useSyncExternalStore(subscribeToWidgetRefresh, getWidgetRefreshState);
-  const completed = lastCompletedRefresh(widget);
+  const [snapshot, send] = useActor(dashboardMachine);
+  const widget = useSelector(widgetRefreshActor, (value) => value);
+  const { context } = snapshot;
+  const { completed, backgroundError } = widget.context;
   const activity = completed?.activity ?? null;
-  const [preview, setPreview] = useState<MoodPreview>({ kind: 'live' });
-  const [themeId, setThemeId] = useState(getWidgetTheme);
-  const [transparency, setTransparency] = useState(getWidgetBackgroundTransparency);
-  const [feedback, setFeedback] = useState<Message | null>(null);
-  const [request, setRequest] = useState<RequestState>({ kind: 'idle' });
-  const activeRequest = useRef<RequestState>({ kind: 'idle' });
-
-  const refresh = useCallback(async () => {
-    try {
-      await refreshWidget();
-    } catch {
-      // The refresh store retains the prior dashboard and reports the failed phase.
-    }
-  }, []);
-
-  useEffect(() => {
-    void refresh();
-    const listener = AppState.addEventListener('change', (status) => {
-      if (status === 'active') void refresh();
-      else flushWidgetAppearance();
-    });
-    return () => listener.remove();
-  }, [refresh]);
-
-  useEffect(() => {
-    if (activity?.kind === 'ready') {
-      void enableBackgroundRefresh().catch(() => setFeedback(refreshError));
-    }
-  }, [activity]);
-
-  function transitionRequest(next: RequestState) {
-    activeRequest.current = next;
-    setRequest(next);
-  }
-
-  async function runAndroidRequest(action: AndroidRequest) {
-    if (activeRequest.current.kind === 'running') return;
-    transitionRequest({ kind: 'running', request: action });
-    setFeedback(null);
-
-    let message: Message | undefined;
-    switch (action) {
-      case 'permission':
-        try {
-          await requestPermission();
-        } catch {
-          message = 'permissionError';
-        }
-        if (!message) {
-          try {
-            await refreshAfterPermissionRequest();
-          } catch {
-            // The refresh state owns failures after the Android prompt.
-          }
-        }
-        break;
-      case 'settings':
-        try {
-          await Linking.openSettings();
-        } catch {
-          message = 'settingsError';
-        }
-        break;
-      case 'pin':
-        try {
-          if (await pinWidget() === 'use-picker') message = pinFallback;
-        } catch {
-          message = pinFallback;
-        }
-        break;
-      case 'open':
-        try {
-          if (await openAnki() === 'missing') message = 'missing';
-        } catch {
-          message = 'openError';
-        }
-        break;
-    }
-    transitionRequest(message ? { kind: 'notice', request: action, message } : { kind: 'idle' });
-  }
-
-  async function selectTheme(id: WidgetTheme) {
-    if (id === getWidgetTheme()) return;
-    setFeedback(null);
-    if (activeRequest.current.kind === 'notice') transitionRequest({ kind: 'idle' });
-    try {
-      const update = changeWidgetTheme(id);
-      setThemeId(id);
-      await update;
-    } catch {
-      // A later selection can become authoritative while this refresh is in flight.
-      const selected = getWidgetTheme();
-      setThemeId(selected);
-      if (selected === id) setFeedback('themeError');
-    }
-  }
-
-  function changeTransparency(value: number) {
-    try {
-      changeWidgetBackgroundTransparency(value);
-      setTransparency(value);
-    } catch {
-      setFeedback('transparencyError');
-    }
-  }
 
   return {
+    ...context,
     activity,
     lastCheckedAt: completed?.checkedAt,
     widgetArtwork: completed?.publication.kind === 'reviews' ? completed.publication : null,
-    themeId,
-    transparency,
-    mood: activity?.kind === 'ready' ? activity.mood : 'waiting',
-    preview,
-    notice: request.kind === 'notice' ? request.message : feedback ?? (widget.kind === 'failed' ? refreshError : null),
-    refreshing: widget.kind === 'reading' || widget.kind === 'rendering',
-    requesting: request.kind === 'running',
-    clearPreview() { setPreview({ kind: 'live' }); },
-    setPreviewMood(mood: ReviewMood) { setPreview({ kind: 'preview', mood }); },
-    runAndroidRequest,
-    selectTheme,
-    changeTransparency,
-    async refresh() {
-      setFeedback(null);
-      if (activeRequest.current.kind === 'notice') transitionRequest({ kind: 'idle' });
-      let message: Message;
-      try {
-        const result = await refreshWidget();
-        message = result.kind === 'ready' ? 'refreshSuccess' : result.kind;
-      } catch {
-        message = 'refreshError';
-      }
-      ToastAndroid.show(copy(getLanguage(), message), ToastAndroid.LONG);
-    },
+    mood: activity?.kind === 'ready' ? activity.mood : 'waiting' as const,
+    notice: context.notice ?? (widget.matches({ data: 'failed' }) || backgroundError ? 'refreshError' as const : null),
+    refreshing: widget.matches({ data: 'reading' }),
+    requesting: snapshot.matches('requesting'),
+    clearPreview() { send({ type: 'widget.preview', value: null }); },
+    setPreviewMood(value: ReviewMood) { send({ type: 'widget.preview', value }); },
+    runAndroidRequest(request: AndroidRequest) { send({ type: 'android.request', request }); },
+    selectTheme(value: WidgetTheme) { send({ type: 'widget.theme', value }); },
+    changeTransparency(value: number) { send({ type: 'widget.transparency', value }); },
+    refresh() { send({ type: 'anki.refresh' }); },
+    setLayout(size: WidgetSize, value: WidgetLayout) { send({ type: 'widget.layout', size, value }); },
+    setAppearance(value: Appearance) { send({ type: 'appearance.select', value }); },
+    setLanguage(value: LanguagePreference) { send({ type: 'language.select', value }); },
   };
 }

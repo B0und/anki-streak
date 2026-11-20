@@ -1,13 +1,16 @@
+import { createEffectActor, createEffectLogic, join } from '@xstate/effect';
+import { useActor } from '@xstate/react';
+import { Effect, Schema } from 'effect';
 import { requireNativeView } from 'expo';
-import { useEffect, useState } from 'react';
-import { StyleSheet, View, useWindowDimensions, type ViewProps } from 'react-native';
+import { StyleSheet, View, type ViewProps } from 'react-native';
+import { createAsyncLogic, types } from 'xstate';
 
 import { historyDays, renderWidget } from './activity';
 import type { WidgetArtwork, WidgetProps } from './AnkiWidget';
 import { useDashboardContext } from './dashboardContext';
 import { copy } from './messages';
 import type { WidgetLayout, WidgetSize } from './preferences';
-import { themes, type WidgetTheme } from './themes';
+import { themes } from './themes';
 import { widgetBackdrop, widgetCard } from './widgetDesign';
 
 const NativePreview = requireNativeView<ViewProps & { widgetName: string; propsJson: string }>('ExpoWidgets', 'WidgetPreviewView');
@@ -16,37 +19,55 @@ const sampleStats = { today: 18, streak: 24, dailyReviewed: 42, dailyLearned: 10
 const sampleHistory = Array.from({ length: historyDays }, (_, index) =>
   index === historyDays - 1 ? sampleStats.today : ((index * 73 + index % 7 * 19) % 151) % 62);
 
-export function useWidgetPreview(sampleWhenDisconnected = false) {
-  const { dashboard, language } = useDashboardContext();
-  const [example, setExample] = useState<{ theme: WidgetTheme; language: typeof language; artwork: WidgetArtwork }>();
-  const { themeId } = dashboard;
-  const live = dashboard.widgetArtwork;
-  const ready = dashboard.activity?.kind === 'ready' ? dashboard.activity : undefined;
-  const sample = sampleWhenDisconnected && !ready;
-  const sampleArt = example?.theme === themeId && example.language === language ? example.artwork : undefined;
-  const artwork = live?.theme === themeId ? live.artwork : sample ? sampleArt : undefined;
+const sampleInput = Schema.Struct({
+  theme: Schema.Literals(['miku', '2b', 'emilia']),
+  language: Schema.Literals(['en', 'ru']),
+});
 
-  useEffect(() => {
-    if (!sample) return;
-    let active = true;
+const sampleArtwork = createEffectLogic({
+  schemas: { input: sampleInput },
+  effect: ({ input }) => {
     const { streak, today, dailyReviewed, dailyLearned } = sampleStats;
-    void renderWidget(streak, today, sampleHistory, dailyReviewed, dailyLearned, themeId, 'preview')
-      .then((artwork) => { if (active) setExample({ theme: themeId, language, artwork }); }).catch(() => {});
-    return () => { active = false; };
-  }, [sample, themeId, language]);
+    return Effect.tryPromise(() => renderWidget(streak, today, sampleHistory, dailyReviewed, dailyLearned,
+      input.theme, 'preview', input.language));
+  },
+});
 
-  return { artwork, stats: sample ? sampleStats : ready, sample };
+const galleryArtwork = createAsyncLogic({
+  schemas: { input: types<typeof sampleInput.Type>() },
+  run: ({ input, signal }) => Effect.runPromise(
+    createEffectActor(sampleArtwork, { input }).pipe(Effect.flatMap(join), Effect.scoped), { signal },
+  ),
+});
+
+type PreviewContent = {
+  artwork?: WidgetArtwork;
+  stats?: typeof sampleStats;
+  sample?: boolean;
+};
+
+export function useWidgetPreview(): PreviewContent {
+  const { dashboard } = useDashboardContext();
+  const live = dashboard.widgetArtwork;
+  return {
+    artwork: live?.theme === dashboard.themeId ? live.artwork : undefined,
+    stats: dashboard.activity?.kind === 'ready' ? dashboard.activity : undefined,
+  };
+}
+
+export function SampleWidgetPreviews({ render }: { render(content: PreviewContent): React.ReactNode }) {
+  const { dashboard, language } = useDashboardContext();
+  const [sample] = useActor(galleryArtwork, { input: { theme: dashboard.themeId, language } });
+  return render({ artwork: sample.output, stats: sampleStats, sample: true });
 }
 
 export function WidgetPreview({ layout, size, content }: {
   layout: WidgetLayout; size: WidgetSize; content: ReturnType<typeof useWidgetPreview>;
 }) {
   const { dashboard, palette, language } = useDashboardContext();
-  const { width: windowWidth } = useWindowDimensions();
-  const [width, setWidth] = useState(0);
   const theme = themes[dashboard.themeId];
   const { artwork, stats, sample } = content;
-  const mood = dashboard.preview.kind === 'preview' ? dashboard.preview.mood : sample ? 'happy' : dashboard.mood;
+  const mood = dashboard.previewMood ?? (sample ? 'happy' : dashboard.mood);
   const drawable = mood === 'happy' ? theme.happyDrawable : theme.waitingDrawable;
   const card = stats && widgetCard(layout, language, stats, theme.accent);
   const payload: WidgetProps = {
@@ -63,8 +84,7 @@ export function WidgetPreview({ layout, size, content }: {
   };
   const backdrop = widgetBackdrop(artwork && card ? theme.card : '#000000', dashboard.transparency);
 
-  return <View onLayout={({ nativeEvent }) => setWidth(nativeEvent.layout.width)}
-    style={[styles.frame, { height: (width || windowWidth - 32) * previewAspect[size], backgroundColor: palette.hero }]}>
+  return <View style={[styles.frame, { aspectRatio: 1 / previewAspect[size], backgroundColor: palette.hero }]}>
     <View pointerEvents="none" style={[styles.wallpaper, { backgroundColor: palette.line }]} />
     <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: backdrop }]} />
     <NativePreview pointerEvents="none" style={StyleSheet.absoluteFill}

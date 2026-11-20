@@ -17,7 +17,6 @@ import java.io.File
 
 private const val STATS_WIDTH = 1199
 private const val COMPACT_STATS_HEIGHT = 424
-private const val TALL_STATS_HEIGHT = 840
 internal const val HISTORY_COLUMNS = 17
 internal const val HISTORY_ROWS = 7
 internal const val HISTORY_DAYS = HISTORY_COLUMNS * HISTORY_ROWS
@@ -42,40 +41,11 @@ internal fun renderWidgetArtwork(
   val streakLabel = if (russian) "дней подряд" else "day streak"
   val reviewLabel = if (russian) "Повторов в день" else "Reviews/day"
   val newLabel = if (russian) "Новых в день" else "New/day"
-  val historyLabel = if (russian) "История занятий" else "Review history"
   val compact = writeStats(context, theme, "${prefix}compact", COMPACT_STATS_HEIGHT) { canvas, paint ->
     canvas.drawFlameAndStreak(context, streak, streakLabel, theme, paint)
     canvas.drawHistory(history, today > 0, theme, paint)
     canvas.drawAverage(dailyReviewed, reviewLabel, 393f, 392f, 342f, theme, paint)
     canvas.drawAverage(dailyLearned, newLabel, 788f, 392f, 373f, theme, paint)
-  }
-  val tall = writeStats(context, theme, "${prefix}tall", TALL_STATS_HEIGHT) { canvas, paint ->
-    canvas.save()
-    canvas.translate(-28f, -130f)
-    canvas.scale(1.5f, 1.5f)
-    canvas.drawFlameAndStreak(context, streak, streakLabel, theme, paint)
-    canvas.restore()
-
-    canvas.save()
-    canvas.translate(650f, 34f)
-    canvas.scale(1.42f, 1.42f)
-    canvas.drawAverage(dailyReviewed, reviewLabel, 0f, 58f, 355f, theme, paint)
-    canvas.drawAverage(dailyLearned, newLabel, 0f, 161f, 355f, theme, paint)
-    canvas.restore()
-
-    paint.typeface = Typeface.create("sans-serif", Typeface.BOLD)
-    paint.textSize = 53f
-    paint.color = theme.streakLight
-    paint.setShadowLayer(9f, 0f, 2f, 0xCC000000.toInt())
-    canvas.drawText(historyLabel, 30f, 389f, paint)
-    paint.clearShadowLayer()
-
-    canvas.save()
-    canvas.translate(30f, 420f)
-    canvas.scale(1.44f, 1.44f)
-    canvas.translate(-393f, -75f)
-    canvas.drawHistory(history, today > 0, theme, paint)
-    canvas.restore()
   }
   val portrait = if (today > 0) theme.happy else theme.waiting
   val dimensions = BitmapFactory.Options().apply { inJustDecodeBounds = true }
@@ -83,7 +53,6 @@ internal fun renderWidgetArtwork(
 
   return mapOf(
     "compactStats" to compact,
-    "tallStats" to tall,
     "portraitDrawable" to context.resources.getResourceEntryName(portrait),
     "portraitAspect" to dimensions.outWidth.toDouble() / dimensions.outHeight
   )

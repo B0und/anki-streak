@@ -13,6 +13,8 @@ const en = {
   sampleData: 'Sample data', loadingPreview: 'Loading preview…', previewUnavailable: 'Preview unavailable', compact: 'Compact', tall: 'Tall', layout: 'Layout', current: 'Current',
   focus: 'Daily Focus', first: 'Streak First',
   currentDetail: 'Streak, review history, and daily averages',
+  currentTallDetail: 'Today’s reviews, streak, and seven-day activity',
+  widgetStreak: '{count}-day streak',
   focusDetail: 'Today’s reviews at a glance',
   firstDetail: 'Your day streak at a glance',
   appearance: 'Appearance', transparency: 'Background transparency',
@@ -68,6 +70,8 @@ const ru: Record<keyof typeof en, string> = {
   sampleData: 'Пример данных', loadingPreview: 'Загружаем предпросмотр…', previewUnavailable: 'Предпросмотр недоступен', compact: 'Компактный', tall: 'Высокий', layout: 'Макет', current: 'Текущий',
   focus: 'Фокус на сегодня', first: 'Серия на первом плане',
   currentDetail: 'Серия, история занятий и средние показатели',
+  currentTallDetail: 'Повторы за сегодня, серия и активность за неделю',
+  widgetStreak: 'Дней подряд: {count}',
   focusDetail: 'Повторы за сегодня',
   firstDetail: 'Сколько дней подряд ты занимаешься',
   appearance: 'Оформление', transparency: 'Прозрачность фона',
@@ -112,6 +116,10 @@ const ru: Record<keyof typeof en, string> = {
 };
 
 export type Language = 'en' | 'ru';
+export const weekdays = {
+  en: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+  ru: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
+} as const;
 export type Message = keyof typeof en;
 const translators = {
   en: setupI18n({ locale: 'en', messages: { en } }),

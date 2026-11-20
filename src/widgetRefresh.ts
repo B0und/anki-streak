@@ -14,7 +14,7 @@ import { copy } from './messages';
 import { getLanguage, getWidgetLayouts } from './preferences';
 import { recordReviewMilestone } from './celebration';
 import { themes, type WidgetTheme } from './themes';
-import { widgetBackdrop, widgetCard } from './widgetDesign';
+import { currentTall, widgetBackdrop, widgetCard } from './widgetDesign';
 
 const taskName = 'refresh-anki-widget';
 const backgroundIntervalMinutes = 15;
@@ -55,6 +55,7 @@ function snapshotProps(activity: AvailableActivity, artwork: PreparedArtwork | n
     cardBackdrop: widgetBackdrop(theme?.card ?? '#000000', transparency),
     connectLabel: copy(language, 'connectWidget'),
     cards: { ...(compact && { compact }), ...(tall && { tall }) },
+    tallCurrent: ready && theme && layouts.tall === 'current' ? currentTall(language, ready, theme.accent) : undefined,
   };
 }
 

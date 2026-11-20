@@ -3,15 +3,10 @@ import { Text, View, XStack, YStack } from 'tamagui';
 
 import { historyColumns, historyRows, type ReviewHistory } from './activity';
 import type { Palette } from './appearance';
-import { copy, type Language } from './messages';
+import { copy, weekdays, type Language } from './messages';
 import { Action, CountUp, Portrait, Section } from './studyComponents';
 import { themes } from './themes';
 import type { useDashboard } from './useDashboard';
-
-const weekdays = {
-  en: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-  ru: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
-};
 
 export function TodayScreen({ dashboard, palette, language, celebration }: {
   dashboard: ReturnType<typeof useDashboard>; palette: Palette; language: Language; celebration: number;

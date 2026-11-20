@@ -13,16 +13,16 @@ import { useDashboardContext } from './dashboardContext';
 import { copy } from './messages';
 import type { WidgetLayout, WidgetSize } from './preferences';
 import { themes } from './themes';
-import { widgetBackdrop, widgetCard } from './widgetDesign';
+import { currentTall, widgetBackdrop, widgetCard } from './widgetDesign';
 
 const NativePreview = requireNativeView<ViewProps & { widgetName: string; propsJson: string }>('ExpoWidgets', 'WidgetPreviewView');
 const previewAspect: Record<WidgetSize, number> = { compact: .27, tall: .56 };
-const sampleStats = { today: 18, streak: 24, dailyReviewed: 42, dailyLearned: 10 };
 const sampleHistory = {
   counts: Array.from({ length: historyDays }, (_, index) =>
-    index === historyDays - 1 ? sampleStats.today : ((index * 73 + index % historyRows * 19) % 151) % 62),
-  todayRow: historyRows - 1,
+    index === historyDays - 1 ? 18 : ((index * 73 + index % historyRows * 19) % 151) % 62),
+  todayRow: 4,
 };
+const sampleStats = { today: 18, streak: 24, dailyReviewed: 42, dailyLearned: 10, history: sampleHistory };
 
 const sampleInput = Schema.Struct({
   theme: Schema.Literals(['miku', '2b', 'emilia']),
@@ -103,6 +103,7 @@ export function WidgetPreview({ layout, size }: { layout: WidgetLayout; size: Wi
   const mood = dashboard.previewMood ?? (example ? 'happy' : live?.activity.mood ?? 'waiting');
   const drawable = mood === 'happy' ? theme.happyDrawable : theme.waitingDrawable;
   const card = stats && widgetCard(layout, frameLanguage, stats, theme.accent);
+  const tallCurrent = stats && size === 'tall' && layout === 'current' ? currentTall(frameLanguage, stats, theme.accent) : undefined;
   const payload: WidgetProps = {
     artwork: frame ? { ...frame.artwork, portraitDrawable: drawable } : null,
     description: stats ? copy(frameLanguage, 'activityDescription', {
@@ -114,8 +115,9 @@ export function WidgetPreview({ layout, size }: { layout: WidgetLayout; size: Wi
     connectLabel: frame ? undefined : copy(language, needsSample && sample.matches('unavailable') ? 'previewUnavailable' : 'loadingPreview'),
     previewSize: size,
     cards: card ? { [size]: card } : undefined,
+    tallCurrent,
   };
-  const backdrop = widgetBackdrop(card ? theme.card : '#000000', dashboard.transparency);
+  const backdrop = widgetBackdrop(card || tallCurrent ? theme.card : '#000000', dashboard.transparency);
 
   return <YStack gap={7}>
     <YStack aspectRatio={1 / previewAspect[size]} bg="hero" justify="center" rounded={20} overflow="hidden">

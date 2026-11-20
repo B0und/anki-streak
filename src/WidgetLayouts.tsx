@@ -29,7 +29,8 @@ export function WidgetLayouts({ initialSize }: { initialSize: WidgetSize }) {
           items="center" bg={selected ? 'subtle' : 'surface'} rounded={11} opacity="press:0.8">
           <YStack flex={1} gap={3}>
             <Text color="color" fontSize={16} fontWeight="700">{copy(language, layout)}</Text>
-            <Text color="muted" fontSize={13}>{copy(language, layoutDescriptions[layout])}</Text>
+            <Text color="muted" fontSize={13}>{copy(language, layout === 'current' && size === 'tall'
+              ? 'currentTallDetail' : layoutDescriptions[layout])}</Text>
           </YStack>
           <Icon size={20} color={selected ? palette.accent : palette.muted} />
         </XStack>;

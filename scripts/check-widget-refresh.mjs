@@ -78,7 +78,7 @@ function makeHost() {
       return { started: started.promise, complete: () => completed.resolve() };
     },
     AnkiActivity: {
-      historyRows: 1,
+      historyRows: 7,
       historyColumns: 1,
       getWidgetTheme: () => theme,
       getWidgetBackgroundTransparency: () => transparency,
@@ -86,7 +86,7 @@ function makeHost() {
       async readActivity() {
         return {
           kind: 'ready', today: reviews, newToday: 0, dueReviews: 0, streak: 1,
-          history: { counts: [reviews], todayRow: 0 }, dailyReviewed: reviews, dailyLearned: 0,
+          history: { counts: [0, 1, 0, 1, 2, 0, reviews], todayRow: 2 }, dailyReviewed: reviews, dailyLearned: 0,
         };
       },
       async renderWidget(_streak, today, _history, _reviewed, _learned, renderedTheme, _purpose, renderedLanguage) {
@@ -98,7 +98,7 @@ function makeHost() {
         }
 
         const image = { uri: `${today}/${renderedTheme}/${renderedLanguage}`, aspect: 1 };
-        return { compactStats: image, tallStats: image, portraitDrawable: renderedTheme, portraitAspect: 1 };
+        return { compactStats: image, portraitDrawable: renderedTheme, portraitAspect: 1 };
       },
     },
     StudyPreferences: {
@@ -117,7 +117,11 @@ function assertPublications(host, trace) {
   for (const { name, props, artwork, backdrop } of host.publications) {
     assert.equal(name, 'AnkiStreak', trace);
     assert.equal(props.artwork?.compactStats.uri, artwork, `Stale widget artwork for ${trace}`);
-    assert.equal(props.artwork?.tallStats.uri, artwork, `Stale tall widget artwork for ${trace}`);
+    const [reviews, , language] = artwork.split('/');
+    assert.equal(props.tallCurrent?.value, reviews, `Stale tall widget count for ${trace}`);
+    assert.deepEqual(props.tallCurrent?.days.map(({ state }) => state),
+      ['reviewed', 'missed', 'today-reviewed', 'future', 'future', 'future', 'future'], trace);
+    assert.equal(props.tallCurrent?.days[2].label, language === 'ru' ? 'Ср' : 'Wed', `Stale weekday locale for ${trace}`);
     assert.equal(props.backdrop, backdrop, `Stale widget transparency for ${trace}`);
   }
 

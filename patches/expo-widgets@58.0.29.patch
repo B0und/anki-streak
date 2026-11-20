@@ -67,13 +67,15 @@ diff --git a/android/src/main/java/expo/modules/widgets/WidgetPreviewView.kt b/a
 new file mode 100644
 --- /dev/null
 +++ b/android/src/main/java/expo/modules/widgets/WidgetPreviewView.kt
-@@ -0,0 +1,74 @@
+@@ -0,0 +1,90 @@
 +package expo.modules.widgets
 +
 +import android.annotation.SuppressLint
 +import android.content.Context
++import android.graphics.Bitmap
++import android.graphics.Canvas
 +import android.util.Log
-+import android.widget.LinearLayout.LayoutParams
++import android.view.View
 +import androidx.compose.ui.unit.DpSize
 +import androidx.compose.ui.unit.dp
 +import androidx.glance.appwidget.ExperimentalGlanceRemoteViewsApi
@@ -95,6 +97,12 @@ new file mode 100644
 +  var widgetName = ""
 +  var propsJson = ""
 +  private var rendering: Job? = null
++  private var bitmap: Bitmap? = null
++
++  override fun dispatchDraw(canvas: Canvas) {
++    super.dispatchDraw(canvas)
++    bitmap?.let { canvas.drawBitmap(it, 0f, 0f, null) }
++  }
 +
 +  override fun onAttachedToWindow() {
 +    super.onAttachedToWindow()
@@ -114,6 +122,8 @@ new file mode 100644
 +  fun render() {
 +    rendering?.cancel()
 +    if (!isAttachedToWindow || width == 0 || height == 0 || propsJson.isEmpty()) return
++    val pixelWidth = width
++    val pixelHeight = height
 +    val app = context.applicationContext
 +    val density = resources.displayMetrics.density
 +    val size = DpSize((width / density).dp, (height / density).dp)
@@ -131,9 +141,15 @@ new file mode 100644
 +        val views = GlanceRemoteViews().compose(context, size) { EmittableTree(root) }.remoteViews
 +        ensureActive()
 +        val preview = views.apply(app, this@WidgetPreviewView)
-+        removeAllViews()
-+        addView(preview, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
-+        post { if (preview.parent === this@WidgetPreviewView) measureAndLayout() }
++        preview.measure(
++          View.MeasureSpec.makeMeasureSpec(pixelWidth, View.MeasureSpec.EXACTLY),
++          View.MeasureSpec.makeMeasureSpec(pixelHeight, View.MeasureSpec.EXACTLY)
++        )
++        preview.layout(0, 0, pixelWidth, pixelHeight)
++        bitmap = Bitmap.createBitmap(pixelWidth, pixelHeight, Bitmap.Config.ARGB_8888).also {
++          preview.draw(Canvas(it))
++        }
++        invalidate()
 +      } catch (error: CancellationException) {
 +        throw error
 +      } catch (error: Exception) {

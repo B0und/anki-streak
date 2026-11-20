@@ -26,12 +26,12 @@ const androidRequest = Effect.fnUntraced(function*(request: AndroidRequest): Eff
     case 'settings':
       return yield* Effect.tryPromise(() => Linking.openSettings()).pipe(Effect.as(null), Effect.orElseSucceed(() => 'settingsError' as const));
     case 'pin':
-      return yield* Effect.tryPromise(pinWidget).pipe(
+      return yield* Effect.tryPromise(() => pinWidget()).pipe(
         Effect.map((result) => result === 'use-picker' ? 'pinFallback' as const : null),
         Effect.orElseSucceed(() => 'pinFallback' as const),
       );
     case 'open':
-      return yield* Effect.tryPromise(openAnki).pipe(
+      return yield* Effect.tryPromise(() => openAnki()).pipe(
         Effect.map((result) => result === 'missing' ? 'missing' as const : null),
         Effect.orElseSucceed(() => 'openError' as const),
       );

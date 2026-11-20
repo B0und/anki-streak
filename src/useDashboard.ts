@@ -48,7 +48,19 @@ const androidRequest = Effect.fnUntraced(function*(request: AndroidRequest): Eff
   }
 });
 
-function readPreferences() {
+type DashboardContext = {
+  appearance: Appearance;
+  languagePreference: LanguagePreference;
+  language: ReturnType<typeof getLanguage>;
+  layouts: ReturnType<typeof getWidgetLayouts>;
+  themeId: WidgetTheme;
+  transparency: number;
+  previewMood: ReviewMood | null;
+  notice: Message | null;
+  request: AndroidRequest;
+};
+
+function readPreferences(): DashboardContext {
   return {
     appearance: preference('appearance', appearanceOptions, 'system'),
     languagePreference: preference('language', languageOptions, 'system'),
@@ -56,9 +68,9 @@ function readPreferences() {
     layouts: getWidgetLayouts(),
     themeId: getWidgetTheme(),
     transparency: getWidgetBackgroundTransparency(),
-    previewMood: null as ReviewMood | null,
-    notice: null as Message | null,
-    request: 'open' as AndroidRequest,
+    previewMood: null,
+    notice: null,
+    request: 'open',
   };
 }
 
@@ -87,7 +99,7 @@ function manualRefresh() {
 
 const dashboardSetup = setup({
   schemas: {
-    context: types<ReturnType<typeof readPreferences>>(),
+    context: types<DashboardContext>(),
     events: {
       visibility: types<{ active: boolean; language: ReturnType<typeof getLanguage> }>(),
       'appearance.select': types<{ value: Appearance }>(),

@@ -23,8 +23,13 @@ const automaticChecks = createCallbackLogic({
     const check = () => sendBack({ type: 'check', manual: false });
     check();
     const listener = AppState.addEventListener('change', (state) => { if (state === 'active') check(); });
+    // oxlint-disable-next-line no-restricted-globals -- The existing update actor owns this foreground polling interval and clears it on stop.
     const timer = setInterval(() => { if (AppState.currentState === 'active') check(); }, automaticCheckIntervalMs);
-    return () => { listener.remove(); clearInterval(timer); };
+    return () => {
+      listener.remove();
+      // oxlint-disable-next-line no-restricted-globals -- Dispose the polling interval when the actor stops.
+      clearInterval(timer);
+    };
   },
 });
 

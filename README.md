@@ -47,6 +47,10 @@ For a GitHub release, set `expo.version` in `app.json` to the release version an
 
 The dashboard and its screens observe XState 6 actors. Effect 4 handles provider validation, cancellable release checks, and Android requests. Android owns launcher dimensions, OS permissions, and background scheduling. See the [glossary](GLOSSARY.md) for app terms.
 
+## Development checks
+
+Run `bun run check` locally for lint, Effect-aware type checking, and widget refresh verification. The [engineering guide](docs/engineering.md) lists the tool requirements and editor setup.
+
 | Flow | Owner |
 | --- | --- |
 | App preferences and Android requests | [Dashboard actor](src/useDashboard.ts). Starts a read on foreground, persists appearance changes, and runs one Android request at a time. |

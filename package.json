@@ -6,8 +6,12 @@
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
-    "lint": "oxlint",
-    "typecheck": "tsc --noEmit"
+    "lint": "effect-tsgo --tsrs-lint oxlint",
+    "typecheck": "effect-tsgo tsrs --noEmit",
+    "check": "bun run lint && bun run typecheck && bun scripts/check-widget-model.mjs && bun scripts/check-widget-refresh.mjs",
+    "lsp:effect": "effect-tsgo tsrs --lsp --stdio",
+    "lsp:lint": "effect-tsgo --tsrs-lint oxlint --lsp",
+    "refs:sync": "bash scripts/sync-agent-sources.sh"
   },
   "dependencies": {
     "@expo/ui": "^58.0.29",
@@ -36,10 +40,14 @@
     "xstate": "6.0.0-beta.3"
   },
   "devDependencies": {
+    "@effect/tsgo": "0.73.2",
+    "@oxlint/plugins": "1.94.0",
     "@tamagui/cli": "3.3.3",
     "@types/react": "^19.3.0",
-    "oxlint": "^1.94.0",
-    "typescript": "^7.0.2"
+    "oxlint": "1.94.0",
+    "tla-ts": "0.0.10",
+    "tsrs": "7.1.0-beta.tsrs3",
+    "typescript": "7.0.2"
   },
   "patchedDependencies": {
     "expo-widgets@58.0.29": "patches/expo-widgets@58.0.29.patch"

@@ -9,6 +9,7 @@ const frames = createCallbackLogic({
   run: ({ input: { value, delay }, sendBack }) => {
     let running = true;
     let frame = 0;
+    // oxlint-disable-next-line no-restricted-globals -- The existing animation actor owns this timer handle and clears it on stop.
     let timer: ReturnType<typeof setTimeout> | undefined;
     void AccessibilityInfo.isReduceMotionEnabled().then((reduced) => {
       if (!running) return;
@@ -17,6 +18,7 @@ const frames = createCallbackLogic({
         return;
       }
       sendBack({ type: 'frame', value: 0 });
+      // oxlint-disable-next-line no-restricted-globals -- The existing animation delay precedes the frame loop and is cleared on actor stop.
       timer = setTimeout(() => {
         const begin = Date.now();
         const step = () => {
@@ -30,6 +32,7 @@ const frames = createCallbackLogic({
     }).catch(() => { if (running) sendBack({ type: 'complete' }); });
     return () => {
       running = false;
+      // oxlint-disable-next-line no-restricted-globals -- Dispose the animation delay when the actor stops.
       clearTimeout(timer);
       cancelAnimationFrame(frame);
     };

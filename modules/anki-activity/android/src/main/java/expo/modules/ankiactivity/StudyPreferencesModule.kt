@@ -64,11 +64,10 @@ class StudyPreferencesModule : Module() {
 
     Function("recordMilestone") { day: String, animate: Boolean, notify: Boolean, title: String, body: String, channel: String ->
       synchronized(milestoneLock) {
-        val legacyDay = preferences.getString("lastMilestone", null)
-        if (animate && preferences.getString("lastCelebrationDay", legacyDay) != day) {
+        if (animate && preferences.getString("lastCelebrationDay", null) != day) {
           preferences.edit().putString("lastCelebrationDay", day).putString("pendingCelebration", day).apply()
         }
-        if (notify && preferences.getString("lastNotificationDay", legacyDay) != day &&
+        if (notify && preferences.getString("lastNotificationDay", null) != day &&
           postNotificationIfAllowed(title, body, channel)) {
           preferences.edit().putString("lastNotificationDay", day).apply()
         }

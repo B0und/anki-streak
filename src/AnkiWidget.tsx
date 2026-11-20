@@ -29,7 +29,6 @@ export type WidgetProps = {
   backdrop: string;
   waitingDrawable: string;
   connectLabel?: string;
-  card?: WidgetCard | null;
   cards?: { compact?: WidgetCard; tall?: WidgetCard };
   cardBackdrop?: string;
   previewSize?: 'compact' | 'tall';
@@ -38,7 +37,7 @@ export type WidgetProps = {
 type AndroidWidgetEnvironment = WidgetEnvironment & { width?: number; height?: number; screenHeight?: number };
 
 function AnkiStreak(
-  { artwork, description, backdrop = '#000000', waitingDrawable = 'miku_waiting', connectLabel = 'Open Anki Streak to connect', card: legacyCard, cards, cardBackdrop, previewSize }: WidgetProps,
+  { artwork, description, backdrop = '#000000', waitingDrawable = 'miku_waiting', connectLabel = 'Open Anki Streak to connect', cards, cardBackdrop, previewSize }: WidgetProps,
   { width: widgetWidth = 300, height = 80, screenHeight = 0 }: AndroidWidgetEnvironment,
 ) {
   'widget';
@@ -46,7 +45,7 @@ function AnkiStreak(
   const minimumTallHeight = 105;
   const compactScreenFraction = 0.24;
   const layout = previewSize ?? (height >= Math.max(minimumTallHeight, screenHeight * compactScreenFraction) ? 'tall' : 'compact');
-  const card = cards ? cards[layout] : legacyCard;
+  const card = cards?.[layout];
   const narrow = widgetWidth < 240;
   const stats = artwork && (layout === 'tall' ? artwork.tallStats : artwork.compactStats);
   const portraitAspect = artwork?.portraitAspect ?? 1;

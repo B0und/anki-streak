@@ -49,7 +49,7 @@ The dashboard and its screens observe XState 6 actors. Effect 4 handles provider
 
 ## Development checks
 
-Run `bun run check` locally for lint, Effect-aware type checking, and widget refresh verification. The [engineering guide](docs/engineering.md) lists the tool requirements and editor setup.
+Run `bun run check` locally for TypeScript and Android lint, type checking, and widget refresh verification. Use the [Android build prerequisites](#build-an-apk) for the native checks. The [engineering guide](docs/engineering.md) covers editor setup.
 
 | Flow | Owner |
 | --- | --- |

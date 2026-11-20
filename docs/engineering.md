@@ -2,7 +2,7 @@
 
 ## Local checks and language servers
 
-Use Node 24 or later and Bun. Install with `bun install --frozen-lockfile`. Run `bun run check` locally before handoff. The gate runs Effect-patched TSRS, type-aware Oxlint, and widget refresh verification. The [widget refresh verification skill](../.agents/skills/verify-widget-refresh/SKILL.md) describes the TLA+ model checked by `tla-ts` and the production actor coverage.
+Use Node 24 or later, Bun, and the [Android build prerequisites](../README.md#build-an-apk). Install with `bun install --frozen-lockfile`. Run `bun run check` locally before handoff. It runs Effect-patched TSRS, type-aware Oxlint, widget refresh verification, Kotlin compilation, and Android Lint for `anki-activity`. The native check generates the Android project on the first run. The [widget refresh verification skill](../.agents/skills/verify-widget-refresh/SKILL.md) describes the TLA+ model checked by `tla-ts` and the production actor coverage.
 
 For an editor with custom LSP commands, launch `bun run lsp:effect` from the repo root to run Effect-patched TSRS over stdio. Register it for TypeScript, TSX, JavaScript, and JSX. Use `bun run lsp:lint` for Oxlint and enable one server per role.
 

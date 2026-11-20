@@ -1,6 +1,6 @@
 ---
 name: verify-widget-refresh
-description: Verify widget publication when changing AnkiDroid refresh, appearance scheduling, native artwork rendering, or the publication guard.
+description: Verify widget publication and launcher parity when changing AnkiDroid refresh, appearance scheduling, widget sizing or rendering, or the publication guard.
 ---
 
 # Verify widget refresh
@@ -30,3 +30,10 @@ bun scripts/check-widget-refresh.mjs --mutate-freshness
 ```
 
 Then run the normal local gate.
+
+## Verify launcher parity
+
+1. Pin one Compact and one Tall widget. At 0% transparency, capture each on the launcher and in the app with **Mood preview → Live**.
+2. Compare the widget crops at the same scale. Confirm the stats, portrait crop, palette, and spacing match for each size. Repeat for each character when changing portrait or layout code.
+3. Resize a pinned widget and reopen the app. Compare the new bounds and layout. With different pinned dimensions in the same size class, use the dimension selector to check each.
+4. Change layout and transparency, then return to the launcher. Compare the updated layout and opacity. The app surface and launcher wallpaper show through transparent pixels.

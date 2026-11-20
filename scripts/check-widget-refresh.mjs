@@ -117,7 +117,9 @@ function assertPublications(host, trace) {
   for (const { name, props, artwork, backdrop } of host.publications) {
     assert.equal(name, 'AnkiStreak', trace);
     assert.equal(props.artwork?.compactStats.uri, artwork, `Stale widget artwork for ${trace}`);
-    const [reviews, , language] = artwork.split('/');
+    const [reviews, theme, language] = artwork.split('/');
+    assert.equal(props.happyDrawable, `${theme}_happy`, `Stale happy portrait for ${trace}`);
+    assert.equal(props.waitingDrawable, `${theme}_waiting`, `Stale waiting portrait for ${trace}`);
     assert.equal(props.tallCurrent?.value, reviews, `Stale tall widget count for ${trace}`);
     assert.deepEqual(props.tallCurrent?.days.map(({ state }) => state),
       ['reviewed', 'missed', 'today-reviewed', 'future', 'future', 'future', 'future'], trace);
@@ -144,12 +146,12 @@ try {
     const render = host.holdNextRender();
     const refresh = app.refreshWidget();
     const pendingRefreshes = [refresh];
-    const previewFrames = [];
+    const preparedFrames = [];
     let previous;
     app.widgetRefreshActor.subscribe(({ context }) => {
       if (!context.artwork || context.artwork === previous) return;
       previous = context.artwork;
-      previewFrames.push({ uri: previous.artwork.compactStats.uri, expected: host.artworkKey() });
+      preparedFrames.push({ uri: previous.artwork.compactStats.uri, expected: host.artworkKey() });
     });
 
     try {
@@ -184,8 +186,8 @@ try {
       await Promise.all(pendingRefreshes);
       await waitFor(app.widgetRefreshActor, (snapshot) => snapshot.matches({ appearance: 'quiet' }), waitOptions);
       assertPublications(host, order.join(' → '));
-      for (const { uri, expected } of previewFrames) {
-        assert.equal(uri, expected, `Superseded preview artwork for ${order.join(' → ')}`);
+      for (const { uri, expected } of preparedFrames) {
+        assert.equal(uri, expected, `Superseded artwork cached for ${order.join(' → ')}`);
       }
       checked += 1;
     } finally {
@@ -202,7 +204,7 @@ try {
     render.complete();
     await app.refreshWidget();
     const lastFrame = app.widgetRefreshActor.getSnapshot().context.artwork;
-    assert.ok(lastFrame, 'Initial preview artwork is ready');
+    assert.ok(lastFrame, 'Initial widget artwork is ready');
 
     const appearanceRender = host.holdNextRender();
     try {

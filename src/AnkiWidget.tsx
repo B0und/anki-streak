@@ -35,30 +35,36 @@ export type WidgetProps = {
   description: string;
   backdrop: string;
   waitingDrawable: string;
+  happyDrawable?: string;
   connectLabel?: string;
   cards?: { compact?: WidgetCard; tall?: WidgetCard };
   tallCurrent?: TallCurrent;
   cardBackdrop?: string;
-  previewSize?: 'compact' | 'tall';
 };
 
-type AndroidWidgetEnvironment = WidgetEnvironment & { width?: number; height?: number; screenHeight?: number };
+type AndroidWidgetEnvironment = WidgetEnvironment & {
+  width?: number;
+  height?: number;
+  sizeClass?: 'compact' | 'tall';
+  previewMood?: 'live' | 'waiting' | 'happy';
+};
 
 function AnkiStreak(
-  { artwork, description, backdrop = '#000000', waitingDrawable = 'miku_waiting', connectLabel = 'Open Anki Streak to connect', cards, tallCurrent, cardBackdrop, previewSize }: WidgetProps,
-  { width: widgetWidth = 300, height = 80, screenHeight = 0 }: AndroidWidgetEnvironment,
+  { artwork, description, backdrop = '#000000', waitingDrawable = 'miku_waiting', happyDrawable,
+    connectLabel = 'Open Anki Streak to connect', cards, tallCurrent, cardBackdrop }: WidgetProps,
+  { width: widgetWidth = 300, height = 80, sizeClass: layout = 'compact', previewMood }: AndroidWidgetEnvironment,
 ) {
   'widget';
 
-  const minimumTallHeight = 105;
-  const compactScreenFraction = 0.24;
-  const layout = previewSize ?? (height >= Math.max(minimumTallHeight, screenHeight * compactScreenFraction) ? 'tall' : 'compact');
   const card = cards?.[layout];
   const narrow = widgetWidth < 240;
   const short = height < 78;
   const tallOverview = layout === 'tall' && !card ? tallCurrent : undefined;
   const surface = card || tallOverview ? cardBackdrop ?? backdrop : backdrop;
-  const openApp = previewSize ? [] : [{ $type: 'openAppOnTap' }];
+  const openApp = previewMood ? [] : [{ $type: 'openAppOnTap' }];
+  const livePortrait = artwork?.portraitDrawable ?? waitingDrawable;
+  const portrait = previewMood === 'happy' ? happyDrawable ?? livePortrait
+    : previewMood === 'waiting' ? waitingDrawable : livePortrait;
   if (artwork && tallOverview) {
     const { value, label, streak, accent, days } = tallOverview;
     const footerHeight = narrow ? 36 : 44;
@@ -78,7 +84,7 @@ function AnkiStreak(
         <Column modifiers={[fillMaxSize()]}>
           <Box modifiers={[size(widgetWidth, heroHeight)]}>
             <Box contentAlignment="bottomEnd" modifiers={[fillMaxSize()]}>
-              <Image source={{ uri: artwork.portraitDrawable }} contentScale="crop"
+              <Image source={{ uri: portrait }} contentScale="crop"
                 modifiers={[size(portraitPanelWidth, portraitHeight)]} />
             </Box>
             <Box contentAlignment="centerStart" modifiers={[fillMaxSize(), padding(inset, 0, 0, 0)]}>
@@ -131,7 +137,7 @@ function AnkiStreak(
         <>
           <Box contentAlignment="bottomEnd" modifiers={[fillMaxSize(), padding(0, 0, portraitInset, 0)]}>
             <Image
-              source={{ uri: artwork.portraitDrawable }}
+              source={{ uri: portrait }}
               contentScale="fit"
               modifiers={[size(portraitWidth, portraitHeight)]}
             />
@@ -166,7 +172,7 @@ function AnkiStreak(
         </>
       ) : (
         <Row verticalAlignment="center" modifiers={[width(Math.min(260, widgetWidth - 16))]}>
-          <Image source={{ uri: waitingDrawable }} contentScale="fit" modifiers={[size(narrow ? 49 : 65, 48)]} />
+          <Image source={{ uri: portrait }} contentScale="fit" modifiers={[size(narrow ? 49 : 65, 48)]} />
           <Text color="#FFFFFF" modifiers={[padding(8, 0, 0, 0)]} style={{ fontSize: 13 }} maxLines={3}>{connectLabel}</Text>
         </Row>
       )}

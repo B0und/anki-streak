@@ -1,7 +1,29 @@
 diff --git a/android/build.gradle b/android/build.gradle
+index df3bdb4..e527407 100644
 --- a/android/build.gradle
 +++ b/android/build.gradle
-@@ -119,2 +119,9 @@
+@@ -2,2 +2,11 @@ import org.apache.tools.ant.taskdefs.condition.Os
+
++buildscript {
++  repositories {
++    mavenCentral()
++  }
++  dependencies {
++    classpath("org.jetbrains.kotlin.plugin.compose:org.jetbrains.kotlin.plugin.compose.gradle.plugin:${kotlinVersion}")
++  }
++}
++
+ plugins {
+@@ -7,2 +16,4 @@ plugins {
+
++apply plugin: 'org.jetbrains.kotlin.plugin.compose'
++
+ group = 'expo.modules.widgets'
+@@ -65,2 +76,3 @@ android {
+   buildFeatures {
++    compose true
+     prefab true
+@@ -112,2 +124,9 @@ def generateExpoWidgetsLayoutRegistry = tasks.register("generateExpoWidgetsLayou
    inputs.files(expoWidgetsLayoutRegistryConfigFile)
 +  inputs.files {
 +    if (!expoWidgetsLayoutRegistryConfigFile.isFile()) return []
@@ -12,20 +34,14 @@ diff --git a/android/build.gradle b/android/build.gradle
 +  }
    outputs.file(expoWidgetsLayoutRegistryOutput)
 diff --git a/android/src/main/java/expo/modules/widgets/ExpoWidgetEmittableTree.kt b/android/src/main/java/expo/modules/widgets/ExpoWidgetEmittableTree.kt
-index 3df9e4a4d92155a00d3f5652d17d20be10bef1c1..3a5e2469e970d3b30ea7454c4ab1f0888e634e2f 100644
+index 3df9e4a..3a5e246 100644
 --- a/android/src/main/java/expo/modules/widgets/ExpoWidgetEmittableTree.kt
 +++ b/android/src/main/java/expo/modules/widgets/ExpoWidgetEmittableTree.kt
-@@ -66,6 +66,7 @@ import androidx.glance.ImageProvider
- import androidx.glance.TintColorFilterParams
- import androidx.glance.GlanceModifier
+@@ -68,2 +68,3 @@ import androidx.glance.GlanceModifier
  import androidx.glance.action.clickable
 +import androidx.glance.appwidget.action.actionStartActivity
  import androidx.glance.appwidget.CheckboxDefaults
- import androidx.glance.appwidget.cornerRadius
- import androidx.glance.appwidget.EmittableCheckBox
-@@ -419,6 +420,15 @@ private fun ModifierType.toPeekModifier(converterContext: ConverterContext): Gla
-     "background" -> asRecord<BackgroundParams>(converterContext)?.color?.toGlanceColorProvider()
-       ?.let { GlanceModifier.background(it) }
+@@ -421,2 +422,11 @@ private fun ModifierType.toPeekModifier(converterContext: ConverterContext): Gla
      "cornerRadius" -> asRecord<CornerRadiusParams>(converterContext)?.let { GlanceModifier.cornerRadius(it.radius.dp) }
 +    "openAppOnTap" -> converterContext.applicationContext.let { context ->
 +      context.packageManager.getLaunchIntentForPackage(context.packageName)?.let { intent ->
@@ -37,60 +53,101 @@ index 3df9e4a4d92155a00d3f5652d17d20be10bef1c1..3a5e2469e970d3b30ea7454c4ab1f088
 +      }
 +    }
      // Unsupported Expo UI modifiers are ignored until they have exact Glance semantics.
-     else -> null
-   } ?: GlanceModifier
 diff --git a/android/src/main/java/expo/modules/widgets/ExpoWidgetsPeekWidget.kt b/android/src/main/java/expo/modules/widgets/ExpoWidgetsPeekWidget.kt
-index edabde8f51b3bd9162b634e46f2f09686c3a3b8a..da3e7b5655520247515d414760230edcc3c7b124 100644
+index edabde8..5782d51 100644
 --- a/android/src/main/java/expo/modules/widgets/ExpoWidgetsPeekWidget.kt
 +++ b/android/src/main/java/expo/modules/widgets/ExpoWidgetsPeekWidget.kt
-@@ -25,5 +25,9 @@ internal class ExpoWidgetsPeekWidget(
-     val layout = WidgetsLayoutRegistry.layout(appContext, widgetName)
-       ?: return createErrorRoot("No layout found for $widgetName")
+@@ -27,7 +27,22 @@ internal class ExpoWidgetsPeekWidget(
      val props = WidgetsLayoutRegistry.props(appContext, widgetName)
 -    val environment = getWidgetEnvironment(appContext)
-+    val environment = getWidgetEnvironment(appContext) + mapOf(
-+      "width" to size.width.value.toDouble(),
-+      "height" to size.height.value.toDouble(),
-+      "screenHeight" to context.resources.configuration.screenHeightDp.toDouble()
-+    )
-     val node = evaluateLayout(appContext, layout, props, environment)
-diff --git a/android/src/main/java/expo/modules/widgets/WidgetsModule.kt b/android/src/main/java/expo/modules/widgets/WidgetsModule.kt
---- a/android/src/main/java/expo/modules/widgets/WidgetsModule.kt
-+++ b/android/src/main/java/expo/modules/widgets/WidgetsModule.kt
-@@ -46,6 +46,22 @@
-
-     Function("reloadAllWidgets") {
-       WidgetsUpdater.reloadAll(context)
-+    }
+-    val node = evaluateLayout(appContext, layout, props, environment)
+-
+-    return node.toPeekRoot(appContext, InteractionSource.Widget(widgetName), size)
++    return renderWidgetRoot(appContext, widgetName, layout, props, size)
+   }
+ }
 +
-+    AsyncFunction("publishSnapshot") Coroutine { name: String, props: String ->
-+      WidgetsUpdater.publish(context.applicationContext, name, props)
-+    }
++internal fun renderWidgetRoot(
++  context: Context,
++  name: String,
++  layout: String,
++  props: Map<String, Any?>?,
++  size: DpSize,
++  previewMood: String? = null
++): Emittable {
++  val environment = getWidgetEnvironment(context) + mapOf(
++    "width" to size.width.value.toDouble(),
++    "height" to size.height.value.toDouble(),
++    "sizeClass" to widgetSizeClass(context, size),
++    "previewMood" to previewMood
++  )
++  val node = evaluateLayout(context, layout, props, environment)
++  return node.toPeekRoot(context, InteractionSource.Widget(name), size)
++}
+diff --git a/android/src/main/java/expo/modules/widgets/WidgetPreviewSizes.kt b/android/src/main/java/expo/modules/widgets/WidgetPreviewSizes.kt
+new file mode 100644
+index 0000000..0953ce5
+--- /dev/null
++++ b/android/src/main/java/expo/modules/widgets/WidgetPreviewSizes.kt
+@@ -0,0 +1,44 @@
++package expo.modules.widgets
 +
-+    View(WidgetPreviewView::class) {
-+      Prop("widgetName") { view: WidgetPreviewView, name: String ->
-+        view.widgetName = name
-+      }
-+      Prop("propsJson") { view: WidgetPreviewView, props: String ->
-+        view.propsJson = props
-+      }
-+      OnViewDidUpdateProps { view ->
-+        view.render()
-+      }
-     }
-
-     Class("Widget", WidgetObject::class) {
++import android.annotation.SuppressLint
++import android.appwidget.AppWidgetManager
++import android.content.Context
++import androidx.compose.ui.unit.DpSize
++import androidx.compose.ui.unit.dp
++import androidx.glance.appwidget.AppWidgetId
++import androidx.glance.appwidget.GlanceAppWidgetManager
++import kotlin.math.abs
++import kotlin.math.ceil
++
++private fun tallHeight(context: Context) =
++  maxOf(105f, context.resources.configuration.screenHeightDp * 0.24f)
++
++internal fun widgetSizeClass(context: Context, size: DpSize) =
++  if (size.height.value >= tallHeight(context)) "tall" else "compact"
++
++@SuppressLint("RestrictedApi")
++internal suspend fun widgetPreviewSizes(context: Context, name: String): List<Map<String, Any>> {
++  val manager = AppWidgetManager.getInstance(context)
++  val glance = GlanceAppWidgetManager(context)
++  val pinned = manager.getAppWidgetIds(widgetProviderComponentName(context, name)).sortedDescending().mapNotNull { id ->
++    val options = manager.getAppWidgetOptions(id)
++    // The app is portrait-only. Match the portrait pair from the launcher, retaining its exact dp values.
++    val portraitWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH)
++    val portraitHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT)
++    val portraitSize = glance.getAppWidgetSizes(AppWidgetId(id))
++      .filter { it.width > 0.dp && it.height > 0.dp }
++      .minByOrNull { abs(it.width.value - portraitWidth) + abs(it.height.value - portraitHeight) }
++    portraitSize?.let { id to it }
++  }
++  fun entry(size: DpSize, widgetId: Int? = null) = buildMap<String, Any> {
++    put("size", widgetSizeClass(context, size))
++    put("width", size.width.value.toDouble())
++    put("height", size.height.value.toDouble())
++    if (widgetId != null) put("widgetId", widgetId)
++  }
++  return pinned.map { (id, size) -> entry(size, id) } + listOf(
++    DpSize(360.dp, 97.dp),
++    DpSize(360.dp, maxOf(202f, ceil(tallHeight(context))).dp)
++  ).filter { fallback -> pinned.none { (_, size) -> widgetSizeClass(context, size) == widgetSizeClass(context, fallback) } }
++    .map { entry(it) }
++}
 diff --git a/android/src/main/java/expo/modules/widgets/WidgetPreviewView.kt b/android/src/main/java/expo/modules/widgets/WidgetPreviewView.kt
 new file mode 100644
+index 0000000..5061a4d
 --- /dev/null
 +++ b/android/src/main/java/expo/modules/widgets/WidgetPreviewView.kt
-@@ -0,0 +1,90 @@
+@@ -0,0 +1,101 @@
 +package expo.modules.widgets
 +
 +import android.annotation.SuppressLint
 +import android.content.Context
 +import android.graphics.Bitmap
 +import android.graphics.Canvas
++import android.graphics.Paint
++import android.graphics.RectF
 +import android.util.Log
 +import android.view.View
 +import androidx.compose.ui.unit.DpSize
@@ -106,56 +163,65 @@ new file mode 100644
 +import kotlinx.coroutines.Job
 +import kotlinx.coroutines.ensureActive
 +import kotlinx.coroutines.launch
++import kotlin.math.roundToInt
 +
 +@SuppressLint("RestrictedApi")
 +@OptIn(ExperimentalGlanceRemoteViewsApi::class)
 +class WidgetPreviewView(context: Context, appContext: AppContext) : ExpoView(context, appContext) {
 +  override val shouldUseAndroidLayout = true
 +  var widgetName = ""
-+  var propsJson = ""
++  var sampleProps = ""
++  var widthDp = 0f
++  var heightDp = 0f
++  var previewMood = "live"
 +  private var rendering: Job? = null
++  private var observing: Job? = null
 +  private var bitmap: Bitmap? = null
++  private val scaledBounds = RectF()
++  private val paint = Paint(Paint.FILTER_BITMAP_FLAG)
 +
 +  override fun dispatchDraw(canvas: Canvas) {
 +    super.dispatchDraw(canvas)
-+    bitmap?.let { canvas.drawBitmap(it, 0f, 0f, null) }
++    val image = bitmap ?: return
++    // Render at the launcher size first, then fit the whole result into the app's content column.
++    val scale = minOf(1f, width.toFloat() / image.width, height.toFloat() / image.height)
++    val left = (width - image.width * scale) / 2
++    val top = (height - image.height * scale) / 2
++    scaledBounds.set(left, top, width - left, height - top)
++    canvas.drawBitmap(image, null, scaledBounds, paint)
 +  }
 +
 +  override fun onAttachedToWindow() {
 +    super.onAttachedToWindow()
-+    render()
-+  }
-+
-+  override fun onSizeChanged(width: Int, height: Int, oldWidth: Int, oldHeight: Int) {
-+    super.onSizeChanged(width, height, oldWidth, oldHeight)
-+    render()
++    observing = CoroutineScope(Dispatchers.Main.immediate).launch {
++      WidgetsUpdater.publication.collect { if (sampleProps.isEmpty()) render() }
++    }
++    if (sampleProps.isNotEmpty()) render()
 +  }
 +
 +  override fun onDetachedFromWindow() {
++    observing?.cancel()
 +    rendering?.cancel()
 +    super.onDetachedFromWindow()
 +  }
 +
 +  fun render() {
 +    rendering?.cancel()
-+    if (!isAttachedToWindow || width == 0 || height == 0 || propsJson.isEmpty()) return
-+    val pixelWidth = width
-+    val pixelHeight = height
++    if (!isAttachedToWindow || widthDp <= 0 || heightDp <= 0 || widgetName.isEmpty()) return
 +    val app = context.applicationContext
++    val size = DpSize(widthDp.dp, heightDp.dp)
 +    val density = resources.displayMetrics.density
-+    val size = DpSize((width / density).dp, (height / density).dp)
++    val pixelWidth = (widthDp * density).roundToInt().coerceAtLeast(1)
++    val pixelHeight = (heightDp * density).roundToInt().coerceAtLeast(1)
 +    val name = widgetName
-+    val json = propsJson
++    val sample = sampleProps
++    val mood = previewMood
 +    rendering = CoroutineScope(Dispatchers.Main.immediate).launch {
 +      try {
 +        val layout = WidgetsLayoutRegistry.layout(app, name) ?: return@launch
-+        val environment = getWidgetEnvironment(app) + mapOf(
-+          "width" to size.width.value.toDouble(),
-+          "height" to size.height.value.toDouble()
-+        )
-+        val node = evaluateLayout(app, layout, WidgetsJson.parseMap(json), environment)
-+        val root = node.toPeekRoot(app, InteractionSource.Widget(name), size)
-+        val views = GlanceRemoteViews().compose(context, size) { EmittableTree(root) }.remoteViews
++        val props = if (sample.isEmpty()) WidgetsUpdater.publishedProps(app, name) else WidgetsJson.parseMap(sample)
++        val root = renderWidgetRoot(app, name, layout, props, size, mood)
++        val views = GlanceRemoteViews().compose(app, size) { EmittableTree(root) }.remoteViews
 +        ensureActive()
 +        val preview = views.apply(app, this@WidgetPreviewView)
 +        preview.measure(
@@ -175,43 +241,47 @@ new file mode 100644
 +    }
 +  }
 +}
-diff --git a/android/build.gradle b/android/build.gradle
---- a/android/build.gradle
-+++ b/android/build.gradle
-@@ -1,9 +1,20 @@
- import org.apache.tools.ant.taskdefs.condition.Os
+diff --git a/android/src/main/java/expo/modules/widgets/WidgetsModule.kt b/android/src/main/java/expo/modules/widgets/WidgetsModule.kt
+index 05d6a9c..f1006d2 100644
+--- a/android/src/main/java/expo/modules/widgets/WidgetsModule.kt
++++ b/android/src/main/java/expo/modules/widgets/WidgetsModule.kt
+@@ -50,2 +50,31 @@ class WidgetsModule : Module() {
+
++    AsyncFunction("publishSnapshot") Coroutine { name: String, props: String ->
++      WidgetsUpdater.publish(context.applicationContext, name, props)
++    }
 +
-+buildscript {
-+  repositories {
-+    mavenCentral()
-+  }
-+  dependencies {
-+    classpath("org.jetbrains.kotlin.plugin.compose:org.jetbrains.kotlin.plugin.compose.gradle.plugin:${kotlinVersion}")
-+  }
-+}
-
- plugins {
-   id 'com.android.library'
-   id 'expo-module-gradle-plugin'
- }
++    AsyncFunction("getWidgetPreviewSizes") Coroutine { name: String ->
++      widgetPreviewSizes(context.applicationContext, name)
++    }
 +
-+apply plugin: 'org.jetbrains.kotlin.plugin.compose'
-
- group = 'expo.modules.widgets'
- version = '58.0.29'
-@@ -63,5 +74,6 @@
-   }
-
-   buildFeatures {
-+    compose true
-     prefab true
-   }
++    View(WidgetPreviewView::class) {
++      Prop("widgetName") { view: WidgetPreviewView, name: String ->
++        view.widgetName = name
++      }
++      Prop("sampleProps") { view: WidgetPreviewView, props: String ->
++        view.sampleProps = props
++      }
++      Prop("widthDp") { view: WidgetPreviewView, value: Double ->
++        view.widthDp = value.toFloat()
++      }
++      Prop("heightDp") { view: WidgetPreviewView, value: Double ->
++        view.heightDp = value.toFloat()
++      }
++      Prop("previewMood") { view: WidgetPreviewView, value: String ->
++        view.previewMood = value
++      }
++      OnViewDidUpdateProps { view ->
++        view.render()
++      }
++    }
++
+     Class("Widget", WidgetObject::class) {
 diff --git a/android/src/main/java/expo/modules/widgets/WidgetsStorage.kt b/android/src/main/java/expo/modules/widgets/WidgetsStorage.kt
+index f5dbbd2..5e6967f 100644
 --- a/android/src/main/java/expo/modules/widgets/WidgetsStorage.kt
 +++ b/android/src/main/java/expo/modules/widgets/WidgetsStorage.kt
-@@ -18,6 +18,13 @@
-     set(context, key, WidgetsJson.stringifyList(value))
-   }
+@@ -20,2 +20,9 @@ internal object WidgetsStorage {
 
 +  fun replaceSnapshot(context: Context, name: String, props: String?) {
 +    val key = "__expo_widgets_${name}_props"
@@ -221,29 +291,39 @@ diff --git a/android/src/main/java/expo/modules/widgets/WidgetsStorage.kt b/andr
 +  }
 +
    fun getString(context: Context, key: String): String? {
-     return preferences(context).getString(key, null)
-   }
 diff --git a/android/src/main/java/expo/modules/widgets/WidgetsUpdater.kt b/android/src/main/java/expo/modules/widgets/WidgetsUpdater.kt
+index e1caef7..78fff37 100644
 --- a/android/src/main/java/expo/modules/widgets/WidgetsUpdater.kt
 +++ b/android/src/main/java/expo/modules/widgets/WidgetsUpdater.kt
-@@ -23,6 +23,20 @@
-     updateScope.launch {
-       updateMutex.withLock {
-         updateWidget(appContext, name)
-+      }
-+    }
-+  }
+@@ -9,2 +9,4 @@ import kotlinx.coroutines.Dispatchers
+ import kotlinx.coroutines.SupervisorJob
++import kotlinx.coroutines.flow.MutableStateFlow
++import kotlinx.coroutines.flow.asStateFlow
+ import kotlinx.coroutines.launch
+@@ -15,2 +17,8 @@ internal object WidgetsUpdater {
+   private val updateMutex = Mutex()
++  private val revision = MutableStateFlow(0L)
++  val publication = revision.asStateFlow()
 +
++  suspend fun publishedProps(context: Context, name: String) =
++    updateMutex.withLock { WidgetsLayoutRegistry.props(context, name) }
++
+   private val updateScope = CoroutineScope(
+@@ -29,2 +37,17 @@ internal object WidgetsUpdater {
+
 +  suspend fun publish(context: Context, name: String, props: String) {
 +    updateMutex.withLock {
 +      val previous = WidgetsStorage.getString(context, "__expo_widgets_${name}_props")
 +      try {
 +        WidgetsStorage.replaceSnapshot(context, name, props)
 +        updateWidget(context, name)
++        revision.value++
 +      } catch (error: Exception) {
 +        runCatching { WidgetsStorage.replaceSnapshot(context, name, previous) }
 +          .exceptionOrNull()?.let(error::addSuppressed)
 +        throw error
-       }
-     }
-   }
++      }
++    }
++  }
++
+   fun reloadAll(context: Context) {

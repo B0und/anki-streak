@@ -17,7 +17,7 @@ Use XState actors for app state and lifecycle. Use actor delays for state transi
 
 # App and widget design
 
-Use the project-local [Impeccable skill](.agents/skills/impeccable/SKILL.md) for UI changes. Verify widget design changes in the app preview and Android launcher at both compact and tall sizes.
+Use the project-local [Impeccable skill](.agents/skills/impeccable/SKILL.md) for UI changes. Follow the [launcher parity check](.agents/skills/verify-widget-refresh/SKILL.md#verify-launcher-parity) for widget design changes.
 
 # Effect and TypeScript
 

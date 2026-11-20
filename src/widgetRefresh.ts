@@ -5,16 +5,15 @@ import { DateTime, Effect, Schedule, Schema, Semaphore } from 'effect';
 import { createActor, createAsyncLogic, setup, types, waitFor } from 'xstate';
 
 import './AnkiWidget';
-import type { WidgetArtwork, WidgetProps } from './AnkiWidget';
+import type { WidgetArtwork } from './AnkiWidget';
 import {
   getWidgetTheme, getWidgetBackgroundTransparency, readActivityEffect, renderWidget,
   setWidgetBackgroundTransparency, type AnkiActivity,
 } from './activity';
-import { copy } from './messages';
 import { getLanguage, getWidgetLayouts } from './preferences';
 import { recordReviewMilestone } from './celebration';
-import { themes, type WidgetTheme } from './themes';
-import { currentTall, widgetBackdrop, widgetCard } from './widgetDesign';
+import type { WidgetTheme } from './themes';
+import { widgetProps } from './widgetDesign';
 
 const taskName = 'refresh-anki-widget';
 const backgroundIntervalMinutes = 15;
@@ -22,7 +21,7 @@ const appearanceDelayMs = 150;
 
 type AvailableActivity = Exclude<AnkiActivity, { kind: 'unavailable' }>;
 type ReadyActivity = Extract<AvailableActivity, { kind: 'ready' }>;
-type PreparedArtwork = { artwork: WidgetArtwork; activity: ReadyActivity; theme: WidgetTheme; language: ReturnType<typeof getLanguage>; revision: number };
+type PreparedArtwork = { artwork: WidgetArtwork; activity: ReadyActivity; theme: WidgetTheme; language: ReturnType<typeof getLanguage> };
 type ActivityCheck = { activity: AnkiActivity; checkedAt: number };
 
 class WidgetFailure extends Schema.TaggedError<WidgetFailure>()('WidgetFailure', {
@@ -36,34 +35,11 @@ const { publishSnapshot } = requireNativeModule<{
 
 const publishing = Semaphore.makeUnsafe(1);
 
-function snapshotProps(activity: AvailableActivity, artwork: PreparedArtwork | null, themeId: WidgetTheme): WidgetProps {
-  const transparency = getWidgetBackgroundTransparency();
-  const language = getLanguage();
-  const ready = activity.kind === 'ready' ? activity : null;
-  const layouts = getWidgetLayouts();
-  const theme = ready ? themes[themeId] : null;
-  const compact = ready && theme && widgetCard(layouts.compact, language, ready, theme.accent);
-  const tall = ready && theme && widgetCard(layouts.tall, language, ready, theme.accent);
-  return {
-    artwork: artwork?.artwork ?? null,
-    description: ready ? copy(language, 'activityDescription', {
-      name: themes[themeId].name, streak: ready.streak, today: ready.today,
-      reviews: ready.dailyReviewed, learned: ready.dailyLearned,
-    }) : '',
-    waitingDrawable: themes[themeId].waitingDrawable,
-    backdrop: widgetBackdrop('#000000', transparency),
-    cardBackdrop: widgetBackdrop(theme?.card ?? '#000000', transparency),
-    connectLabel: copy(language, 'connectWidget'),
-    cards: { ...(compact && { compact }), ...(tall && { tall }) },
-    tallCurrent: ready && theme && layouts.tall === 'current' ? currentTall(language, ready, theme.accent) : undefined,
-  };
-}
-
 const publishLatest = publishing.withPermit(
   Effect.gen(function*() {
     yield* Effect.yieldNow;
     while (true) {
-      const { activity, artwork, revision } = widgetRefreshActor.getSnapshot().context;
+      const { activity, artwork } = widgetRefreshActor.getSnapshot().context;
       if (!activity || activity.kind === 'unavailable') return false;
 
       const theme = getWidgetTheme();
@@ -78,14 +54,22 @@ const publishLatest = publishing.withPermit(
             try: () => renderWidget(streak, today, history, dailyReviewed, dailyLearned, theme, 'widget', language),
             catch: (cause) => new WidgetFailure({ stage: 'artwork', cause }),
           });
-          prepared = { artwork: rendered, activity, theme, language, revision };
+          prepared = { artwork: rendered, activity, theme, language };
           widgetRefreshActor.send({ type: 'artworkPrepared', artwork: prepared });
         }
       }
       const latest = widgetRefreshActor.getSnapshot().context;
       if (latest.activity !== activity || getWidgetTheme() !== theme || getLanguage() !== language) continue;
+      const props = widgetProps({
+        artwork: prepared?.artwork ?? null,
+        stats: activity.kind === 'ready' ? activity : null,
+        themeId: theme,
+        language,
+        layouts: getWidgetLayouts(),
+        transparency: getWidgetBackgroundTransparency(),
+      });
       yield* Effect.tryPromise({
-        try: () => publishSnapshot('AnkiStreak', JSON.stringify(snapshotProps(activity, prepared, theme))),
+        try: () => publishSnapshot('AnkiStreak', JSON.stringify(props)),
         catch: (cause) => new WidgetFailure({ stage: 'publish', cause }),
       });
       widgetRefreshActor.send({ type: 'widgetPublished' });
@@ -121,7 +105,7 @@ const refreshSetup = setup({
   schemas: {
     context: types<{
       check: ActivityCheck | null; activity: AnkiActivity | null; artwork: PreparedArtwork | null;
-      revision: number; error: unknown; appearanceError: boolean; appearancePending: boolean; backgroundError: boolean;
+      error: unknown; appearanceError: boolean; appearancePending: boolean; backgroundError: boolean;
     }>(),
     events: {
       refresh: types<void>(),
@@ -137,7 +121,7 @@ const refreshSetup = setup({
 const refreshMachine = refreshSetup.createMachine({
   id: 'widgetRefresh',
   type: 'parallel',
-  context: { check: null, activity: null, artwork: null, revision: 0, error: null, appearanceError: false, appearancePending: false, backgroundError: false },
+  context: { check: null, activity: null, artwork: null, error: null, appearanceError: false, appearancePending: false, backgroundError: false },
   on: {
     widgetPublished: ({ context }) => ({ context: { ...context, appearanceError: false } }),
     artworkPrepared: ({ context, event }) => {
@@ -163,8 +147,7 @@ const refreshMachine = refreshSetup.createMachine({
               const activity = transient && context.activity?.kind === 'ready' ? context.activity : check.activity;
               return {
                 target: transient ? 'idle' : 'publishing',
-                context: { ...context, check, activity, artwork: activity.kind === 'ready' ? context.artwork : null,
-                  revision: context.revision + Number(activity !== context.activity) },
+                context: { ...context, check, activity, artwork: activity.kind === 'ready' ? context.artwork : null },
               };
             },
             onError: ({ context, event }) => ({ target: 'failed', context: { ...context, error: event.error } }),

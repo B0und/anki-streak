@@ -16,18 +16,20 @@ export function WidgetScreen({ openLayouts, openThemes }: {
   openLayouts(size: WidgetSize): void; openThemes(): void;
 }) {
   const { dashboard, palette, language, layouts } = useDashboardContext();
-  const [selection, select] = useActor(widgetSizeActor, { input: 'compact' });
-  const size = selection.context;
+  const [selection, select] = useActor(widgetSizeActor, { input: {} });
+  const { size, sizes, selectedWidgetId } = selection.context;
+  const candidates = sizes.filter((bounds) => bounds.size === size);
   const theme = themes[dashboard.themeId];
   const mood = dashboard.previewMood ?? 'live';
 
   return <>
     <YStack gap={10}>
       <Choices<WidgetSize> choices={widgetSizes} value={size} onChange={(size) => select({ type: 'select', size })} label={(key) => copy(language, key)} />
-      <WidgetPreview layout={layouts[size]} size={size} />
+      <WidgetPreview sizes={candidates} selected={selectedWidgetId} onSelect={(widgetId) => select({ type: 'bounds', widgetId })} />
+      {candidates.length === 0 && selection.matches('unavailable') && <Text color="muted">{copy(language, 'previewUnavailable')}</Text>}
       <Action primary disabled={dashboard.requesting}
         onPress={() => void dashboard.runAndroidRequest('pin')}>{copy(language, 'addWidget')}</Action>
-      {size === 'tall' && <Text color="muted" fontSize={13}>{copy(language, 'resizeWidget')}</Text>}
+      {size === 'tall' && candidates[0]?.widgetId === undefined && <Text color="muted" fontSize={13}>{copy(language, 'resizeWidget')}</Text>}
     </YStack>
     <Section title={copy(language, 'appearance')}>
       <XStack accessibilityRole="button" onPress={openThemes} minH={54} py={5}

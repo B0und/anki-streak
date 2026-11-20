@@ -3,20 +3,25 @@ import { useActor } from '@xstate/react';
 import { Effect, Option, Schema } from 'effect';
 import { requireNativeView } from 'expo';
 import { useLayoutEffect } from 'react';
-import { StyleSheet, type ViewProps } from 'react-native';
+import { ScrollView, StyleSheet, type ViewProps } from 'react-native';
 import { Text, YStack } from 'tamagui';
 import { createAsyncLogic, setup, types } from 'xstate';
 
 import { historyDays, historyRows, renderWidget } from './activity';
-import type { WidgetArtwork, WidgetProps } from './AnkiWidget';
+import type { WidgetArtwork } from './AnkiWidget';
 import { useDashboardContext } from './dashboardContext';
 import { copy } from './messages';
-import type { WidgetLayout, WidgetSize } from './preferences';
-import { themes } from './themes';
-import { currentTall, widgetBackdrop, widgetCard } from './widgetDesign';
+import { Choices } from './studyComponents';
+import { widgetProps } from './widgetDesign';
+import { previewBounds, type WidgetPreviewSize } from './widgetSizeActor';
 
-const NativePreview = requireNativeView<ViewProps & { widgetName: string; propsJson: string }>('ExpoWidgets', 'WidgetPreviewView');
-const previewAspect: Record<WidgetSize, number> = { compact: .27, tall: .56 };
+const NativePreview = requireNativeView<ViewProps & {
+  widgetName: string;
+  sampleProps: string;
+  widthDp: number;
+  heightDp: number;
+  previewMood: 'live' | 'waiting' | 'happy';
+}>('ExpoWidgets', 'WidgetPreviewView');
 const sampleHistory = {
   counts: Array.from({ length: historyDays }, (_, index) =>
     index === historyDays - 1 ? 18 : ((index * 73 + index % historyRows * 19) % 151) % 62),
@@ -85,46 +90,54 @@ const samplePreview = previewSetup.createMachine({
   },
 });
 
-export function WidgetPreview({ layout, size }: { layout: WidgetLayout; size: WidgetSize }) {
-  const { dashboard, language } = useDashboardContext();
-  const { themeId, activity, widgetArtwork: live } = dashboard;
-  const needsSample = activity?.kind !== 'ready';
+function dimensionsKey({ width, height }: WidgetPreviewSize) {
+  return `${width} × ${height}`;
+}
+
+export function WidgetPreview({ sizes, selected, onSelect }: {
+  sizes: readonly WidgetPreviewSize[]; selected: number | null; onSelect(widgetId: number): void;
+}) {
+  const { dashboard, language, layouts } = useDashboardContext();
+  const { themeId, activity, transparency } = dashboard;
+  const bounds = previewBounds(sizes, selected);
+  const needsSample = !!bounds && bounds.widgetId === undefined && activity?.kind !== 'ready';
   const [sample, send] = useActor(samplePreview, { input: { theme: themeId, language } });
 
   useLayoutEffect(() => {
     if (needsSample) send({ type: 'sample', request: { theme: themeId, language } });
   }, [language, needsSample, send, themeId]);
 
-  const example = live ? null : sample.context.frame;
-  const frame = live ?? example;
-  const stats = live?.activity ?? (example ? sampleStats : null);
-  const theme = themes[frame?.theme ?? themeId];
-  const frameLanguage = frame?.language ?? language;
-  const mood = dashboard.previewMood ?? (example ? 'happy' : live?.activity.mood ?? 'waiting');
-  const drawable = mood === 'happy' ? theme.happyDrawable : theme.waitingDrawable;
-  const card = stats && widgetCard(layout, frameLanguage, stats, theme.accent);
-  const tallCurrent = stats && size === 'tall' && layout === 'current' ? currentTall(frameLanguage, stats, theme.accent) : undefined;
-  const payload: WidgetProps = {
-    artwork: frame ? { ...frame.artwork, portraitDrawable: drawable } : null,
-    description: stats ? copy(frameLanguage, 'activityDescription', {
-      name: theme.name, streak: stats.streak, today: stats.today, reviews: stats.dailyReviewed, learned: stats.dailyLearned,
-    }) : '',
-    waitingDrawable: drawable,
-    backdrop: '#00000000',
-    cardBackdrop: '#00000000',
-    connectLabel: frame ? undefined : copy(language, needsSample && sample.matches('unavailable') ? 'previewUnavailable' : 'loadingPreview'),
-    previewSize: size,
-    cards: card ? { [size]: card } : undefined,
-    tallCurrent,
-  };
-  const backdrop = widgetBackdrop(card || tallCurrent ? theme.card : '#000000', dashboard.transparency);
+  if (!bounds) return null;
+  const frame = needsSample ? sample.context.frame : null;
+  const sampleProps = frame ? JSON.stringify(widgetProps({
+    artwork: frame.artwork,
+    stats: sampleStats,
+    language: frame.language,
+    themeId: frame.theme,
+    layouts,
+    transparency,
+  })) : '';
+  const width = bounds.width;
+  const height = bounds.height;
+  const dimensions = new Map(sizes.map((candidate) => [dimensionsKey(candidate), candidate]));
+  dimensions.set(dimensionsKey(bounds), bounds);
+  const sizeLabels = new Map([...dimensions.values()].map((candidate) => [
+    String(candidate.widgetId), `${Math.round(candidate.width)} × ${Math.round(candidate.height)}`,
+  ]));
 
   return <YStack gap={7}>
-    <YStack aspectRatio={1 / previewAspect[size]} bg="hero" justify="center" rounded={20} overflow="hidden">
-      <YStack pointerEvents="none" position="absolute" t={0} r={0} b={0} l={0} bg={backdrop} />
-      <NativePreview pointerEvents="none" style={StyleSheet.absoluteFill}
-        widgetName="AnkiStreak" propsJson={JSON.stringify({ ...payload, revision: live?.revision })} />
+    {sizeLabels.size > 1 && <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+      <Choices choices={[...sizeLabels.keys()]} value={String(bounds.widgetId)} onChange={(key) => onSelect(Number(key))}
+        label={(key) => sizeLabels.get(key) ?? key} />
+    </ScrollView>}
+    <YStack w="100%" maxW={width} self="center">
+      <YStack w="100%" aspectRatio={width / height} bg="hero" rounded={20} overflow="hidden">
+        <NativePreview pointerEvents="none" style={StyleSheet.absoluteFill} widgetName="AnkiStreak"
+          sampleProps={sampleProps} previewMood={dashboard.previewMood ?? 'live'} widthDp={width} heightDp={height} />
+      </YStack>
     </YStack>
-    {example && <Text color="muted" fontSize={12}>{copy(language, 'sampleData')}</Text>}
+    {frame && <Text color="muted" fontSize={12}>{copy(language, 'sampleData')}</Text>}
+    {!frame && bounds.widgetId === undefined && <Text color="muted" fontSize={12}>{copy(language, 'exampleWidgetSize')}</Text>}
+    {needsSample && !frame && sample.matches('unavailable') && <Text color="muted" fontSize={12}>{copy(language, 'previewUnavailable')}</Text>}
   </YStack>;
 }

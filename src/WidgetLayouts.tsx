@@ -13,13 +13,15 @@ const layoutDescriptions = { current: 'currentDetail', focus: 'focusDetail', fir
 
 export function WidgetLayouts({ initialSize }: { initialSize: WidgetSize }) {
   const { palette, language, layouts, setLayout } = useDashboardContext();
-  const [selection, select] = useActor(widgetSizeActor, { input: initialSize });
-  const size = selection.context;
+  const [selection, select] = useActor(widgetSizeActor, { input: { size: initialSize } });
+  const { size, sizes, selectedWidgetId } = selection.context;
+  const candidates = sizes.filter((bounds) => bounds.size === size);
   const activeLayout = layouts[size];
 
   return <>
     <Choices<WidgetSize> choices={widgetSizes} value={size} onChange={(size) => select({ type: 'select', size })} label={(option) => copy(language, option)} />
-    <WidgetPreview layout={activeLayout} size={size} />
+    <WidgetPreview sizes={candidates} selected={selectedWidgetId} onSelect={(widgetId) => select({ type: 'bounds', widgetId })} />
+    {candidates.length === 0 && selection.matches('unavailable') && <Text color="muted">{copy(language, 'previewUnavailable')}</Text>}
     <YStack accessibilityRole="radiogroup" bg="surface" borderColor="border-color" borderWidth={1} rounded={16} p={5} gap={4}>
       {widgetLayouts.map((layout) => {
         const selected = layout === activeLayout;

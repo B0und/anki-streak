@@ -195,13 +195,12 @@ export function useDashboard() {
   const [snapshot, send] = useActor(dashboardMachine);
   const widget = useSelector(widgetRefreshActor, (value) => value);
   const { context } = snapshot;
-  const { activity, check, artwork, appearanceError, backgroundError } = widget.context;
+  const { activity, check, appearanceError, backgroundError } = widget.context;
 
   return {
     ...context,
     activity,
     lastCheckedAt: check?.checkedAt,
-    widgetArtwork: artwork,
     mood: activity?.kind === 'ready' ? activity.mood : 'waiting' as const,
     notice: context.notice ?? (appearanceError ? 'widgetAppearanceFailed' as const
       : widget.matches({ data: 'failed' }) || backgroundError ? 'refreshError' as const

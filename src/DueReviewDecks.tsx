@@ -48,9 +48,9 @@ export function DueReviewDecks({ language, palette }: { language: Language; pale
   const [snapshot, send] = useActor(dueReviewDecks);
   const { decks, excluded } = snapshot.context;
 
-  return <YStack gap={6}>
-    <Text color="color" fontWeight="600">{copy(language, 'excludedDueDecks')}</Text>
-    <Text color="muted">{copy(language, 'excludedDueDecksDetail')}</Text>
+  return <YStack gap={6} pt={12} borderTopWidth={1} borderTopColor="border-color">
+    <Text accessibilityRole="header" color="color" fontWeight="700">{copy(language, 'excludedDueDecks')}</Text>
+    <Text color="muted" fontSize={13}>{copy(language, 'excludedDueDecksDetail')}</Text>
     {snapshot.matches('loading') && <Text color="muted">{copy(language, 'loadingDueDecks')}</Text>}
     {snapshot.matches('unavailable') && <>
       <Text color="muted">{copy(language, 'unavailableDueDecks')}</Text>
@@ -60,7 +60,7 @@ export function DueReviewDecks({ language, palette }: { language: Language; pale
       {decks.map(({ id, name }) => {
         const checked = excluded.includes(id);
         return <XStack key={id} accessibilityRole="checkbox" accessibilityState={{ checked }}
-          onPress={() => send({ type: 'toggle', id })} minH={44} p={8} gap={9} items="center"
+          onPress={() => send({ type: 'toggle', id })} minH={48} px={10} py={8} gap={10} items="center"
           rounded={9} bg={checked ? 'subtle' : 'surface'} opacity="press:0.75">
           {checked ? <CheckSquare size={18} color={palette.accent} /> : <Square size={18} color={palette.muted} />}
           <Text color="color" flex={1}>{name}</Text>

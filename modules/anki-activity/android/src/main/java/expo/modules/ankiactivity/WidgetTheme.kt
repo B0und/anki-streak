@@ -14,29 +14,22 @@ internal enum class WidgetTheme(
   val accent: Int,
   val streakLight: Int,
   val streakDark: Int,
-  val reviewBackground: Int,
-  val reviewForeground: Int,
-  val newBackground: Int,
-  val newForeground: Int,
   val flameTint: Int? = null
 ) {
   MIKU(
     "miku", R.drawable.miku_waiting, R.drawable.miku_happy,
     colors("#0A5048", "#096255", "#078577", "#0AAE9B", "#1DD6C1"), color("#22E6CE"),
-    Color.WHITE, color("#E5E7EA"),
-    color("#E13A4242"), color("#A6AEAF"), color("#E1274658"), color("#6099C8")
+    Color.WHITE, color("#E5E7EA")
   ),
   TWO_B(
     "2b", R.drawable.twob_waiting, R.drawable.twob_happy,
     colors("#393633", "#514B45", "#756D63", "#A79C8C", "#D8CDB8"), color("#F3EBD9"),
-    color("#FFFCF0"), color("#D8CDB8"),
-    color("#E13F3933"), color("#DAD0BE"), color("#E14F4539"), color("#ECD8B7"), color("#DDC8A4")
+    color("#FFFCF0"), color("#D8CDB8"), color("#DDC8A4")
   ),
   EMILIA(
     "emilia", R.drawable.emilia_waiting, R.drawable.emilia_happy,
     colors("#40305E", "#593B81", "#794DB0", "#A471E6", "#D8B6FF"), color("#E9CBFF"),
-    color("#FAF1FF"), color("#CFACFF"),
-    color("#E14B3866"), color("#E0C8FF"), color("#E161407A"), color("#F0C7FA"), color("#DAAAFF")
+    color("#FAF1FF"), color("#CFACFF"), color("#DAAAFF")
   );
 
   companion object {

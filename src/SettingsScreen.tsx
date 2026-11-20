@@ -29,10 +29,10 @@ export function SettingsScreen({ palette, language, appearance, setAppearance, l
         label={(key) => key === 'system' ? copy(language, key) : key === 'en' ? 'English' : 'Русский'} />
     </Section>
     <Section title={copy(language, 'rewards')}>
-      <Text color="muted">{copy(language, 'milestone')}</Text>
+      <Text color="muted" fontWeight="600">{copy(language, 'milestone')}</Text>
       {milestones.map((key) => (
         <XStack accessibilityRole="radio" accessibilityState={{ checked: milestone === key }} key={key}
-          onPress={() => send({ type: 'milestone', value: key })} minH={44} p={8} gap={9} items="center"
+          onPress={() => send({ type: 'milestone', value: key })} minH={48} px={10} py={8} gap={10} items="center"
           rounded={9} bg={milestone === key ? 'subtle' : 'surface'} opacity="press:0.75">
           {milestone === key ? <CheckCircle2 size={18} color={palette.accent} /> : <Circle size={18} color={palette.muted} />}
           <Text color="color" flex={1}>{copy(language, key)}</Text>
@@ -47,14 +47,14 @@ export function SettingsScreen({ palette, language, appearance, setAppearance, l
           borderColor="border-color focus:accent" borderWidth={1} rounded={9}
           onChangeText={(value) => send({ type: 'draft', value })}
           onBlur={() => send({ type: 'finishEditing' })} />
-    </XStack>}
+      </XStack>}
       {([
         ['notifications', notifications, (enabled: boolean) => send({ type: 'notifications', enabled })],
         ['animate', animate, (enabled: boolean) => send({ type: 'animate', enabled })],
       ] as const).map(([key, value, action]) => (
-        <XStack key={key} gap={8} items="center" justify="space-between">
+        <XStack key={key} gap={10} minH={48} items="center" justify="space-between">
           <Text color="color" flex={1}>{copy(language, key)}</Text>
-          <Switch accessibilityLabel={copy(language, key)} checked={value} onCheckedChange={action}
+          <Switch accessibilityLabel={copy(language, key)} hitSlop={8} checked={value} onCheckedChange={action}
             bg={value ? 'accent' : 'border-color'} borderColor="transparent">
             <Switch.Thumb bg={value ? 'on-accent' : 'surface'} />
           </Switch>

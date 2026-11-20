@@ -94,9 +94,9 @@ export function WidgetPreview({ layout, size, content }: {
     waitingDrawable: drawable,
     backdrop: '#00000000',
     cardBackdrop: '#00000000',
-    connectLabel: copy(language, 'connectWidget'),
+    connectLabel: copy(language, stats ? 'loadingPreview' : 'connectWidget'),
     previewSize: size,
-    ...(card && { card }),
+    cards: card ? { [size]: card } : undefined,
   };
   const backdrop = widgetBackdrop(artwork && card ? theme.card : '#000000', dashboard.transparency);
 

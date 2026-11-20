@@ -1,5 +1,5 @@
 import { useWindowDimensions } from 'react-native';
-import { Image, Text, View, XStack, YStack } from 'tamagui';
+import { Text, View, XStack, YStack } from 'tamagui';
 
 import { historyColumns, historyRows, type ReviewHistory } from './activity';
 import type { Palette } from './appearance';
@@ -7,7 +7,6 @@ import { copy, type Language } from './messages';
 import { Action, CountUp, Portrait, Section } from './studyComponents';
 import { themes } from './themes';
 import type { useDashboard } from './useDashboard';
-import { VictoryLaurels } from './VictoryLaurels';
 
 const weekdays = {
   en: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
@@ -22,38 +21,33 @@ export function TodayScreen({ dashboard, palette, language, celebration }: {
   const ready = activity?.kind === 'ready' ? activity : null;
   const portrait = themes[themeId][ready?.mood ?? 'waiting'];
   return <>
-    <YStack h={208} rounded={23} borderWidth={1} borderColor="border-color" bg="hero" overflow="hidden" justify="center">
-      <Portrait source={portrait} height={192} maxWidth={Math.min(width * .51, 228)} />
-      <YStack w="49%" items="center" px={10}>
-        <VictoryLaurels color={palette.accent} />
-        <Text color="color" fontFamily="display" fontWeight="700" fontSize={73} lineHeight="82px"
-          style={{ includeFontPadding: false }} maxW="64%" adjustsFontSizeToFit numberOfLines={1}>
+    <YStack minH={208} rounded={22} bg="hero" overflow="hidden" justify="center">
+      <Portrait source={portrait} height={198} maxWidth={Math.min(width * .47, 240)} />
+      <YStack w="53%" px={18} py={20} gap={4}>
+        <Text color="color" fontFamily="display" fontWeight="700" fontSize={68} letterSpacing={-2}
+          fontVariant={['tabular-nums']} style={{ includeFontPadding: false }} adjustsFontSizeToFit numberOfLines={1}>
           <CountUp value={ready?.streak} delay={0} celebration={celebration} />
         </Text>
-        <Text color="accent" fontWeight="700" fontSize={14} text="center">{copy(language, 'streak')}</Text>
+        <Text color="color" fontWeight="700" fontSize={17}>{copy(language, 'streak')}</Text>
+        {ready && <Text color="color" fontSize={13}>
+          {copy(language, celebration ? 'rewardToast' : ready.today ? 'cheers' : 'waiting')}
+        </Text>}
       </YStack>
     </YStack>
 
     {ready ? <>
-      <XStack bg="surface" borderColor="border-color" borderWidth={1} rounded={18}>
+      <XStack bg="surface" borderColor="border-color" borderWidth={1} rounded={16}>
         {([['reviewed', ready.today, 'avgReviews', ready.dailyReviewed], ['learned', ready.newToday, 'avgNew', ready.dailyLearned]] as const)
           .map(([label, value, average, averageValue], index) => (
-            <YStack key={label} flex={1} py={13} px={12} items="center" gap={2}
+            <YStack key={label} flex={1} py={14} px={14} gap={4}
               borderLeftWidth={index > 0 ? 1 : 0} borderLeftColor="border-color">
-              <Text color="color" fontSize={34} fontFamily="display" fontWeight="700" style={{ includeFontPadding: false }}>
+              <Text color="color" fontSize={13} fontWeight="600">{copy(language, label)}</Text>
+              <Text color="color" fontSize={32} fontWeight="700" fontVariant={['tabular-nums']} style={{ includeFontPadding: false }}>
                 <CountUp value={value} delay={160 + 145 * index} celebration={celebration} />
               </Text>
-              <Text color="color" fontSize={13} fontWeight="700" text="center">{copy(language, label)}</Text>
-              <Text color="muted" mt={6} fontSize={11} text="center">{averageValue} · {copy(language, average)}</Text>
+              <Text color="muted" fontSize={12}>{averageValue} · {copy(language, average)}</Text>
             </YStack>
           ))}
-      </XStack>
-      <ActivityHeatmap history={ready.history} palette={palette} language={language} />
-      <XStack bg="subtle" borderColor="border-color" borderWidth={1} rounded={16} p={8} items="center" gap={10}>
-        <Image source={portrait} style={{ width: 45, height: 45, borderRadius: 22 }} />
-        <Text flex={1} color="color" fontWeight="700">
-          {celebration ? copy(language, 'rewardToast') + ' ' : ''}{copy(language, ready.today ? 'cheers' : 'waiting')}
-        </Text>
       </XStack>
     </> : <Section title="AnkiDroid">
       <Text color="muted">{copy(language, activity && activity.kind !== 'ready' ? activity.kind : 'loading')}</Text>
@@ -61,13 +55,14 @@ export function TodayScreen({ dashboard, palette, language, celebration }: {
         onPress={() => void dashboard.runAndroidRequest('permission')}>{copy(language, 'connect')}</Action>}
     </Section>}
 
-    <XStack gap={8}>
-      {activity?.kind !== 'missing' && <Action disabled={dashboard.requesting}
+    <XStack gap={8} flexWrap="wrap">
+      {activity?.kind !== 'missing' && <Action primary disabled={dashboard.requesting}
         onPress={() => void dashboard.runAndroidRequest('open')}>{copy(language, 'openAnki')}</Action>}
       <Action disabled={dashboard.refreshing} onPress={() => void dashboard.refresh()}>
         {copy(language, dashboard.refreshing ? 'refreshing' : 'refresh')}
       </Action>
     </XStack>
+    {ready && <ActivityHeatmap history={ready.history} palette={palette} language={language} />}
   </>;
 }
 
@@ -98,7 +93,7 @@ function ActivityHeatmap({ history, palette, language }: {
         </XStack>
       ))}
     </YStack>
-    <XStack justify="space-between">
+    <XStack justify="space-between" flexWrap="wrap" gap={6}>
       <Text color="muted" fontSize={12}>{period}</Text>
       <XStack items="center" gap={3}>
         <Text color="muted" fontSize={12}>{copy(language, 'less')}</Text>

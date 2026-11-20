@@ -10,7 +10,7 @@ export function Action({ children, onPress, primary, disabled }: {
 }) {
   return (
     <Button size={false} disabled={disabled} accessibilityState={{ disabled }} onPress={onPress}
-      minH={46} px={13} py={9} justify="center" rounded={12}
+      minH={48} maxW="100%" px={16} py={10} justify="center" rounded={12}
       bg={primary ? 'accent' : 'subtle'} opacity={disabled ? .55 : 'press:0.75'}>
       <Text color={primary ? 'on-accent' : 'color'} fontWeight="600" text="center">{children}</Text>
     </Button>
@@ -21,11 +21,11 @@ export function Choices<T extends string>({ choices, value, onChange, label }: {
   choices: readonly T[]; value: T; onChange(value: T): void; label(value: T): string;
 }) {
   return (
-    <XStack bg="subtle" p={4} gap={4} rounded={13}>
+    <XStack accessibilityRole="radiogroup" bg="subtle" p={4} gap={4} rounded={13}>
       {choices.map((choice) => {
         const checked = value === choice;
         return <View key={choice} accessibilityRole="radio" accessibilityState={{ checked }}
-          onPress={() => onChange(choice)} flex={1} minH={42} justify="center" items="center"
+          onPress={() => onChange(choice)} flex={1} minH={48} justify="center" items="center"
           px={3} rounded={10} bg={checked ? 'surface' : 'transparent'} opacity="press:0.75">
           <Text color={checked ? 'accent' : 'muted'} fontWeight="700" text="center">{label(choice)}</Text>
         </View>;
@@ -36,8 +36,8 @@ export function Choices<T extends string>({ choices, value, onChange, label }: {
 
 export function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <YStack bg="surface" borderColor="border-color" borderWidth={1} rounded={18} p={15} gap={10}>
-      <Text accessibilityRole="header" color="color" fontWeight="700" fontSize={17}>{title}</Text>
+    <YStack bg="surface" borderColor="border-color" borderWidth={1} rounded={16} p={15} gap={12}>
+      <Text accessibilityRole="header" color="color" fontWeight="700" fontSize={18}>{title}</Text>
       {children}
     </YStack>
   );
@@ -59,9 +59,11 @@ export function CountUp({ value, delay, celebration }: {
 export function Portrait({ source, height, maxWidth }: {
   source: number; height: number; maxWidth: number;
 }) {
-  const { width, height: imageHeight } = NativeImage.resolveAssetSource(source) ?? { width: 1, height: 1 };
+  const image = NativeImage.resolveAssetSource(source);
+  const aspect = image?.width && image.height ? image.width / image.height : 1;
+  const portraitHeight = Math.min(height, maxWidth / aspect);
   return <Image source={source} objectFit="contain" style={{
-    position: 'absolute', bottom: 0, right: 0, height,
-    width: Math.min(maxWidth, height * (width ?? 1) / (imageHeight ?? 1)),
+    position: 'absolute', bottom: 0, right: 0, height: portraitHeight,
+    width: portraitHeight * aspect,
   }} />;
 }

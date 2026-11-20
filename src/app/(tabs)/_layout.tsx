@@ -11,7 +11,7 @@ export default function TabLayout() {
     tabBarActiveTintColor: palette.accent,
     tabBarInactiveTintColor: palette.muted,
     tabBarStyle: { backgroundColor: palette.surface, borderTopColor: palette.line },
-    tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+    tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
   }}>
     <Tabs.Screen name="index" options={{ title: copy(language, 'today'), tabBarIcon: ({ color, size }) => <House color={color} size={size} /> }} />
     <Tabs.Screen name="widget" options={{ title: copy(language, 'widget'), tabBarIcon: ({ color, size }) => <PanelsTopLeft color={color} size={size} /> }} />

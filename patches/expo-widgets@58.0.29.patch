@@ -1,3 +1,16 @@
+diff --git a/android/build.gradle b/android/build.gradle
+--- a/android/build.gradle
++++ b/android/build.gradle
+@@ -119,2 +119,9 @@
+   inputs.files(expoWidgetsLayoutRegistryConfigFile)
++  inputs.files {
++    if (!expoWidgetsLayoutRegistryConfigFile.isFile()) return []
++    def registry = new groovy.json.JsonSlurper().parse(expoWidgetsLayoutRegistryConfigFile)
++    (registry.widgets ?: []).findAll { it?.initialLayout != null }.collect {
++      file("$expoWidgetsProjectRoot/${it.initialLayout}")
++    }
++  }
+   outputs.file(expoWidgetsLayoutRegistryOutput)
 diff --git a/android/src/main/java/expo/modules/widgets/ExpoWidgetEmittableTree.kt b/android/src/main/java/expo/modules/widgets/ExpoWidgetEmittableTree.kt
 index 3df9e4a4d92155a00d3f5652d17d20be10bef1c1..3a5e2469e970d3b30ea7454c4ab1f0888e634e2f 100644
 --- a/android/src/main/java/expo/modules/widgets/ExpoWidgetEmittableTree.kt

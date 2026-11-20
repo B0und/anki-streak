@@ -2,7 +2,7 @@
   "expo": {
     "name": "Anki Streak",
     "slug": "anki-streak",
-    "version": "1.2.8",
+    "version": "1.2.9",
     "platforms": [
       "android"
     ],
@@ -12,7 +12,7 @@
     "icon": "./assets/app-icon.png",
     "android": {
       "package": "com.ankistreak.anime",
-      "versionCode": 12,
+      "versionCode": 13,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0D1E24"
@@ -30,7 +30,7 @@
             {
               "name": "AnkiStreak",
               "displayName": "Anki Streak",
-              "description": "Your Anki review streak, activity, and Miku’s mood.",
+              "description": "Your review streak and study activity, with the character you choose.",
               "android": {
                 "minWidth": 175,
                 "minHeight": 63,

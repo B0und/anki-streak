@@ -1,5 +1,5 @@
 import { Box, Column, Image, Row, Text } from '@expo/ui/jetpack-compose';
-import { background, cornerRadius, fillMaxSize, padding, paddingAll, size, width } from '@expo/ui/jetpack-compose/modifiers';
+import { background, cornerRadius, fillMaxSize, padding, size, width } from '@expo/ui/jetpack-compose/modifiers';
 import { createWidget, type WidgetEnvironment } from 'expo-widgets';
 
 type WidgetImage = {
@@ -47,15 +47,25 @@ function AnkiStreak(
   const layout = previewSize ?? (height >= Math.max(minimumTallHeight, screenHeight * compactScreenFraction) ? 'tall' : 'compact');
   const card = cards?.[layout];
   const narrow = widgetWidth < 240;
+  const short = height < 78;
   const stats = artwork && (layout === 'tall' ? artwork.tallStats : artwork.compactStats);
   const portraitAspect = artwork?.portraitAspect ?? 1;
   const portraitInset = 6;
-  const portraitMaxWidth = widgetWidth * (layout === 'tall' ? (narrow && card ? 0.48 : 0.58) : 0.38);
+  const portraitMaxWidth = widgetWidth * (layout === 'tall' ? (narrow && card ? 0.44 : 0.53) : 0.36);
   const portraitHeight = Math.max(1, Math.min(height - 4, portraitMaxWidth / portraitAspect));
   const portraitWidth = portraitHeight * portraitAspect;
   const overlap = layout === 'tall' ? Math.min(12, portraitWidth * 0.08) : 0;
-  const statsWidth = Math.max(1, widgetWidth - portraitWidth - portraitInset + (card ? 0 : overlap));
-  const statsHeight = stats ? Math.min(height, statsWidth / stats.aspect) : 0;
+  const stackedArtwork = layout === 'tall' && !card && height >= widgetWidth * 0.84;
+  const statsInset = stackedArtwork ? 14 : 0;
+  const statsWidth = stackedArtwork
+    ? widgetWidth - 2 * statsInset
+    : Math.max(1, widgetWidth - portraitWidth - portraitInset + (card ? 0 : overlap));
+  const availableHeight = stackedArtwork ? Math.max(1, height - portraitHeight - statsInset) : height;
+  const statsHeight = stats ? Math.min(availableHeight, statsWidth / stats.aspect) : 0;
+  const cardInset = narrow ? 10 : 16;
+  const inlineCard = layout === 'compact' && !narrow;
+  const valueSize = layout === 'tall' ? (narrow ? 36 : 46) : (short ? 24 : 31);
+  const labelSize = narrow || short ? 11 : 13;
 
   return (
     <Box contentAlignment="center" modifiers={[fillMaxSize(), background(card ? cardBackdrop ?? backdrop : backdrop), cornerRadius(20), ...(previewSize ? [] : [{ $type: 'openAppOnTap' }])]}>
@@ -68,32 +78,39 @@ function AnkiStreak(
               modifiers={[size(portraitWidth, portraitHeight)]}
             />
           </Box>
-          <Box contentAlignment="centerStart" modifiers={[fillMaxSize()]}>
+          <Box contentAlignment={stackedArtwork ? 'topStart' : 'centerStart'}
+            modifiers={stackedArtwork ? [fillMaxSize(), padding(statsInset, statsInset, 0, 0)] : [fillMaxSize()]}>
             {card ? (
-              <Column modifiers={[padding(14, 0, 0, 0), width(Math.max(1, statsWidth - 14))]}>
-                {layout === 'tall' || narrow ? <>
-                  <Text color="#FFFFFF" style={{ fontSize: layout === 'tall' ? 48 : 23, fontWeight: 'bold' }} maxLines={1}>{card.value}</Text>
-                  <Text color="#FFFFFF" style={{ fontSize: narrow ? 11 : 14 }} maxLines={narrow ? 1 : 2}>{narrow ? card.shortLabel ?? card.label : card.label}</Text>
-                </> : (
-                  <Row verticalAlignment="center">
-                    <Text color="#FFFFFF" style={{ fontSize: 30, fontWeight: 'bold' }} maxLines={1}>{card.value}</Text>
-                    <Text modifiers={[padding(7, 0, 0, 0)]} color="#FFFFFF" style={{ fontSize: 12 }} maxLines={2}>{card.label}</Text>
-                  </Row>
-                )}
-                <Text color={card.accent} style={{ fontSize: narrow ? 11 : layout === 'tall' ? 14 : 12 }} maxLines={1}>{narrow ? card.shortSecondary ?? card.secondary : card.secondary}</Text>
-              </Column>
+              <Box modifiers={[padding(cardInset, 0, 0, 0)]}>
+                <Column modifiers={[width(Math.max(1, statsWidth - cardInset))]}>
+                  {inlineCard ? (
+                    <Row verticalAlignment="center">
+                      <Text color="#FFFFFF" style={{ fontSize: valueSize, fontWeight: 'bold' }} maxLines={1}>{card.value}</Text>
+                      <Text modifiers={[padding(8, 0, 0, 0)]} color="#FFFFFF" style={{ fontSize: labelSize }} maxLines={2}>{card.label}</Text>
+                    </Row>
+                  ) : <>
+                    {layout === 'tall' && <Text color={card.accent} style={{ fontSize: labelSize, fontWeight: '500' }} maxLines={narrow ? 1 : 2}>{narrow ? card.shortLabel ?? card.label : card.label}</Text>}
+                    <Text color="#FFFFFF" style={{ fontSize: valueSize, fontWeight: 'bold' }} maxLines={1}>{card.value}</Text>
+                    {layout === 'compact' && <Text color="#FFFFFF" style={{ fontSize: labelSize }} maxLines={1}>{card.shortLabel ?? card.label}</Text>}
+                  </>}
+                  <Text color={layout === 'tall' ? '#FFFFFF' : card.accent}
+                    modifiers={short ? [] : [padding(0, 4, 0, 0)]} style={{ fontSize: labelSize }} maxLines={1}>
+                    {narrow ? card.shortSecondary ?? card.secondary : card.secondary}
+                  </Text>
+                </Column>
+              </Box>
             ) : <Image
               source={{ uri: stats.uri }}
               contentDescription={description}
               contentScale="fit"
-              modifiers={[size(statsWidth, statsHeight)]}
+              modifiers={[size(statsHeight * stats.aspect, statsHeight)]}
             />}
           </Box>
         </>
       ) : (
-        <Row verticalAlignment="center">
-          <Image source={{ uri: waitingDrawable }} modifiers={[size(69, 51)]} />
-          <Text color="#FFFFFF" modifiers={[paddingAll(8)]}>{connectLabel}</Text>
+        <Row verticalAlignment="center" modifiers={[width(Math.min(260, widgetWidth - 16))]}>
+          <Image source={{ uri: waitingDrawable }} contentScale="fit" modifiers={[size(narrow ? 49 : 65, 48)]} />
+          <Text color="#FFFFFF" modifiers={[padding(8, 0, 0, 0)]} style={{ fontSize: 13 }} maxLines={3}>{connectLabel}</Text>
         </Row>
       )}
     </Box>

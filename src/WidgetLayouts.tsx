@@ -9,28 +9,35 @@ import { Choices } from './studyComponents';
 import { SampleWidgetPreviews, useWidgetPreview, WidgetPreview } from './WidgetPreview';
 import { widgetSizeActor } from './widgetSizeActor';
 
+const layoutDescriptions = { current: 'currentDetail', focus: 'focusDetail', first: 'firstDetail' } as const;
+
 export function WidgetLayouts({ initialSize }: { initialSize: WidgetSize }) {
   const { dashboard, palette, language, layouts, setLayout } = useDashboardContext();
   const [selection, select] = useActor(widgetSizeActor, { input: initialSize });
   const size = selection.context;
   const content = useWidgetPreview();
+  const activeLayout = layouts[size];
 
   const options = (content: ReturnType<typeof useWidgetPreview>) => <>
-    {content.sample && <Text color="muted">{copy(language, 'sampleData')}</Text>}
-    {widgetLayouts.map((layout) => {
-      const selected = layout === layouts[size];
-      const Icon = selected ? CheckCircle2 : Circle;
-      return <YStack key={layout} accessibilityRole="radio" accessibilityLabel={copy(language, layout)}
-        accessibilityState={{ checked: selected }} onPress={() => setLayout(size, layout)}
-        bg="surface" borderColor={selected ? 'accent' : 'border-color'} borderWidth={1.5} rounded={16}
-        p={10} gap={8} opacity="press:0.8">
-        <XStack items="center" px={3} gap={8}>
-          <Text flex={1} color="color" fontSize={16} fontWeight="700">{copy(language, layout)}</Text>
+    <YStack gap={7}>
+      {content.sample && <Text color="muted" fontSize={12}>{copy(language, 'sampleData')}</Text>}
+      <WidgetPreview layout={activeLayout} size={size} content={content} />
+    </YStack>
+    <YStack accessibilityRole="radiogroup" bg="surface" borderColor="border-color" borderWidth={1} rounded={16} p={5} gap={4}>
+      {widgetLayouts.map((layout) => {
+        const selected = layout === activeLayout;
+        const Icon = selected ? CheckCircle2 : Circle;
+        return <XStack key={layout} accessibilityRole="radio" accessibilityState={{ checked: selected }}
+          onPress={() => setLayout(size, layout)} minH={57} gap={12} px={12} py={9}
+          items="center" bg={selected ? 'subtle' : 'surface'} rounded={11} opacity="press:0.8">
+          <YStack flex={1} gap={3}>
+            <Text color="color" fontSize={16} fontWeight="700">{copy(language, layout)}</Text>
+            <Text color="muted" fontSize={13}>{copy(language, layoutDescriptions[layout])}</Text>
+          </YStack>
           <Icon size={20} color={selected ? palette.accent : palette.muted} />
-        </XStack>
-        <WidgetPreview layout={layout} size={size} content={content} />
-      </YStack>;
-    })}
+        </XStack>;
+      })}
+    </YStack>
   </>;
   return <>
     <Choices<WidgetSize> choices={widgetSizes} value={size} onChange={(size) => select({ type: 'select', size })} label={(option) => copy(language, option)} />

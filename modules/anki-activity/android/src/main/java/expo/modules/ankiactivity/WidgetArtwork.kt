@@ -40,25 +40,35 @@ internal fun renderWidgetArtwork(
 ): Map<String, Any> {
   val prefix = if (preview) "preview-" else ""
   val streakLabel = if (russian) "дней подряд" else "day streak"
+  val reviewLabel = if (russian) "Повторов в день" else "Reviews/day"
+  val newLabel = if (russian) "Новых в день" else "New/day"
+  val historyLabel = if (russian) "История занятий" else "Review history"
   val compact = writeStats(context, theme, "${prefix}compact", COMPACT_STATS_HEIGHT) { canvas, paint ->
     canvas.drawFlameAndStreak(context, streak, streakLabel, theme, paint)
     canvas.drawHistory(history, today > 0, theme, paint)
-    canvas.drawCount(dailyReviewed, 652f, false, theme, paint)
-    canvas.drawCount(dailyLearned, 902f, true, theme, paint)
+    canvas.drawAverage(dailyReviewed, reviewLabel, 393f, 392f, 342f, theme, paint)
+    canvas.drawAverage(dailyLearned, newLabel, 788f, 392f, 373f, theme, paint)
   }
   val tall = writeStats(context, theme, "${prefix}tall", TALL_STATS_HEIGHT) { canvas, paint ->
     canvas.save()
-    canvas.translate(66f, -102f)
+    canvas.translate(-28f, -130f)
     canvas.scale(1.5f, 1.5f)
     canvas.drawFlameAndStreak(context, streak, streakLabel, theme, paint)
     canvas.restore()
 
     canvas.save()
-    canvas.translate(906f, 116f)
-    canvas.scale(1.65f, 1.65f)
-    canvas.drawCount(dailyReviewed, 0f, false, theme, paint, centerY = 33f, maxWidth = 290f)
-    canvas.drawCount(dailyLearned, 0f, true, theme, paint, centerY = 115f, maxWidth = 290f)
+    canvas.translate(650f, 34f)
+    canvas.scale(1.42f, 1.42f)
+    canvas.drawAverage(dailyReviewed, reviewLabel, 0f, 58f, 355f, theme, paint)
+    canvas.drawAverage(dailyLearned, newLabel, 0f, 161f, 355f, theme, paint)
     canvas.restore()
+
+    paint.typeface = Typeface.create("sans-serif", Typeface.BOLD)
+    paint.textSize = 53f
+    paint.color = theme.streakLight
+    paint.setShadowLayer(9f, 0f, 2f, 0xCC000000.toInt())
+    canvas.drawText(historyLabel, 30f, 389f, paint)
+    paint.clearShadowLayer()
 
     canvas.save()
     canvas.translate(30f, 420f)
@@ -137,7 +147,9 @@ private fun Canvas.drawStreak(streak: Int, streakLabel: String, theme: WidgetThe
   drawText(label, 147f, 262f, paint)
 
   paint.typeface = Typeface.create("sans-serif", Typeface.NORMAL)
-  paint.textSize = 37f
+  paint.textSize = 45f
+  val labelWidth = paint.measureText(streakLabel)
+  if (labelWidth > 225f) paint.textSize *= 225f / labelWidth
   paint.color = theme.streakDark
   drawText(streakLabel, 154f, 311f, paint)
   paint.clearShadowLayer()
@@ -175,50 +187,31 @@ private fun Canvas.drawHistory(history: ReviewHistory, happy: Boolean, theme: Wi
   }
 }
 
-private fun Canvas.drawCount(
+private fun Canvas.drawAverage(
   count: Int,
-  center: Float,
-  isNew: Boolean,
+  label: String,
+  x: Float,
+  baseline: Float,
+  maxWidth: Float,
   theme: WidgetTheme,
-  paint: Paint,
-  centerY: Float = 381f,
-  maxWidth: Float = 232f
+  paint: Paint
 ) {
-  val label = count.toString()
-  val availableTextWidth = maxWidth - 88f
+  val number = count.toString()
   paint.typeface = Typeface.create("sans-serif", Typeface.BOLD)
-  paint.textSize = 43f
-  val textWidth = paint.measureText(label)
-  if (textWidth > availableTextWidth) paint.textSize *= availableTextWidth / textWidth
-  val halfWidth = maxOf(73f, (paint.measureText(label) + 88f) / 2)
-  save()
-  translate(0f, centerY - 381f)
-  paint.color = if (isNew) theme.newBackground else theme.reviewBackground
-  drawRoundRect(center - halfWidth, 348f, center + halfWidth, 414f, 34f, 34f, paint)
+  paint.textSize = 52f
+  val naturalWidth = paint.measureText(number)
+  val numberWidth = minOf(naturalWidth, maxWidth * .48f)
+  if (naturalWidth > numberWidth) paint.textSize *= numberWidth / naturalWidth
+  paint.color = theme.streakLight
+  paint.setShadowLayer(9f, 0f, 2f, 0xCC000000.toInt())
+  drawText(number, x, baseline, paint)
 
-  val iconX = center - halfWidth + 16f
-  paint.color = if (isNew) theme.newForeground else theme.reviewForeground
-  if (isNew) {
-    paint.style = Paint.Style.STROKE
-    paint.strokeWidth = 5f
-    drawRoundRect(iconX + 8f, 358f, iconX + 45f, 389f, 5f, 5f, paint)
-    paint.style = Paint.Style.FILL
-    paint.color = theme.newBackground or 0xFF000000.toInt()
-    drawRoundRect(iconX, 367f, iconX + 37f, 398f, 5f, 5f, paint)
-    paint.color = theme.newForeground
-    paint.style = Paint.Style.STROKE
-    drawRoundRect(iconX, 367f, iconX + 37f, 398f, 5f, 5f, paint)
-    paint.style = Paint.Style.FILL
-    drawRoundRect(iconX + 36f, 387f, iconX + 57f, 393f, 2f, 2f, paint)
-    drawRoundRect(iconX + 43.5f, 379.5f, iconX + 49.5f, 400.5f, 2f, 2f, paint)
-  } else {
-    drawRect(iconX, 386f, iconX + 48f, 391f, paint)
-    drawRect(iconX + 3f, 379f, iconX + 13f, 399f, paint)
-    drawRect(iconX + 19f, 372f, iconX + 29f, 399f, paint)
-    drawRect(iconX + 35f, 360f, iconX + 45f, 399f, paint)
-  }
-
-  val baseline = 381f - (paint.ascent() + paint.descent()) / 2
-  drawText(label, iconX + 61f, baseline, paint)
-  restore()
+  paint.typeface = Typeface.create("sans-serif", Typeface.NORMAL)
+  paint.textSize = 50f
+  val labelWidth = paint.measureText(label)
+  val available = maxWidth - numberWidth - 14f
+  if (labelWidth > available) paint.textSize *= available / labelWidth
+  paint.color = theme.streakDark
+  drawText(label, x + numberWidth + 14f, baseline, paint)
+  paint.clearShadowLayer()
 }

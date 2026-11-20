@@ -132,6 +132,7 @@ export function WidgetPreview({ sizes, selected, onSelect }: {
       <Choices choices={[...sizeLabels.keys()]} value={String(bounds.widgetId)} onChange={(key) => onSelect(Number(key))}
         label={(key) => sizeLabels.get(key) ?? key} />
     </ScrollView>}
+    {bounds.widgetId === undefined && <Text color="muted" fontSize={12}>{copy(language, 'exampleWidgetSize')}</Text>}
     <YStack w="100%" maxW={width * previewScale} self="center">
       <YStack w="100%" aspectRatio={width / height} bg="hero" rounded={20 * previewScale} overflow="hidden">
         <NativePreview pointerEvents="none" style={StyleSheet.absoluteFill} widgetName="AnkiStreak"
@@ -139,7 +140,6 @@ export function WidgetPreview({ sizes, selected, onSelect }: {
       </YStack>
     </YStack>
     {frame && <Text color="muted" fontSize={12}>{copy(language, 'sampleData')}</Text>}
-    {!frame && bounds.widgetId === undefined && <Text color="muted" fontSize={12}>{copy(language, 'exampleWidgetSize')}</Text>}
     {needsSample && !frame && sample.matches('unavailable') && <Text color="muted" fontSize={12}>{copy(language, 'previewUnavailable')}</Text>}
   </YStack>;
 }

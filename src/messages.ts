@@ -18,7 +18,7 @@ const en = {
   focusDetail: 'Today’s reviews at a glance',
   firstDetail: 'Your day streak at a glance',
   appearance: 'Appearance', transparency: 'Background transparency',
-  addWidget: 'Add home-screen widget', resizeWidget: 'After adding it, resize it on the home screen to use the tall layout.',
+  addWidget: 'Add home-screen widget', resizeWidget: 'Make the widget taller on your home screen to use this layout.',
   connect: 'Connect AnkiDroid',
   openAnki: 'Open AnkiDroid', permissions: 'Android permissions', refresh: 'Refresh',
   refreshing: 'Refreshing…', permission: 'Allow access to read your review activity.',

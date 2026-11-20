@@ -54,7 +54,7 @@ index 3df9e4a..3a5e246 100644
 +    }
      // Unsupported Expo UI modifiers are ignored until they have exact Glance semantics.
 diff --git a/android/src/main/java/expo/modules/widgets/ExpoWidgetsPeekWidget.kt b/android/src/main/java/expo/modules/widgets/ExpoWidgetsPeekWidget.kt
-index edabde8..5782d51 100644
+index edabde8..586ca7a 100644
 --- a/android/src/main/java/expo/modules/widgets/ExpoWidgetsPeekWidget.kt
 +++ b/android/src/main/java/expo/modules/widgets/ExpoWidgetsPeekWidget.kt
 @@ -27,7 +27,22 @@ internal class ExpoWidgetsPeekWidget(
@@ -78,7 +78,7 @@ index edabde8..5782d51 100644
 +  val environment = getWidgetEnvironment(context) + mapOf(
 +    "width" to size.width.value.toDouble(),
 +    "height" to size.height.value.toDouble(),
-+    "sizeClass" to widgetSizeClass(context, size),
++    "sizeClass" to widgetSizeClass(size),
 +    "previewMood" to previewMood
 +  )
 +  val node = evaluateLayout(context, layout, props, environment)
@@ -86,10 +86,10 @@ index edabde8..5782d51 100644
 +}
 diff --git a/android/src/main/java/expo/modules/widgets/WidgetPreviewSizes.kt b/android/src/main/java/expo/modules/widgets/WidgetPreviewSizes.kt
 new file mode 100644
-index 0000000..0953ce5
+index 0000000..139ed1c
 --- /dev/null
 +++ b/android/src/main/java/expo/modules/widgets/WidgetPreviewSizes.kt
-@@ -0,0 +1,44 @@
+@@ -0,0 +1,43 @@
 +package expo.modules.widgets
 +
 +import android.annotation.SuppressLint
@@ -100,13 +100,12 @@ index 0000000..0953ce5
 +import androidx.glance.appwidget.AppWidgetId
 +import androidx.glance.appwidget.GlanceAppWidgetManager
 +import kotlin.math.abs
-+import kotlin.math.ceil
 +
-+private fun tallHeight(context: Context) =
-+  maxOf(105f, context.resources.configuration.screenHeightDp * 0.24f)
++private val minimumTallHeight = 150.dp
++private const val tallHeightRatio = 0.52f
 +
-+internal fun widgetSizeClass(context: Context, size: DpSize) =
-+  if (size.height.value >= tallHeight(context)) "tall" else "compact"
++internal fun widgetSizeClass(size: DpSize) =
++  if (size.height >= minimumTallHeight && size.height >= size.width * tallHeightRatio) "tall" else "compact"
 +
 +@SuppressLint("RestrictedApi")
 +internal suspend fun widgetPreviewSizes(context: Context, name: String): List<Map<String, Any>> {
@@ -123,15 +122,15 @@ index 0000000..0953ce5
 +    portraitSize?.let { id to it }
 +  }
 +  fun entry(size: DpSize, widgetId: Int? = null) = buildMap<String, Any> {
-+    put("size", widgetSizeClass(context, size))
++    put("size", widgetSizeClass(size))
 +    put("width", size.width.value.toDouble())
 +    put("height", size.height.value.toDouble())
 +    if (widgetId != null) put("widgetId", widgetId)
 +  }
 +  return pinned.map { (id, size) -> entry(size, id) } + listOf(
 +    DpSize(360.dp, 97.dp),
-+    DpSize(360.dp, maxOf(202f, ceil(tallHeight(context))).dp)
-+  ).filter { fallback -> pinned.none { (_, size) -> widgetSizeClass(context, size) == widgetSizeClass(context, fallback) } }
++    DpSize(360.dp, 202.dp)
++  ).filter { fallback -> pinned.none { (_, size) -> widgetSizeClass(size) == widgetSizeClass(fallback) } }
 +    .map { entry(it) }
 +}
 diff --git a/android/src/main/java/expo/modules/widgets/WidgetPreviewView.kt b/android/src/main/java/expo/modules/widgets/WidgetPreviewView.kt

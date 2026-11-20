@@ -140,7 +140,10 @@ const refreshMachine = refreshSetup.createMachine({
   on: {
     widgetPublished: ({ context }) => ({ context: { ...context, appearanceError: false } }),
     artworkPrepared: ({ context, event }) => {
-      if (context.activity === event.artwork.activity) return { context: { ...context, artwork: event.artwork } };
+      const { artwork } = event;
+      if (context.activity === artwork.activity && getWidgetTheme() === artwork.theme && getLanguage() === artwork.language) {
+        return { context: { ...context, artwork } };
+      }
     },
   },
   states: {

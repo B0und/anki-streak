@@ -140,6 +140,13 @@ try {
     const render = host.holdNextRender();
     const refresh = app.refreshWidget();
     const pendingRefreshes = [refresh];
+    const previewFrames = [];
+    let previous;
+    app.widgetRefreshActor.subscribe(({ context }) => {
+      if (!context.artwork || context.artwork === previous) return;
+      previous = context.artwork;
+      previewFrames.push({ uri: previous.artwork.compactStats.uri, expected: host.artworkKey() });
+    });
 
     try {
       await Promise.race([
@@ -173,6 +180,9 @@ try {
       await Promise.all(pendingRefreshes);
       await waitFor(app.widgetRefreshActor, (snapshot) => snapshot.matches({ appearance: 'quiet' }), waitOptions);
       assertPublications(host, order.join(' → '));
+      for (const { uri, expected } of previewFrames) {
+        assert.equal(uri, expected, `Superseded preview artwork for ${order.join(' → ')}`);
+      }
       checked += 1;
     } finally {
       render.complete();
@@ -187,6 +197,8 @@ try {
   try {
     render.complete();
     await app.refreshWidget();
+    const lastFrame = app.widgetRefreshActor.getSnapshot().context.artwork;
+    assert.ok(lastFrame, 'Initial preview artwork is ready');
 
     const appearanceRender = host.holdNextRender();
     try {
@@ -200,6 +212,7 @@ try {
       host.setReviews(3);
       const refresh = app.refreshWidget();
       await waitFor(app.widgetRefreshActor, (snapshot) => snapshot.matches({ data: 'publishing' }), waitOptions);
+      assert.equal(app.widgetRefreshActor.getSnapshot().context.artwork, lastFrame, 'Retain the completed frame while the next one is rendering');
       appearanceRender.complete();
       await refresh;
       await waitFor(app.widgetRefreshActor, (snapshot) => snapshot.matches({ appearance: 'quiet' }), waitOptions);

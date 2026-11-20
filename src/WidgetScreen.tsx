@@ -7,7 +7,7 @@ import { copy } from './messages';
 import { widgetSizes, type WidgetSize } from './preferences';
 import { Action, Choices, Section } from './studyComponents';
 import { themes } from './themes';
-import { SampleWidgetPreviews, useWidgetPreview, WidgetPreview } from './WidgetPreview';
+import { WidgetPreview } from './WidgetPreview';
 import { widgetSizeActor } from './widgetSizeActor';
 
 const moods = ['live', 'waiting', 'happy'] as const;
@@ -20,16 +20,11 @@ export function WidgetScreen({ openLayouts, openThemes }: {
   const size = selection.context;
   const theme = themes[dashboard.themeId];
   const mood = dashboard.previewMood ?? 'live';
-  const content = useWidgetPreview();
-  const renderPreview = (preview: typeof content) => <>
-    {preview.sample && <Text color="muted" fontSize={12}>{copy(language, 'sampleData')}</Text>}
-    <WidgetPreview layout={layouts[size]} size={size} content={preview} />
-  </>;
 
   return <>
     <YStack gap={10}>
       <Choices<WidgetSize> choices={widgetSizes} value={size} onChange={(size) => select({ type: 'select', size })} label={(key) => copy(language, key)} />
-      {content.stats ? renderPreview(content) : <SampleWidgetPreviews key={`${dashboard.themeId}-${language}`} render={renderPreview} />}
+      <WidgetPreview layout={layouts[size]} size={size} />
       <Action primary disabled={dashboard.requesting}
         onPress={() => void dashboard.runAndroidRequest('pin')}>{copy(language, 'addWidget')}</Action>
       {size === 'tall' && <Text color="muted" fontSize={13}>{copy(language, 'resizeWidget')}</Text>}

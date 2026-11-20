@@ -6,23 +6,20 @@ import { useDashboardContext } from './dashboardContext';
 import { copy } from './messages';
 import { widgetLayouts, widgetSizes, type WidgetSize } from './preferences';
 import { Choices } from './studyComponents';
-import { SampleWidgetPreviews, useWidgetPreview, WidgetPreview } from './WidgetPreview';
+import { WidgetPreview } from './WidgetPreview';
 import { widgetSizeActor } from './widgetSizeActor';
 
 const layoutDescriptions = { current: 'currentDetail', focus: 'focusDetail', first: 'firstDetail' } as const;
 
 export function WidgetLayouts({ initialSize }: { initialSize: WidgetSize }) {
-  const { dashboard, palette, language, layouts, setLayout } = useDashboardContext();
+  const { palette, language, layouts, setLayout } = useDashboardContext();
   const [selection, select] = useActor(widgetSizeActor, { input: initialSize });
   const size = selection.context;
-  const content = useWidgetPreview();
   const activeLayout = layouts[size];
 
-  const options = (content: ReturnType<typeof useWidgetPreview>) => <>
-    <YStack gap={7}>
-      {content.sample && <Text color="muted" fontSize={12}>{copy(language, 'sampleData')}</Text>}
-      <WidgetPreview layout={activeLayout} size={size} content={content} />
-    </YStack>
+  return <>
+    <Choices<WidgetSize> choices={widgetSizes} value={size} onChange={(size) => select({ type: 'select', size })} label={(option) => copy(language, option)} />
+    <WidgetPreview layout={activeLayout} size={size} />
     <YStack accessibilityRole="radiogroup" bg="surface" borderColor="border-color" borderWidth={1} rounded={16} p={5} gap={4}>
       {widgetLayouts.map((layout) => {
         const selected = layout === activeLayout;
@@ -38,9 +35,5 @@ export function WidgetLayouts({ initialSize }: { initialSize: WidgetSize }) {
         </XStack>;
       })}
     </YStack>
-  </>;
-  return <>
-    <Choices<WidgetSize> choices={widgetSizes} value={size} onChange={(size) => select({ type: 'select', size })} label={(option) => copy(language, option)} />
-    {content.stats ? options(content) : <SampleWidgetPreviews key={`${dashboard.themeId}-${language}`} render={options} />}
   </>;
 }

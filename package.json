@@ -40,6 +40,7 @@
     "xstate": "6.0.0-beta.3"
   },
   "devDependencies": {
+    "@cloudflare/oxlint-config": "0.1.0",
     "@effect/tsgo": "0.73.2",
     "@oxlint/plugins": "1.94.0",
     "@tamagui/cli": "3.3.3",

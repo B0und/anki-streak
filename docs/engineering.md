@@ -34,6 +34,6 @@ Run `bun run refs:sync` for searchable shallow checkouts under `.agent_sources/`
 
 ## Maintain the lint rules
 
-The [Oxlint config](../.oxlintrc.json) is the active policy. [Dillon Mulroy’s anti-slop plugin](../tools/oxlint/anti-slop/UPSTREAM.md) is vendored with its license. This app allows `unknown` at real boundaries. It uses established formatting and permits ordinary view branches. The rule that requires a nearby `SAFETY:` invariant applies when an assertion is unavoidable.
+The [Oxlint config](../oxlint.config.mts) uses [Cloudflare’s preset](https://github.com/cloudflare/oxlint-config) for general lint rules. The local rules require XState for app state and lifecycle and restrict raw timers. File overrides cover boundary types, Expo and Metro conventions, and logging from local check scripts.
 
 When adding a rule, prove it rejects an example and accepts the intended replacement. Give the diagnostic enough detail to fix it. Use a next-line exception when a platform boundary requires one, and explain the invariant or lifecycle in the directive. Keep Oxlint and `@oxlint/plugins` on the same version. Check the [Effect compiler compatibility matrix](https://github.com/Effect-TS/tsgo#supported-package-versions) before changing the tool versions.

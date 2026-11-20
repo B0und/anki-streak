@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.util.Log
 import expo.modules.interfaces.permissions.Permissions
 import expo.modules.kotlin.Promise
@@ -91,6 +92,7 @@ class AnkiActivityModule : Module() {
     }.runOnQueue(Queues.MAIN)
 
     AsyncFunction("pinWidget") {
+      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return@AsyncFunction "use-picker"
       val manager = AppWidgetManager.getInstance(context)
       val provider = ComponentName(context.packageName, "${context.packageName}.AnkiStreakProvider")
       if (manager.isRequestPinAppWidgetSupported && manager.requestPinAppWidget(provider, null, null)) {

@@ -12,4 +12,8 @@ expoModule {
 
 android {
   namespace 'expo.modules.ankiactivity'
+
+  lint {
+    abortOnError = true
+  }
 }

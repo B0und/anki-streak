@@ -2,7 +2,7 @@
   "expo": {
     "name": "Anki Streak",
     "slug": "anki-streak",
-    "version": "1.2.12",
+    "version": "1.2.13",
     "platforms": [
       "android"
     ],
@@ -12,7 +12,7 @@
     "icon": "./assets/app-icon.png",
     "android": {
       "package": "com.ankistreak.anime",
-      "versionCode": 16,
+      "versionCode": 17,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0D1E24"

@@ -22,6 +22,7 @@ const NativePreview = requireNativeView<ViewProps & {
   heightDp: number;
   previewMood: 'live' | 'waiting' | 'happy';
 }>('ExpoWidgets', 'WidgetPreviewView');
+const compactPreviewMaxHeight = 144;
 const sampleHistory = {
   counts: Array.from({ length: historyDays }, (_, index) =>
     index === historyDays - 1 ? 18 : ((index * 73 + index % historyRows * 19) % 151) % 62),
@@ -119,6 +120,7 @@ export function WidgetPreview({ sizes, selected, onSelect }: {
   })) : '';
   const width = bounds.width;
   const height = bounds.height;
+  const previewScale = bounds.size === 'compact' ? Math.min(1, compactPreviewMaxHeight / height) : 1;
   const dimensions = new Map(sizes.map((candidate) => [dimensionsKey(candidate), candidate]));
   dimensions.set(dimensionsKey(bounds), bounds);
   const sizeLabels = new Map([...dimensions.values()].map((candidate) => [
@@ -130,8 +132,8 @@ export function WidgetPreview({ sizes, selected, onSelect }: {
       <Choices choices={[...sizeLabels.keys()]} value={String(bounds.widgetId)} onChange={(key) => onSelect(Number(key))}
         label={(key) => sizeLabels.get(key) ?? key} />
     </ScrollView>}
-    <YStack w="100%" maxW={width} self="center">
-      <YStack w="100%" aspectRatio={width / height} bg="hero" rounded={20} overflow="hidden">
+    <YStack w="100%" maxW={width * previewScale} self="center">
+      <YStack w="100%" aspectRatio={width / height} bg="hero" rounded={20 * previewScale} overflow="hidden">
         <NativePreview pointerEvents="none" style={StyleSheet.absoluteFill} widgetName="AnkiStreak"
           sampleProps={sampleProps} previewMood={dashboard.previewMood ?? 'live'} widthDp={width} heightDp={height} />
       </YStack>

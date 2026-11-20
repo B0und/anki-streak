@@ -130,7 +130,7 @@ new file mode 100644
 +        val root = node.toPeekRoot(app, InteractionSource.Widget(name), size)
 +        val views = GlanceRemoteViews().compose(context, size) { EmittableTree(root) }.remoteViews
 +        ensureActive()
-+        val preview = views.apply(context, this@WidgetPreviewView)
++        val preview = views.apply(app, this@WidgetPreviewView)
 +        removeAllViews()
 +        addView(preview, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
 +      } catch (error: CancellationException) {

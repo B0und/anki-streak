@@ -19,6 +19,9 @@ private const val ANKI_PACKAGE = "com.ichi2.anki"
 private const val ANKI_PERMISSION = "com.ichi2.anki.permission.READ_WRITE_DATABASE"
 private const val PROVIDER = "com.ichi2.anki.flashcards"
 private val CARDS_URI = Uri.parse("content://$PROVIDER/cards")
+private val DECKS_URI = Uri.parse("content://$PROVIDER/decks")
+private const val DUE_REVIEWS = "is:due -is:suspended -is:buried"
+private const val DUE_REVIEW_EXCLUDED_DECKS = "dueReviewExcludedDecks"
 private const val AVERAGE_DAYS = 30
 private const val DEFAULT_DAY_ROLLOVER_HOUR = 4
 private val themeLock = Any()
@@ -59,6 +62,18 @@ class AnkiActivityModule : Module() {
     AsyncFunction("readActivity") {
       synchronized(themeLock) { reconcileWidgetIcon(storedWidgetTheme()) }
       readActivity(context)
+    }
+
+    AsyncFunction("readDecks") {
+      readDecks(context)
+    }
+
+    Function("getDueReviewExcludedDecks") {
+      excludedDeckIds().toList()
+    }
+
+    Function("setDueReviewExcludedDecks") { ids: List<String> ->
+      widgetPreferences.edit().putStringSet(DUE_REVIEW_EXCLUDED_DECKS, ids.toSet()).apply()
     }
 
     AsyncFunction("renderWidget") { streak: Int, today: Int, history: ReviewHistory, dailyReviewed: Int, dailyLearned: Int, theme: String, purpose: String, language: String ->
@@ -131,7 +146,7 @@ class AnkiActivityModule : Module() {
         "kind" to "ready",
         "today" to recent.first(),
         "newToday" to countCards(context, "introduced:1"),
-        "dueReviews" to countCards(context, "is:due -is:suspended -is:buried"),
+        "dueReviews" to countDueReviews(context, excludedDeckIds()),
         "streak" to day - start,
         "history" to mapOf("counts" to recent.reversed(), "todayRow" to todayRow),
         "dailyReviewed" to dailyReviewed,
@@ -146,6 +161,35 @@ class AnkiActivityModule : Module() {
 
   private fun reviewedCards(context: Context, daysAgo: Int): Int =
     countCards(context, "prop:rated=${-daysAgo}")
+
+  private fun excludedDeckIds(): Set<String> =
+    widgetPreferences.getStringSet(DUE_REVIEW_EXCLUDED_DECKS, null) ?: emptySet()
+
+  private fun readDecks(context: Context): List<Map<String, String>> {
+    val cursor = context.contentResolver.query(DECKS_URI, arrayOf("deck_id", "deck_name"), null, null, null)
+      ?: error("AnkiDroid did not return a deck cursor")
+    return cursor.use {
+      buildList {
+        while (it.moveToNext()) {
+          add(mapOf("id" to it.getString(0), "name" to it.getString(1)))
+        }
+      }
+    }
+  }
+
+  private fun countDueReviews(context: Context, excluded: Set<String>): Int {
+    if (excluded.isEmpty()) return countCards(context, DUE_REVIEWS)
+    val cursor = context.contentResolver.query(
+      CARDS_URI, arrayOf("deck_id", "original_deck_id"), DUE_REVIEWS, null, null
+    ) ?: error("AnkiDroid did not return a card cursor")
+    return cursor.use {
+      var count = 0
+      while (it.moveToNext()) {
+        if (it.getString(0) !in excluded && it.getString(1) !in excluded) count++
+      }
+      count
+    }
+  }
 
   private fun countCards(context: Context, search: String): Int {
     // The provider passes its selection through to Anki's browser search.

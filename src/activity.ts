@@ -15,6 +15,9 @@ const anki = requireNativeModule<{
   getWidgetBackgroundTransparency(): number;
   setWidgetBackgroundTransparency(value: number): void;
   readActivity(): Promise<unknown>;
+  readDecks(): Promise<unknown>;
+  getDueReviewExcludedDecks(): string[];
+  setDueReviewExcludedDecks(ids: readonly string[]): void;
   renderWidget(
     streak: number,
     today: number,
@@ -32,10 +35,18 @@ const anki = requireNativeModule<{
 
 export const {
   pinWidget, openAnki, getWidgetBackgroundTransparency, setWidgetBackgroundTransparency, setWidgetTheme,
+  getDueReviewExcludedDecks, setDueReviewExcludedDecks,
 } = anki;
 export const historyRows: number = anki.historyRows;
 export const historyColumns: number = anki.historyColumns;
 export const historyDays = historyRows * historyColumns;
+
+const Decks = Schema.Array(Schema.Struct({ id: Schema.String, name: Schema.String }));
+export type AnkiDeck = (typeof Decks.Type)[number];
+export const readDecks = Effect.tryPromise(() => anki.readDecks()).pipe(
+  Effect.flatMap(Schema.decodeUnknownEffect(Decks)),
+  Effect.map((decks) => [...decks].sort((left, right) => left.name.localeCompare(right.name))),
+);
 
 export const requestAnkiPermission = Effect.tryPromise(() => anki.requestPermission()).pipe(
   Effect.flatMap(Schema.decodeUnknownEffect(Schema.Struct({ granted: Schema.Boolean, canAskAgain: Schema.Boolean }))),

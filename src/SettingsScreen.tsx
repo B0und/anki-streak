@@ -2,6 +2,7 @@ import { CheckCircle2, Circle } from 'lucide-react-native';
 import { Input, Switch, Text, XStack } from 'tamagui';
 
 import type { Palette } from './appearance';
+import { DueReviewDecks } from './DueReviewDecks';
 import { copy, type Language } from './messages';
 import {
   appearanceOptions, hasTarget, languageOptions, milestones,
@@ -37,6 +38,7 @@ export function SettingsScreen({ palette, language, appearance, setAppearance, l
           <Text color="color" flex={1}>{copy(language, key)}</Text>
         </XStack>
       ))}
+      {milestone === 'finishDue' && <DueReviewDecks language={language} palette={palette} />}
       {hasTarget(milestone) && <XStack items="center" gap={12}>
         <Text color="color" flex={1}>{copy(language, 'targetInput')}</Text>
         <Input accessibilityLabel={copy(language, 'targetInput')} value={draft} maxLength={4}

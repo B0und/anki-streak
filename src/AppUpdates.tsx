@@ -15,7 +15,7 @@ export function AppUpdates({ language, updates }: {
     </View>
   );
   const status = (message: string) => (
-    <Text accessibilityLiveRegion="polite" color="muted" fontSize={14} lineHeight={20}>{message}</Text>
+    <Text accessibilityLiveRegion="polite" color="muted" fontSize={14} lineHeight="20px">{message}</Text>
   );
 
   if (update) {

@@ -25,7 +25,9 @@ export function WidgetScreen({ openLayouts, openThemes }: {
   return <>
     <XStack accessibilityRole="button" onPress={openThemes} minH={48} px={11} rounded={13}
       items="center" gap={8} bg="surface" borderColor="border-color" borderWidth={1} opacity="press:0.75">
-      <Image source={theme[dashboard.mood]} resizeMode="cover" w={31} h={31} rounded={6} bg="hero" />
+      <XStack w={31} h={31} rounded={6} bg="hero" overflow="hidden">
+        <Image source={theme[dashboard.mood]} objectFit="cover" style={{ width: '100%', height: '100%' }} />
+      </XStack>
       <Text flex={1} color="color" fontWeight="700">{copy(language, 'theme')}</Text>
       <Text color="accent">{theme.name}</Text>
       <ChevronRight size={18} color={palette.accent} />
@@ -37,12 +39,19 @@ export function WidgetScreen({ openLayouts, openThemes }: {
         <Text flex={1} color="color">{copy(language, 'transparency')}</Text>
         <Text color="accent" fontVariant={['tabular-nums']}>{dashboard.transparency}%</Text>
       </XStack>
-      <Slider size="md" min={0} max={100} step={1} value={[dashboard.transparency]} w="100%" px={10}
+      <Slider size="md" min={0} max={100} step={1} value={[dashboard.transparency]} w="100%" minH={36}
         onValueChange={([value]) => { if (value !== undefined) dashboard.changeTransparency(value); }}>
         <Slider.Track bg="border-color">
           <Slider.TrackActive bg="accent" />
         </Slider.Track>
         <Slider.Thumb index={0} circular accessibilityLabel={copy(language, 'transparency')}
+          accessible accessibilityRole="adjustable"
+          accessibilityValue={{ min: 0, max: 100, now: dashboard.transparency }}
+          accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
+          onAccessibilityAction={({ nativeEvent: { actionName } }) => {
+            const delta = actionName === 'increment' ? 5 : -5;
+            dashboard.changeTransparency(Math.min(100, Math.max(0, dashboard.transparency + delta)));
+          }}
           bg="accent" borderColor="accent" />
       </Slider>
       <Text color="color">{copy(language, 'themePreview')}</Text>

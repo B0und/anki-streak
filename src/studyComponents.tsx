@@ -60,6 +60,8 @@ export function Portrait({ source, height, maxWidth }: {
   source: number; height: number; maxWidth: number;
 }) {
   const { width, height: imageHeight } = NativeImage.resolveAssetSource(source) ?? { width: 1, height: 1 };
-  return <Image source={source} resizeMode="contain"
-    position="absolute" b={0} r={0} h={height} w={Math.min(maxWidth, height * (width ?? 1) / (imageHeight ?? 1))} />;
+  return <Image source={source} objectFit="contain" style={{
+    position: 'absolute', bottom: 0, right: 0, height,
+    width: Math.min(maxWidth, height * (width ?? 1) / (imageHeight ?? 1)),
+  }} />;
 }

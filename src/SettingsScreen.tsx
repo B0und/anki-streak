@@ -59,10 +59,10 @@ export function SettingsScreen({ palette, language, appearance, setAppearance, l
         </XStack>
       ))}
       {blocked && <Action disabled={dashboard.requesting} onPress={() => dashboard.runAndroidRequest('notifications')}>{copy(language, 'notificationsBlocked')}</Action>}
-      <Text color="muted" lineHeight={19}>{copy(language, 'rewardTiming')}</Text>
+      <Text color="muted" lineHeight="19px">{copy(language, 'rewardTiming')}</Text>
     </Section>
     <Section title={copy(language, 'sync')}>
-      <Text color="muted" lineHeight={20}>{copy(language, 'syncDetail')}</Text>
+      <Text color="muted" lineHeight="20px">{copy(language, 'syncDetail')}</Text>
       {dashboard.lastCheckedAt !== undefined && <Text color="color">
         {copy(language, 'lastCheck', {
           time: new Date(dashboard.lastCheckedAt).toLocaleTimeString(language, { hour: '2-digit', minute: '2-digit' }),

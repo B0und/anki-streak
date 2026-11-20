@@ -26,7 +26,7 @@ export function TodayScreen({ dashboard, palette, language, celebration }: {
       <Portrait source={portrait} height={192} maxWidth={Math.min(width * .51, 228)} />
       <YStack w="49%" items="center" px={10}>
         <VictoryLaurels color={palette.accent} />
-        <Text color="color" fontFamily="display" fontWeight="700" fontSize={73} lineHeight={82}
+        <Text color="color" fontFamily="display" fontWeight="700" fontSize={73} lineHeight="82px"
           style={{ includeFontPadding: false }} maxW="64%" adjustsFontSizeToFit numberOfLines={1}>
           <CountUp value={ready?.streak} delay={0} celebration={celebration} />
         </Text>
@@ -50,7 +50,7 @@ export function TodayScreen({ dashboard, palette, language, celebration }: {
       </XStack>
       <ActivityHeatmap history={ready.history} palette={palette} language={language} />
       <XStack bg="subtle" borderColor="border-color" borderWidth={1} rounded={16} p={8} items="center" gap={10}>
-        <Image source={portrait} w={45} h={45} rounded={22} />
+        <Image source={portrait} style={{ width: 45, height: 45, borderRadius: 22 }} />
         <Text flex={1} color="color" fontWeight="700">
           {celebration ? copy(language, 'rewardToast') + ' ' : ''}{copy(language, ready.today ? 'cheers' : 'waiting')}
         </Text>
@@ -86,7 +86,7 @@ function ActivityHeatmap({ history, palette, language }: {
     <YStack accessible accessibilityLabel={`${title} · ${period}`} gap={3}>
       {Array.from({ length: historyRows }, (_, row) => (
         <XStack key={row} gap={3} items="center">
-          <Text w={27} color="muted" fontSize={9} lineHeight={12}>{weekdays[language][row]}</Text>
+          <Text w={27} color="muted" fontSize={9} lineHeight="12px">{weekdays[language][row]}</Text>
           {Array.from({ length: historyColumns }, (_, column) => {
             const slot = column * historyRows + row;
             const count = counts[slot] ?? 0;

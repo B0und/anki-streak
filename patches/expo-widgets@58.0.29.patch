@@ -86,19 +86,20 @@ index edabde8..586ca7a 100644
 +}
 diff --git a/android/src/main/java/expo/modules/widgets/WidgetPreviewSizes.kt b/android/src/main/java/expo/modules/widgets/WidgetPreviewSizes.kt
 new file mode 100644
-index 0000000..139ed1c
+index 0000000..b6ddf7b
 --- /dev/null
 +++ b/android/src/main/java/expo/modules/widgets/WidgetPreviewSizes.kt
-@@ -0,0 +1,43 @@
+@@ -0,0 +1,50 @@
 +package expo.modules.widgets
 +
-+import android.annotation.SuppressLint
 +import android.appwidget.AppWidgetManager
 +import android.content.Context
++import android.os.Build
++import android.os.Bundle
++import android.util.SizeF
 +import androidx.compose.ui.unit.DpSize
 +import androidx.compose.ui.unit.dp
-+import androidx.glance.appwidget.AppWidgetId
-+import androidx.glance.appwidget.GlanceAppWidgetManager
++import androidx.core.os.BundleCompat
 +import kotlin.math.abs
 +
 +private val minimumTallHeight = 150.dp
@@ -107,19 +108,25 @@ index 0000000..139ed1c
 +internal fun widgetSizeClass(size: DpSize) =
 +  if (size.height >= minimumTallHeight && size.height >= size.width * tallHeightRatio) "tall" else "compact"
 +
-+@SuppressLint("RestrictedApi")
-+internal suspend fun widgetPreviewSizes(context: Context, name: String): List<Map<String, Any>> {
++private fun portraitWidgetSize(options: Bundle): DpSize? {
++  val width = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH)
++  val height = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT)
++  // The app is portrait-only. Use the exact option nearest the launcher's portrait pair.
++  val exact = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
++    BundleCompat.getParcelableArrayList(options, AppWidgetManager.OPTION_APPWIDGET_SIZES, SizeF::class.java)
++      ?.filter { it.width > 0f && it.height > 0f }
++      ?.minByOrNull { abs(it.width - width) + abs(it.height - height) }
++  } else {
++    null
++  }
++  return exact?.let { DpSize(it.width.dp, it.height.dp) }
++    ?: DpSize(width.dp, height.dp).takeIf { width > 0 && height > 0 }
++}
++
++internal fun widgetPreviewSizes(context: Context, name: String): List<Map<String, Any>> {
 +  val manager = AppWidgetManager.getInstance(context)
-+  val glance = GlanceAppWidgetManager(context)
 +  val pinned = manager.getAppWidgetIds(widgetProviderComponentName(context, name)).sortedDescending().mapNotNull { id ->
-+    val options = manager.getAppWidgetOptions(id)
-+    // The app is portrait-only. Match the portrait pair from the launcher, retaining its exact dp values.
-+    val portraitWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH)
-+    val portraitHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT)
-+    val portraitSize = glance.getAppWidgetSizes(AppWidgetId(id))
-+      .filter { it.width > 0.dp && it.height > 0.dp }
-+      .minByOrNull { abs(it.width.value - portraitWidth) + abs(it.height.value - portraitHeight) }
-+    portraitSize?.let { id to it }
++    portraitWidgetSize(manager.getAppWidgetOptions(id))?.let { id to it }
 +  }
 +  fun entry(size: DpSize, widgetId: Int? = null) = buildMap<String, Any> {
 +    put("size", widgetSizeClass(size))
@@ -241,7 +248,7 @@ index 0000000..5061a4d
 +  }
 +}
 diff --git a/android/src/main/java/expo/modules/widgets/WidgetsModule.kt b/android/src/main/java/expo/modules/widgets/WidgetsModule.kt
-index 05d6a9c..f1006d2 100644
+index 05d6a9c..56c3c9f 100644
 --- a/android/src/main/java/expo/modules/widgets/WidgetsModule.kt
 +++ b/android/src/main/java/expo/modules/widgets/WidgetsModule.kt
 @@ -50,2 +50,31 @@ class WidgetsModule : Module() {
@@ -250,7 +257,7 @@ index 05d6a9c..f1006d2 100644
 +      WidgetsUpdater.publish(context.applicationContext, name, props)
 +    }
 +
-+    AsyncFunction("getWidgetPreviewSizes") Coroutine { name: String ->
++    Function("getWidgetPreviewSizes") { name: String ->
 +      widgetPreviewSizes(context.applicationContext, name)
 +    }
 +

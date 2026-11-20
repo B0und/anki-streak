@@ -21,11 +21,11 @@ export function previewBounds(sizes: readonly WidgetPreviewSize[], widgetId: num
 
 const { getWidgetPreviewSizes } = requireNativeModule<{
   // oxlint-disable-next-line quality/no-unknown-returns -- Launcher dimensions are decoded at the native boundary.
-  getWidgetPreviewSizes(name: string): Promise<unknown>;
+  getWidgetPreviewSizes(name: string): unknown;
 }>('ExpoWidgets');
 
-const readSizes = Effect.tryPromise(() => getWidgetPreviewSizes('AnkiStreak')).pipe(
-  Effect.flatMap(Schema.decodeUnknownEffect(pinnedSizes)),
+const readSizes = Effect.try(() => Schema.decodeUnknownSync(pinnedSizes)(getWidgetPreviewSizes('AnkiStreak'))).pipe(
+  Effect.orElseSucceed((): readonly WidgetPreviewSize[] => []),
 );
 
 const observeLauncher = createCallbackLogic({
@@ -57,37 +57,29 @@ const sizeSetup = setup({
 });
 
 export const widgetSizeActor = sizeSetup.createMachine({
-  initial: 'reading',
-  context: ({ input }) => ({
-    size: input.size ?? 'compact', sizes: [], selectedWidgetId: null, preferPinned: input.size === undefined,
-  }),
+  context: ({ input }) => {
+    const sizes = Effect.runSync(readSizes);
+    const pinned = sizes.filter((bounds) => bounds.widgetId !== undefined);
+    const initialSize = pinned.some((bounds) => bounds.size === 'compact') ? 'compact' : pinned[0]?.size ?? 'compact';
+    return { size: input.size ?? initialSize, sizes, selectedWidgetId: null, preferPinned: input.size === undefined };
+  },
   invoke: { src: observeLauncher },
   on: {
-    resume: { target: '.reading', reenter: true },
+    resume: ({ context }) => {
+      const sizes = Effect.runSync(readSizes);
+      if (sizes.length === 0) return;
+      const previous = previewBounds(context.sizes.filter((bounds) => bounds.size === context.size), context.selectedWidgetId);
+      const pinned = sizes.filter((bounds) => bounds.widgetId !== undefined);
+      const sameWidget = pinned.find((bounds) => bounds.widgetId === previous?.widgetId);
+      const chooseDefault = context.preferPinned && !pinned.some((bounds) => bounds.size === context.size);
+      const size = sameWidget?.size ?? (chooseDefault ? pinned[0]?.size : undefined) ?? context.size;
+      return { context: { ...context, sizes, size, selectedWidgetId: sameWidget?.widgetId ?? null } };
+    },
     select: ({ context, event }) => ({
       context: { ...context, size: event.size, selectedWidgetId: null, preferPinned: false },
     }),
     bounds: ({ context, event }) => ({
       context: { ...context, selectedWidgetId: event.widgetId },
     }),
-  },
-  states: {
-    reading: {
-      invoke: sizeSetup.createInvoke({
-        src: ({ signal }): Promise<typeof pinnedSizes.Type> => Effect.runPromise(readSizes, { signal }),
-        onDone: ({ context, event }) => {
-          const sizes = event.output;
-          const currentBounds = previewBounds(context.sizes.filter((bounds) => bounds.size === context.size), context.selectedWidgetId);
-          const pinned = sizes.filter((bounds) => bounds.widgetId !== undefined);
-          const sameWidget = pinned.find((bounds) => bounds.widgetId === currentBounds?.widgetId);
-          const chooseDefault = context.preferPinned && !pinned.some((bounds) => bounds.size === context.size);
-          const size = sameWidget?.size ?? (chooseDefault ? pinned[0]?.size : undefined) ?? context.size;
-          return { target: 'ready', context: { ...context, sizes, size, selectedWidgetId: sameWidget?.widgetId ?? null } };
-        },
-        onError: { target: 'unavailable' },
-      }),
-    },
-    ready: {},
-    unavailable: {},
   },
 });

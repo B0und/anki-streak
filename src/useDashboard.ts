@@ -200,6 +200,7 @@ export function useDashboard() {
   return {
     ...context,
     activity,
+    initialCheckComplete: check !== null || widget.matches({ data: 'failed' }),
     lastCheckedAt: check?.checkedAt,
     mood: activity?.kind === 'ready' ? activity.mood : 'waiting' as const,
     notice: context.notice ?? (appearanceError ? 'widgetAppearanceFailed' as const

@@ -108,7 +108,7 @@ export function WidgetPreview({ sizes, selected, onSelect }: {
     if (needsSample) send({ type: 'sample', request: { theme: themeId, language } });
   }, [language, needsSample, send, themeId]);
 
-  if (!bounds) return null;
+  if (!bounds) return <Text color="muted">{copy(language, 'previewUnavailable')}</Text>;
   const frame = needsSample ? sample.context.frame : null;
   const sampleProps = frame ? JSON.stringify(widgetProps({
     artwork: frame.artwork,
@@ -132,14 +132,15 @@ export function WidgetPreview({ sizes, selected, onSelect }: {
       <Choices choices={[...sizeLabels.keys()]} value={String(bounds.widgetId)} onChange={(key) => onSelect(Number(key))}
         label={(key) => sizeLabels.get(key) ?? key} />
     </ScrollView>}
-    {bounds.widgetId === undefined && <Text color="muted" fontSize={12}>{copy(language, 'exampleWidgetSize')}</Text>}
+    {bounds.widgetId === undefined && <Text color="muted" fontSize={12}>{copy(language,
+      needsSample ? 'sampleData' : 'exampleWidgetSize')}</Text>}
     <YStack w="100%" maxW={width * previewScale} self="center">
       <YStack w="100%" aspectRatio={width / height} bg="hero" rounded={20 * previewScale} overflow="hidden">
         <NativePreview pointerEvents="none" style={StyleSheet.absoluteFill} widgetName="AnkiStreak"
           sampleProps={sampleProps} previewMood={dashboard.previewMood ?? 'live'} widthDp={width} heightDp={height} />
+        {needsSample && !frame && sample.matches('unavailable') && <Text position="absolute" b={10} l={8} r={8}
+          text="center" color="on-accent" fontSize={12}>{copy(language, 'previewUnavailable')}</Text>}
       </YStack>
     </YStack>
-    {frame && <Text color="muted" fontSize={12}>{copy(language, 'sampleData')}</Text>}
-    {needsSample && !frame && sample.matches('unavailable') && <Text color="muted" fontSize={12}>{copy(language, 'previewUnavailable')}</Text>}
   </YStack>;
 }

@@ -16,7 +16,7 @@ function widgetCard(layout: WidgetLayout, language: Language, stats: { today: nu
   return {
     value: String(focus ? stats.today : stats.streak),
     label: copy(language, focus ? 'reviewed' : 'streak'),
-    secondary: `${copy(language, focus ? 'streak' : 'reviewed')}: ${secondary}`,
+    secondary: focus ? copy(language, 'widgetStreak', { count: secondary }) : `${copy(language, 'reviewed')}: ${secondary}`,
     shortLabel: copy(language, focus ? 'shortReviews' : 'shortStreak'),
     shortSecondary: `${copy(language, focus ? 'shortStreak' : 'shortReviews')}: ${secondary}`,
     accent,

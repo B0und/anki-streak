@@ -13,7 +13,6 @@ type UpdateContext = {
   canUpdate: boolean;
   lastCheck: number;
   update: AppUpdate | null;
-  dismissed: string | null;
   resume: CheckPhase;
   manual: boolean;
 };
@@ -44,20 +43,17 @@ function startCheck(resume: CheckPhase) {
 const updatesSetup = setup({
   schemas: {
     context: types<UpdateContext>(),
-    events: { check: types<{ manual: boolean }>(), install: types<void>(), dismiss: types<{ digest: string }>() },
+    events: { check: types<{ manual: boolean }>(), install: types<void>() },
   },
 });
 
 const updatesMachine = updatesSetup.createMachine({
   id: 'appUpdates',
   context: () => ({
-    ...appUpdater.getInstalledBuild(), lastCheck: -Infinity, update: null, dismissed: null, manual: false, resume: 'idle',
+    ...appUpdater.getInstalledBuild(), lastCheck: -Infinity, update: null, manual: false, resume: 'idle',
   }),
   initial: 'idle',
   invoke: { src: automaticChecks },
-  on: {
-    dismiss: ({ context, event }) => ({ context: { ...context, dismissed: event.digest } }),
-  },
   states: {
     idle: { on: { check: startCheck('idle') } },
     current: { on: { check: startCheck('current') } },
@@ -126,6 +122,5 @@ export function useAppUpdates() {
     kind,
     check() { send({ type: 'check', manual: true }); },
     install() { send({ type: 'install' }); },
-    dismiss(digest: string) { send({ type: 'dismiss', digest }); },
   };
 }

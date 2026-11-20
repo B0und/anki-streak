@@ -21,7 +21,6 @@ export function WidgetLayouts({ initialSize }: { initialSize: WidgetSize }) {
   return <>
     <Choices<WidgetSize> choices={widgetSizes} value={size} onChange={(size) => select({ type: 'select', size })} label={(option) => copy(language, option)} />
     <WidgetPreview sizes={candidates} selected={selectedWidgetId} onSelect={(widgetId) => select({ type: 'bounds', widgetId })} />
-    {candidates.length === 0 && selection.matches('unavailable') && <Text color="muted">{copy(language, 'previewUnavailable')}</Text>}
     <YStack accessibilityRole="radiogroup" bg="surface" borderColor="border-color" borderWidth={1} rounded={16} p={5} gap={4}>
       {widgetLayouts.map((layout) => {
         const selected = layout === activeLayout;

@@ -20,7 +20,7 @@ In **Settings**, see how AnkiDroid sync works and check when Anki Streak last re
 
 ## Update the app
 
-Install an updater-enabled APK once to enable update checks. Anki Streak checks GitHub Releases when you open the app and every five minutes while it is active. A banner takes you to the update in Settings. **Check for updates** in Settings runs a check immediately.
+Install an updater-enabled APK once to enable update checks. Anki Streak checks GitHub Releases when you open the app and every five minutes while it is active. The Settings tab shows a badge when an update is available. **Check for updates** in Settings runs a check immediately.
 
 When an update appears, tap **Download and install**. If Android opens its install permission settings, allow installs from Anki Streak, return to the app, and tap **Install update**. Confirm the update in the Android installer. In-place updates keep app settings and pinned widgets.
 

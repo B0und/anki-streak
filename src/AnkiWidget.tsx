@@ -11,6 +11,7 @@ export type WidgetArtwork = {
   compactStats: WidgetImage;
   portraitDrawable: string;
   portraitAspect: number;
+  alternatePortraitAspect?: number;
 };
 
 export type WidgetCard = {
@@ -65,34 +66,38 @@ function AnkiStreak(
   const livePortrait = artwork?.portraitDrawable ?? waitingDrawable;
   const portrait = previewMood === 'happy' ? happyDrawable ?? livePortrait
     : previewMood === 'waiting' ? waitingDrawable : livePortrait;
+  const portraitAspect = (portrait === livePortrait ? undefined : artwork?.alternatePortraitAspect)
+    ?? artwork?.portraitAspect ?? 1;
+  const portraitInset = 6;
+  const inset = narrow ? 10 : 16;
+  const labelSize = narrow || short ? 11 : 13;
   if (artwork && tallOverview) {
     const { value, label, streak, accent, days } = tallOverview;
     const footerHeight = narrow ? 36 : 44;
     const heroHeight = height - footerHeight;
-    const inset = narrow ? 8 : 13;
     const portraitPanelWidth = Math.round(widgetWidth * 0.53);
-    const portraitHeight = Math.min(heroHeight, Math.round(portraitPanelWidth * 1.27));
+    const portraitHeight = Math.max(1, Math.min(heroHeight - portraitInset, (portraitPanelWidth - portraitInset) / portraitAspect));
     const tallyWidth = widgetWidth - portraitPanelWidth - inset;
-    const tallySize = Math.min(narrow || heroHeight < 90 ? 32 : 52, tallyWidth / Math.max(1, value.length * 0.62));
+    const tallySize = Math.min(narrow || heroHeight < 104 ? 32 : 44, tallyWidth / Math.max(1, value.length * 0.62));
     const dayWidth = Math.floor((widgetWidth - inset * 2) / 7);
-    const markWidth = dayWidth - (narrow ? 4 : 7);
-    const markHeight = narrow ? 7 : 9;
+    const markWidth = dayWidth - (narrow ? 5 : 9);
+    const markHeight = narrow ? 5 : 7;
     const empty = accent + '33';
 
     return (
       <Box modifiers={[fillMaxSize(), background(surface), cornerRadius(20), ...openApp]}>
         <Column modifiers={[fillMaxSize()]}>
           <Box modifiers={[size(widgetWidth, heroHeight)]}>
-            <Box contentAlignment="bottomEnd" modifiers={[fillMaxSize()]}>
-              <Image source={{ uri: portrait }} contentScale="crop"
-                modifiers={[size(portraitPanelWidth, portraitHeight)]} />
+            <Box contentAlignment="bottomEnd" modifiers={[fillMaxSize(), padding(0, 0, portraitInset, 0)]}>
+              <Image source={{ uri: portrait }} contentScale="fit"
+                modifiers={[size(portraitHeight * portraitAspect, portraitHeight)]} />
             </Box>
             <Box contentAlignment="centerStart" modifiers={[fillMaxSize(), padding(inset, 0, 0, 0)]}>
               <Column modifiers={[width(tallyWidth)]}>
                 <Text color="#FFFFFF" style={{ fontSize: tallySize, fontWeight: 'bold' }} maxLines={1}>{value}</Text>
-                <Text color="#FFFFFF" style={{ fontSize: narrow ? 10 : 13 }} maxLines={2}>{label}</Text>
-                <Text color={accent} style={{ fontSize: narrow ? 10 : 12, fontWeight: 'bold' }}
-                  modifiers={[padding(0, heroHeight < 90 ? 3 : 8, 0, 0)]} maxLines={2}>{streak}</Text>
+                <Text color="#FFFFFF" style={{ fontSize: labelSize, fontWeight: '500' }} maxLines={2}>{label}</Text>
+                <Text color={accent} style={{ fontSize: labelSize, fontWeight: '500' }}
+                  modifiers={[padding(0, heroHeight < 104 ? 4 : 7, 0, 0)]} maxLines={2}>{streak}</Text>
               </Column>
             </Box>
           </Box>
@@ -104,11 +109,11 @@ function AnkiStreak(
               const fill = reviewed ? accent : state === 'future' ? accent + '1A' : empty;
               return (
                 <Column key={day} horizontalAlignment="center" modifiers={[width(dayWidth)]}>
-                  <Box contentAlignment="center" modifiers={[size(markWidth, markHeight), background(current ? accent : fill), cornerRadius(2)]}>
-                    {state === 'today' && <Box modifiers={[size(markWidth - 2, markHeight - 2), background('#20282C'), cornerRadius(1)]} />}
+                  <Box contentAlignment="center" modifiers={[size(markWidth, markHeight), background(current ? accent : fill)]}>
+                    {state === 'today' && <Box modifiers={[size(markWidth - 2, markHeight - 2), background(surface)]} />}
                   </Box>
-                  <Text color={current ? accent : '#FFFFFF'} style={{ fontSize: narrow ? 9 : 11 }}
-                    modifiers={[padding(0, 3, 0, 0)]} maxLines={1}>{day}</Text>
+                  <Text color={current ? accent : '#FFFFFF'} style={{ fontSize: narrow ? 9 : 11, fontWeight: current ? '500' : 'normal' }}
+                    modifiers={[padding(0, 4, 0, 0)]} maxLines={1}>{day}</Text>
                 </Column>
               );
             })}
@@ -119,17 +124,16 @@ function AnkiStreak(
   }
 
   const stats = artwork?.compactStats;
-  const portraitAspect = artwork?.portraitAspect ?? 1;
-  const portraitInset = 6;
   const portraitMaxWidth = widgetWidth * (layout === 'tall' ? (narrow && card ? 0.44 : 0.53) : 0.36);
-  const portraitHeight = Math.max(1, Math.min(height - 4, portraitMaxWidth / portraitAspect));
+  const portraitHeight = Math.max(1, Math.min(height - portraitInset, portraitMaxWidth / portraitAspect));
   const portraitWidth = portraitHeight * portraitAspect;
   const statsWidth = Math.max(1, widgetWidth - portraitWidth - portraitInset);
   const statsHeight = stats ? Math.min(height, statsWidth / stats.aspect) : 0;
-  const cardInset = narrow ? 10 : 16;
-  const inlineCard = layout === 'compact' && !narrow;
-  const valueSize = layout === 'tall' ? (narrow ? 36 : 46) : (short ? 24 : 31);
-  const labelSize = narrow || short ? 11 : 13;
+  const cardWidth = Math.max(1, statsWidth - inset);
+  const inlineCard = layout === 'compact' && short && !narrow;
+  const valueMax = layout === 'tall' ? (narrow ? 32 : 44) : (short ? 24 : 32);
+  const valueWidth = inlineCard ? cardWidth * 0.50 : cardWidth;
+  const valueSize = Math.min(valueMax, valueWidth / Math.max(1, (card?.value.length ?? 1) * 0.62));
 
   return (
     <Box contentAlignment="center" modifiers={[fillMaxSize(), background(surface), cornerRadius(20), ...openApp]}>
@@ -144,20 +148,21 @@ function AnkiStreak(
           </Box>
           <Box contentAlignment="centerStart" modifiers={[fillMaxSize()]}>
             {card ? (
-              <Box modifiers={[padding(cardInset, 0, 0, 0)]}>
-                <Column modifiers={[width(Math.max(1, statsWidth - cardInset))]}>
+              <Box modifiers={[padding(inset, 0, 0, 0)]}>
+                <Column modifiers={[width(cardWidth)]}>
                   {inlineCard ? (
                     <Row verticalAlignment="center">
                       <Text color="#FFFFFF" style={{ fontSize: valueSize, fontWeight: 'bold' }} maxLines={1}>{card.value}</Text>
-                      <Text modifiers={[padding(8, 0, 0, 0)]} color="#FFFFFF" style={{ fontSize: labelSize }} maxLines={2}>{card.label}</Text>
+                      <Text modifiers={[padding(6, 0, 0, 0)]} color="#FFFFFF" style={{ fontSize: labelSize, fontWeight: '500' }} maxLines={2}>{card.label}</Text>
                     </Row>
                   ) : <>
-                    {layout === 'tall' && <Text color={card.accent} style={{ fontSize: labelSize, fontWeight: '500' }} maxLines={narrow ? 1 : 2}>{narrow ? card.shortLabel ?? card.label : card.label}</Text>}
                     <Text color="#FFFFFF" style={{ fontSize: valueSize, fontWeight: 'bold' }} maxLines={1}>{card.value}</Text>
-                    {layout === 'compact' && <Text color="#FFFFFF" style={{ fontSize: labelSize }} maxLines={1}>{card.shortLabel ?? card.label}</Text>}
+                    <Text color="#FFFFFF" style={{ fontSize: labelSize, fontWeight: '500' }} maxLines={short ? 1 : 2}>
+                      {narrow && short ? card.shortLabel ?? card.label : card.label}
+                    </Text>
                   </>}
-                  <Text color={layout === 'tall' ? '#FFFFFF' : card.accent}
-                    modifiers={short ? [] : [padding(0, 4, 0, 0)]} style={{ fontSize: labelSize }} maxLines={1}>
+                  <Text color={card.accent}
+                    modifiers={[padding(0, short ? 2 : 6, 0, 0)]} style={{ fontSize: labelSize, fontWeight: '500' }} maxLines={short ? 1 : 2}>
                     {narrow ? card.shortSecondary ?? card.secondary : card.secondary}
                   </Text>
                 </Column>

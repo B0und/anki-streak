@@ -11,7 +11,7 @@ import type { useDashboard } from './useDashboard';
 export function TodayScreen({ dashboard, palette, language, celebration }: {
   dashboard: ReturnType<typeof useDashboard>; palette: Palette; language: Language; celebration: number;
 }) {
-  const { width } = useWindowDimensions();
+  const { width, fontScale } = useWindowDimensions();
   const { activity, themeId } = dashboard;
   const ready = activity?.kind === 'ready' ? activity : null;
   const portrait = themes[themeId][ready?.mood ?? 'waiting'];
@@ -24,9 +24,9 @@ export function TodayScreen({ dashboard, palette, language, celebration }: {
           <CountUp value={ready?.streak} delay={0} celebration={celebration} />
         </Text>
         <Text color="color" fontWeight="700" fontSize={17}>{copy(language, 'streak')}</Text>
-        {ready && <Text color="color" fontSize={13}>
-          {copy(language, celebration ? 'rewardToast' : ready.today ? 'cheers' : 'waiting')}
-        </Text>}
+        <Text color="color" fontSize={13} lineHeight="18px" numberOfLines={3} style={{ height: 54 * fontScale }}>
+          {ready && copy(language, celebration ? 'rewardToast' : ready.today ? 'cheers' : 'waiting')}
+        </Text>
       </YStack>
     </YStack>
 
@@ -37,7 +37,8 @@ export function TodayScreen({ dashboard, palette, language, celebration }: {
             <YStack key={label} flex={1} py={14} px={14} gap={4}
               borderLeftWidth={index > 0 ? 1 : 0} borderLeftColor="border-color">
               <Text color="color" fontSize={13} fontWeight="600">{copy(language, label)}</Text>
-              <Text color="color" fontSize={32} fontWeight="700" fontVariant={['tabular-nums']} style={{ includeFontPadding: false }}>
+              <Text color="color" fontSize={32} fontWeight="700" fontVariant={['tabular-nums']}
+                adjustsFontSizeToFit numberOfLines={1} style={{ includeFontPadding: false }}>
                 <CountUp value={value} delay={160 + 145 * index} celebration={celebration} />
               </Text>
               <Text color="muted" fontSize={12}>{averageValue} · {copy(language, average)}</Text>
@@ -45,7 +46,7 @@ export function TodayScreen({ dashboard, palette, language, celebration }: {
           ))}
       </XStack>
     </> : <Section title="AnkiDroid">
-      <Text color="muted">{copy(language, activity && activity.kind !== 'ready' ? activity.kind : 'loading')}</Text>
+      <Text color="muted">{copy(language, activity && activity.kind !== 'ready' ? activity.kind : 'unavailable')}</Text>
       {activity?.kind === 'permission' && <Action primary disabled={dashboard.requesting}
         onPress={() => void dashboard.runAndroidRequest('permission')}>{copy(language, 'connect')}</Action>}
     </Section>}
@@ -54,7 +55,7 @@ export function TodayScreen({ dashboard, palette, language, celebration }: {
       {activity?.kind !== 'missing' && <Action primary disabled={dashboard.requesting}
         onPress={() => void dashboard.runAndroidRequest('open')}>{copy(language, 'openAnki')}</Action>}
       <Action disabled={dashboard.refreshing} onPress={() => void dashboard.refresh()}>
-        {copy(language, dashboard.refreshing ? 'refreshing' : 'refresh')}
+          {copy(language, 'refresh')}
       </Action>
     </XStack>
     {ready && <ActivityHeatmap history={ready.history} palette={palette} language={language} />}

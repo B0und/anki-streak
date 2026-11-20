@@ -48,13 +48,19 @@ internal fun renderWidgetArtwork(
     canvas.drawAverage(dailyLearned, newLabel, 788f, 392f, 373f, theme, paint)
   }
   val portrait = if (today > 0) theme.happy else theme.waiting
-  val dimensions = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-  BitmapFactory.decodeResource(context.resources, portrait, dimensions)
+  val alternatePortrait = if (today > 0) theme.waiting else theme.happy
+
+  fun aspect(drawable: Int): Double {
+    val dimensions = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+    BitmapFactory.decodeResource(context.resources, drawable, dimensions)
+    return dimensions.outWidth.toDouble() / dimensions.outHeight
+  }
 
   return mapOf(
     "compactStats" to compact,
     "portraitDrawable" to context.resources.getResourceEntryName(portrait),
-    "portraitAspect" to dimensions.outWidth.toDouble() / dimensions.outHeight
+    "portraitAspect" to aspect(portrait),
+    "alternatePortraitAspect" to aspect(alternatePortrait)
   )
 }
 
@@ -120,7 +126,7 @@ private fun Canvas.drawStreak(streak: Int, streakLabel: String, theme: WidgetThe
   val labelWidth = paint.measureText(streakLabel)
   if (labelWidth > 225f) paint.textSize *= 225f / labelWidth
   paint.color = theme.streakDark
-  drawText(streakLabel, 154f, 311f, paint)
+  drawText(streakLabel, 147f, 311f, paint)
   paint.clearShadowLayer()
 }
 
@@ -176,7 +182,7 @@ private fun Canvas.drawAverage(
   drawText(number, x, baseline, paint)
 
   paint.typeface = Typeface.create("sans-serif", Typeface.NORMAL)
-  paint.textSize = 50f
+  paint.textSize = 46f
   val labelWidth = paint.measureText(label)
   val available = maxWidth - numberWidth - 14f
   if (labelWidth > available) paint.textSize *= available / labelWidth

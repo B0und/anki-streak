@@ -65,13 +65,14 @@ export function SettingsScreen({ palette, language, appearance, setAppearance, l
     </Section>
     <Section title={copy(language, 'sync')}>
       <Text color="muted" lineHeight="20px">{copy(language, 'syncDetail')}</Text>
-      {dashboard.lastCheckedAt !== undefined && <Text color="color">
+      <Text color="color">
         {copy(language, 'lastCheck', {
-          time: new Date(dashboard.lastCheckedAt).toLocaleTimeString(language, { hour: '2-digit', minute: '2-digit' }),
+          time: dashboard.lastCheckedAt === undefined ? '—'
+            : new Date(dashboard.lastCheckedAt).toLocaleTimeString(language, { hour: '2-digit', minute: '2-digit' }),
         })}
-      </Text>}
+      </Text>
       <Action disabled={dashboard.refreshing} onPress={() => void dashboard.refresh()}>
-        {copy(language, dashboard.refreshing ? 'refreshing' : 'refresh')}
+        {copy(language, 'refresh')}
       </Action>
       {dashboard.activity?.kind === 'permission' && <Action primary disabled={dashboard.requesting}
         onPress={() => void dashboard.runAndroidRequest('permission')}>{copy(language, 'connect')}</Action>}

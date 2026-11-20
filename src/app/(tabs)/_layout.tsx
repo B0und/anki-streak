@@ -5,7 +5,7 @@ import { useDashboardContext } from '../../dashboardContext';
 import { copy } from '../../messages';
 
 export default function TabLayout() {
-  const { language, palette } = useDashboardContext();
+  const { language, palette, updates } = useDashboardContext();
   return <Tabs backBehavior="initialRoute" screenOptions={{
     headerShown: false,
     tabBarActiveTintColor: palette.accent,
@@ -15,6 +15,10 @@ export default function TabLayout() {
   }}>
     <Tabs.Screen name="index" options={{ title: copy(language, 'today'), tabBarIcon: ({ color, size }) => <House color={color} size={size} /> }} />
     <Tabs.Screen name="widget" options={{ title: copy(language, 'widget'), tabBarIcon: ({ color, size }) => <PanelsTopLeft color={color} size={size} /> }} />
-    <Tabs.Screen name="settings" options={{ title: copy(language, 'settings'), tabBarIcon: ({ color, size }) => <Settings color={color} size={size} /> }} />
+    <Tabs.Screen name="settings" options={{
+      title: copy(language, 'settings'),
+      tabBarIcon: ({ color, size }) => <Settings color={color} size={size} />,
+      tabBarBadge: updates.update ? 1 : undefined,
+    }} />
   </Tabs>;
 }

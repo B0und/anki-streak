@@ -26,7 +26,6 @@ export function WidgetScreen({ openLayouts, openThemes }: {
     <YStack gap={10}>
       <Choices<WidgetSize> choices={widgetSizes} value={size} onChange={(size) => select({ type: 'select', size })} label={(key) => copy(language, key)} />
       <WidgetPreview sizes={candidates} selected={selectedWidgetId} onSelect={(widgetId) => select({ type: 'bounds', widgetId })} />
-      {candidates.length === 0 && selection.matches('unavailable') && <Text color="muted">{copy(language, 'previewUnavailable')}</Text>}
       <Action primary disabled={dashboard.requesting}
         onPress={() => void dashboard.runAndroidRequest('pin')}>{copy(language, 'addWidget')}</Action>
       {size === 'tall' && candidates[0]?.widgetId === undefined && <Text color="muted" fontSize={13}>{copy(language, 'resizeWidget')}</Text>}
@@ -34,8 +33,8 @@ export function WidgetScreen({ openLayouts, openThemes }: {
     <Section title={copy(language, 'appearance')}>
       <XStack accessibilityRole="button" onPress={openThemes} minH={54} py={5}
         items="center" gap={10} opacity="press:0.75">
-        <XStack w={42} h={42} rounded={9} bg="hero" overflow="hidden">
-          <Image source={theme[dashboard.mood]} objectFit="cover" style={{ width: '100%', height: '100%' }} />
+        <XStack w={42} h={42} rounded={9} bg="hero" items="center" justify="center" overflow="hidden">
+          <Image source={theme[dashboard.mood]} objectFit="contain" style={{ width: 36, height: 36 }} />
         </XStack>
         <YStack flex={1} gap={2}>
           <Text color="color" fontWeight="700">{copy(language, 'theme')}</Text>

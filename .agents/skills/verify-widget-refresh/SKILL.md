@@ -34,6 +34,7 @@ Then run the normal local gate.
 ## Verify launcher parity
 
 1. Pin one Compact and one Tall widget. At 0% transparency, capture each on the launcher and in the app with **Mood preview → Live**.
-2. Compare the widget crops at the same scale. Confirm the stats, portrait crop, palette, and spacing match for each size. Repeat for each character when changing portrait or layout code.
+2. Compare the widget crops at the same scale. Confirm the stats, palette, and spacing match for each size. Check the full head and visible headroom for every character in both Waiting and Happy.
 3. Resize a pinned widget and reopen the app. Compare the new bounds and layout. With different pinned dimensions in the same size class, use the dimension selector to check each.
 4. Change layout and transparency, then return to the launcher. Compare the updated layout and opacity. The app surface and launcher wallpaper show through transparent pixels.
+5. Cold-open the Widget screen and record through the first preview render. The Add widget button and appearance controls must keep their positions. Repeat while refreshing the preview data.

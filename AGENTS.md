@@ -15,6 +15,10 @@ Recover the paired Pixel before asking for connection details.
 
 Use XState actors for app state and lifecycle. Use actor delays for state transitions and Effect schedules for Effect work.
 
+# App and widget design
+
+Use the project-local [Impeccable skill](.agents/skills/impeccable/SKILL.md) for UI changes. Verify widget design changes in the app preview and Android launcher at both compact and tall sizes.
+
 # Effect and TypeScript
 
 Before writing Effect code, read `node_modules/effect/AGENTS.md` completely and follow the relevant examples. Check `node_modules/effect/src` for the installed API. For schemas, services, actor lifecycles, or lint changes, read the [engineering guide](docs/engineering.md). It maps local examples and pinned upstream sources.

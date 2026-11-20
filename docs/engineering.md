@@ -8,6 +8,8 @@ For an editor with custom LSP commands, launch `bun run lsp:effect` from the rep
 
 For VS Code, the workspace recommends the Oxc extension and selects the native TypeScript workspace SDK. After installing dependencies, run `bunx --no-install effect-tsgo patch --typescript`, select the workspace TypeScript version, and reload the editor. Repeat the patch after reinstalling TypeScript. [Effect language service](https://github.com/Effect-TS/tsgo) · [Oxc editor setup](https://oxc.rs/docs/guide/usage/linter/editors.html)
 
+The project vendors [Impeccable](../.agents/skills/impeccable/SKILL.md) 4.10.0 for Codex. The launcher downloads its pinned engine on first use. Refresh the skill with `bunx impeccable@4.10.0 install --project --providers=codex --no-hooks -y`, updating the version when upgrading. [Upstream repository](https://github.com/pbakaus/impeccable)
+
 ## Read the installed API first
 
 Start with `node_modules/effect/AGENTS.md`. Follow its examples for Schema, services, schedules, resources, or testing. Search `node_modules/effect/src` before using an unfamiliar API. The installed Effect and `@xstate/effect` versions are the authority for what this app can call.

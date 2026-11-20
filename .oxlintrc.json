@@ -94,7 +94,9 @@
     "reportUnusedDisableDirectives": "error"
   },
   "ignorePatterns": [
+    ".agents/skills/impeccable/**",
     ".agent_sources/**",
+    "scripts/.widget-check-*/**",
     "tools/oxlint/anti-slop/**",
     "android/**",
     "ios/**"

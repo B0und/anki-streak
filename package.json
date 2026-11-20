@@ -8,7 +8,7 @@
     "android": "expo run:android",
     "lint": "effect-tsgo --tsrs-lint oxlint",
     "typecheck": "effect-tsgo tsrs --noEmit",
-    "check": "bun run lint && bun run typecheck && bun scripts/check-widget-model.mjs && bun scripts/check-widget-refresh.mjs && bash scripts/check-android.sh",
+    "check": "bun scripts/check-local.mjs",
     "lsp:effect": "effect-tsgo tsrs --lsp --stdio",
     "lsp:lint": "effect-tsgo --tsrs-lint oxlint --lsp",
     "refs:sync": "bash scripts/sync-agent-sources.sh"

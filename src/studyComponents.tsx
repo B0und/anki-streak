@@ -1,47 +1,45 @@
 import { useActor } from '@xstate/react';
 import type { ReactNode } from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image as NativeImage } from 'react-native';
+import { Button, Image, Text, View, XStack, YStack } from 'tamagui';
 
-import type { Palette } from './appearance';
 import { countUpMachine } from './countUpMachine';
 
-export function Action({ children, onPress, palette, primary, disabled }: {
-  children: ReactNode; onPress(): void; palette: Palette; primary?: boolean; disabled?: boolean;
+export function Action({ children, onPress, primary, disabled }: {
+  children: ReactNode; onPress(): void; primary?: boolean; disabled?: boolean;
 }) {
   return (
-    <Pressable accessibilityRole="button" disabled={disabled} onPress={onPress}
-      style={({ pressed }) => [styles.action, {
-        backgroundColor: primary ? palette.accent : palette.subtle,
-        opacity: disabled ? .55 : pressed ? .75 : 1,
-      }]}>
-      <Text style={{ color: primary ? palette.onAccent : palette.text, fontWeight: '600', textAlign: 'center' }}>{children}</Text>
-    </Pressable>
+    <Button size={false} disabled={disabled} accessibilityState={{ disabled }} onPress={onPress}
+      minH={46} px={13} py={9} justify="center" rounded={12}
+      bg={primary ? 'accent' : 'subtle'} opacity={disabled ? .55 : 'press:0.75'}>
+      <Text color={primary ? 'on-accent' : 'color'} fontWeight="600" text="center">{children}</Text>
+    </Button>
   );
 }
 
-export function Choices<T extends string>({ choices, value, onChange, label, palette }: {
-  choices: readonly T[]; value: T; onChange(value: T): void; label(value: T): string; palette: Palette;
+export function Choices<T extends string>({ choices, value, onChange, label }: {
+  choices: readonly T[]; value: T; onChange(value: T): void; label(value: T): string;
 }) {
   return (
-    <View style={[styles.choices, { backgroundColor: palette.subtle }]}>
-      {choices.map((choice) => (
-        <Pressable key={choice} accessibilityRole="radio" accessibilityState={{ checked: value === choice }}
-          onPress={() => onChange(choice)} style={[styles.choice, value === choice && { backgroundColor: palette.surface }]}>
-          <Text style={{ color: value === choice ? palette.accent : palette.muted, fontWeight: '700', textAlign: 'center' }}>
-            {label(choice)}
-          </Text>
-        </Pressable>
-      ))}
-    </View>
+    <XStack bg="subtle" p={4} gap={4} rounded={13}>
+      {choices.map((choice) => {
+        const checked = value === choice;
+        return <View key={choice} accessibilityRole="radio" accessibilityState={{ checked }}
+          onPress={() => onChange(choice)} flex={1} minH={42} justify="center" items="center"
+          px={3} rounded={10} bg={checked ? 'surface' : 'transparent'} opacity="press:0.75">
+          <Text color={checked ? 'accent' : 'muted'} fontWeight="700" text="center">{label(choice)}</Text>
+        </View>;
+      })}
+    </XStack>
   );
 }
 
-export function Section({ title, palette, children }: { title: string; palette: Palette; children: ReactNode }) {
+export function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <View style={[styles.section, { backgroundColor: palette.surface, borderColor: palette.line }]}>
-      <Text accessibilityRole="header" style={{ color: palette.text, fontWeight: '700', fontSize: 17 }}>{title}</Text>
+    <YStack bg="surface" borderColor="border-color" borderWidth={1} rounded={18} p={15} gap={10}>
+      <Text accessibilityRole="header" color="color" fontWeight="700" fontSize={17}>{title}</Text>
       {children}
-    </View>
+    </YStack>
   );
 }
 
@@ -61,14 +59,7 @@ export function CountUp({ value, delay, celebration }: {
 export function Portrait({ source, height, maxWidth }: {
   source: number; height: number; maxWidth: number;
 }) {
-  const { width, height: imageHeight } = Image.resolveAssetSource(source) ?? { width: 1, height: 1 };
+  const { width, height: imageHeight } = NativeImage.resolveAssetSource(source) ?? { width: 1, height: 1 };
   return <Image source={source} resizeMode="contain"
-    style={{ position: 'absolute', bottom: 0, right: 0, height, width: Math.min(maxWidth, height * (width ?? 1) / (imageHeight ?? 1)) }} />;
+    position="absolute" b={0} r={0} h={height} w={Math.min(maxWidth, height * (width ?? 1) / (imageHeight ?? 1))} />;
 }
-
-const styles = StyleSheet.create({
-  action: { minHeight: 46, paddingHorizontal: 13, paddingVertical: 9, justifyContent: 'center', borderRadius: 12 },
-  choices: { flexDirection: 'row', padding: 4, gap: 4, borderRadius: 13 },
-  choice: { flex: 1, minHeight: 42, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 3, borderRadius: 10 },
-  section: { padding: 15, gap: 10, borderWidth: 1, borderRadius: 18 },
-});

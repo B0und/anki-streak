@@ -1,29 +1,27 @@
-import { Pressable, StyleSheet, Text } from 'react-native';
-
-import type { Palette } from './appearance';
+import { Text, View } from 'tamagui';
 import { copy, type Language } from './messages';
 import { Section } from './studyComponents';
 import type { useAppUpdates } from './updateMachine';
 
-export function AppUpdates({ palette, language, updates }: {
-  palette: Palette; language: Language; updates: ReturnType<typeof useAppUpdates>;
+export function AppUpdates({ language, updates }: {
+  language: Language; updates: ReturnType<typeof useAppUpdates>;
 }) {
   const { kind, update, version, canUpdate, check, install } = updates;
   if (!canUpdate) return null;
 
   const button = (label: string, action: () => void) => (
-    <Pressable accessibilityRole="button" onPress={action} style={styles.button}>
-      <Text style={[styles.buttonLabel, { color: palette.accent }]}>{label}</Text>
-    </Pressable>
+    <View accessibilityRole="button" onPress={action} self="flex-start" justify="center" minH={44} opacity="press:0.75">
+      <Text color="accent" fontSize={14} fontWeight="700">{label}</Text>
+    </View>
   );
   const status = (message: string) => (
-    <Text accessibilityLiveRegion="polite" style={[styles.detail, { color: palette.muted }]}>{message}</Text>
+    <Text accessibilityLiveRegion="polite" color="muted" fontSize={14} lineHeight={20}>{message}</Text>
   );
 
   if (update) {
     return (
-      <Section palette={palette} title={copy(language, 'updates')}>
-        <Text style={{ color: palette.text }}>{copy(language, 'updateAvailable', { version: update.version })}</Text>
+      <Section title={copy(language, 'updates')}>
+        <Text color="color">{copy(language, 'updateAvailable', { version: update.version })}</Text>
         {kind === 'checking' && status(copy(language, 'checking'))}
         {kind === 'download-failed' && status(copy(language, 'updateFailed'))}
         {kind === 'downloading' && status(copy(language, 'downloading'))}
@@ -38,7 +36,7 @@ export function AppUpdates({ palette, language, updates }: {
   }
 
   return (
-    <Section palette={palette} title={copy(language, 'updates')}>
+    <Section title={copy(language, 'updates')}>
       {status(kind === 'checking' ? copy(language, 'checking') :
         kind === 'check-failed' ? copy(language, 'checkFailed') :
         kind === 'current' ? copy(language, 'upToDate', { version }) : copy(language, 'version', { version }))}
@@ -46,9 +44,3 @@ export function AppUpdates({ palette, language, updates }: {
     </Section>
   );
 }
-
-const styles = StyleSheet.create({
-  detail: { color: '#A4BFC1', fontSize: 14, lineHeight: 20 },
-  button: { alignSelf: 'flex-start', justifyContent: 'center', minHeight: 44 },
-  buttonLabel: { fontSize: 14, fontWeight: '700' },
-});

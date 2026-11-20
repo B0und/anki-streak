@@ -2,7 +2,7 @@ import type { WidgetCard } from './AnkiWidget';
 import { copy, type Language } from './messages';
 import type { WidgetLayout } from './preferences';
 
-export function widgetBackdrop(color: string, transparency: number) {
+export function widgetBackdrop(color: `#${string}`, transparency: number): `#${string}` {
   const alpha = Math.round(255 * (1 - transparency / 100)).toString(16).padStart(2, '0');
   return `${color}${alpha}`;
 }

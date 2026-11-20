@@ -1,6 +1,6 @@
-import { CheckCircle2, Circle } from 'lucide-react-native';
 import { useActor } from '@xstate/react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { CheckCircle2, Circle } from 'lucide-react-native';
+import { Text, XStack, YStack } from 'tamagui';
 
 import { useDashboardContext } from './dashboardContext';
 import { copy } from './messages';
@@ -16,31 +16,24 @@ export function WidgetLayouts({ initialSize }: { initialSize: WidgetSize }) {
   const content = useWidgetPreview();
 
   const options = (content: ReturnType<typeof useWidgetPreview>) => <>
-    {content.sample && <Text style={{ color: palette.muted }}>{copy(language, 'sampleData')}</Text>}
+    {content.sample && <Text color="muted">{copy(language, 'sampleData')}</Text>}
     {widgetLayouts.map((layout) => {
       const selected = layout === layouts[size];
       const Icon = selected ? CheckCircle2 : Circle;
-      return <Pressable key={layout} accessibilityRole="radio" accessibilityLabel={copy(language, layout)}
-        accessibilityState={{ checked: selected }}
-        onPress={() => setLayout(size, layout)}
-        style={({ pressed }) => [styles.option, {
-          backgroundColor: palette.surface, borderColor: selected ? palette.accent : palette.line, opacity: pressed ? .8 : 1,
-        }]}>
-        <View style={styles.label}>
-          <Text style={{ flex: 1, color: palette.text, fontSize: 16, fontWeight: '700' }}>{copy(language, layout)}</Text>
+      return <YStack key={layout} accessibilityRole="radio" accessibilityLabel={copy(language, layout)}
+        accessibilityState={{ checked: selected }} onPress={() => setLayout(size, layout)}
+        bg="surface" borderColor={selected ? 'accent' : 'border-color'} borderWidth={1.5} rounded={16}
+        p={10} gap={8} opacity="press:0.8">
+        <XStack items="center" px={3} gap={8}>
+          <Text flex={1} color="color" fontSize={16} fontWeight="700">{copy(language, layout)}</Text>
           <Icon size={20} color={selected ? palette.accent : palette.muted} />
-        </View>
+        </XStack>
         <WidgetPreview layout={layout} size={size} content={content} />
-      </Pressable>;
+      </YStack>;
     })}
   </>;
   return <>
-    <Choices<WidgetSize> palette={palette} choices={widgetSizes} value={size} onChange={(size) => select({ type: 'select', size })} label={(option) => copy(language, option)} />
+    <Choices<WidgetSize> choices={widgetSizes} value={size} onChange={(size) => select({ type: 'select', size })} label={(option) => copy(language, option)} />
     {content.stats ? options(content) : <SampleWidgetPreviews key={`${dashboard.themeId}-${language}`} render={options} />}
   </>;
 }
-
-const styles = StyleSheet.create({
-  option: { borderRadius: 16, borderWidth: 1.5, padding: 10, gap: 8 },
-  label: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 3, gap: 8 },
-});

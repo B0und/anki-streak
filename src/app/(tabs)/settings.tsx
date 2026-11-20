@@ -9,9 +9,9 @@ import { SettingsScreen } from '../../SettingsScreen';
 export default function SettingsRoute() {
   const { update } = useLocalSearchParams<{ update?: string }>();
   const preferences = useDashboardContext();
-  const { palette, language, updates } = preferences;
+  const { language, updates } = preferences;
   const available = Boolean(updates.update);
-  const updateSection = <AppUpdates palette={palette} language={language} updates={updates} />;
+  const updateSection = <AppUpdates language={language} updates={updates} />;
 
   return <Screen key={update} title={copy(language, 'settings')}>
     {available && updateSection}

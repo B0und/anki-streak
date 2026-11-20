@@ -1,8 +1,6 @@
-import { Host, Slider } from '@expo/ui/jetpack-compose';
-import { fillMaxWidth, semantics } from '@expo/ui/jetpack-compose/modifiers';
-import { ChevronRight } from 'lucide-react-native';
 import { useActor } from '@xstate/react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ChevronRight } from 'lucide-react-native';
+import { Image, Slider, Text, XStack } from 'tamagui';
 
 import { useDashboardContext } from './dashboardContext';
 import { copy } from './messages';
@@ -25,53 +23,44 @@ export function WidgetScreen({ openLayouts, openThemes }: {
   const content = useWidgetPreview();
 
   return <>
-    <Pressable accessibilityRole="button" onPress={openThemes}
-      style={({ pressed }) => [styles.row, styles.themeRow, {
-        backgroundColor: palette.surface, borderColor: palette.line, opacity: pressed ? .75 : 1,
-      }]}>
-      <View style={[styles.themeIcon, { backgroundColor: palette.hero }]}>
-        <Image source={theme[dashboard.mood]} resizeMode="cover" style={{ width: 31, height: 31 }} />
-      </View>
-      <Text style={{ flex: 1, color: palette.text, fontWeight: '700' }}>{copy(language, 'theme')}</Text>
-      <Text style={{ color: palette.accent }}>{theme.name}</Text>
+    <XStack accessibilityRole="button" onPress={openThemes} minH={48} px={11} rounded={13}
+      items="center" gap={8} bg="surface" borderColor="border-color" borderWidth={1} opacity="press:0.75">
+      <Image source={theme[dashboard.mood]} resizeMode="cover" w={31} h={31} rounded={6} bg="hero" />
+      <Text flex={1} color="color" fontWeight="700">{copy(language, 'theme')}</Text>
+      <Text color="accent">{theme.name}</Text>
       <ChevronRight size={18} color={palette.accent} />
-    </Pressable>
-    <Section title={copy(language, 'preview')} palette={palette}>
-      <Choices<WidgetSize> palette={palette} choices={widgetSizes} value={size} onChange={(size) => select({ type: 'select', size })} label={(key) => copy(language, key)} />
+    </XStack>
+    <Section title={copy(language, 'preview')}>
+      <Choices<WidgetSize> choices={widgetSizes} value={size} onChange={(size) => select({ type: 'select', size })} label={(key) => copy(language, key)} />
       <WidgetPreview layout={layouts[size]} size={size} content={content} />
-      <View style={styles.transparency}>
-        <Text style={{ flex: 1, color: palette.text }}>{copy(language, 'transparency')}</Text>
-        <Text style={{ color: palette.accent, fontVariant: ['tabular-nums'] }}>{dashboard.transparency}%</Text>
-      </View>
-      <Host matchContents={{ vertical: true }} style={{ width: '100%' }}>
-        <Slider min={0} max={100} value={dashboard.transparency}
-          colors={{ activeTrackColor: palette.accent, thumbColor: palette.accent, inactiveTrackColor: palette.line }}
-          modifiers={[fillMaxWidth(), semantics({ contentDescription: copy(language, 'transparency') })]}
-          onValueChange={(value) => dashboard.changeTransparency(Math.round(value))} />
-      </Host>
-      <Text style={{ color: palette.text }}>{copy(language, 'themePreview')}</Text>
-      <Choices palette={palette} choices={moods} value={mood}
+      <XStack mt={4}>
+        <Text flex={1} color="color">{copy(language, 'transparency')}</Text>
+        <Text color="accent" fontVariant={['tabular-nums']}>{dashboard.transparency}%</Text>
+      </XStack>
+      <Slider size="md" min={0} max={100} step={1} value={[dashboard.transparency]} w="100%" px={10}
+        onValueChange={([value]) => { if (value !== undefined) dashboard.changeTransparency(value); }}>
+        <Slider.Track bg="border-color">
+          <Slider.TrackActive bg="accent" />
+        </Slider.Track>
+        <Slider.Thumb index={0} circular accessibilityLabel={copy(language, 'transparency')}
+          bg="accent" borderColor="accent" />
+      </Slider>
+      <Text color="color">{copy(language, 'themePreview')}</Text>
+      <Choices choices={moods} value={mood}
         onChange={(value) => value === 'live' ? dashboard.clearPreview() : dashboard.setPreviewMood(value)}
         label={(value) => copy(language, value === 'live' ? value : value === 'happy' ? 'happyMood' : 'waitingMood')} />
     </Section>
-    <Section title={copy(language, 'widgetLayouts')} palette={palette}>
+    <Section title={copy(language, 'widgetLayouts')}>
       {widgetSizes.map((size) => (
-        <Pressable key={size} accessibilityRole="button" onPress={() => openLayouts(size)}
-          style={({ pressed }) => [styles.row, { backgroundColor: palette.subtle, opacity: pressed ? .75 : 1 }]}>
-          <Text style={{ flex: 1, color: palette.text, fontWeight: '700' }}>{copy(language, size)}</Text>
-          <Text style={{ color: palette.accent, flexShrink: 1 }}>{copy(language, layouts[size])}</Text>
+        <XStack key={size} accessibilityRole="button" onPress={() => openLayouts(size)}
+          minH={48} px={11} rounded={11} items="center" gap={8} bg="subtle" opacity="press:0.75">
+          <Text flex={1} color="color" fontWeight="700">{copy(language, size)}</Text>
+          <Text color="accent" shrink={1}>{copy(language, layouts[size])}</Text>
           <ChevronRight size={18} color={palette.accent} />
-        </Pressable>
+        </XStack>
       ))}
     </Section>
-    <Action palette={palette} primary disabled={dashboard.requesting}
+    <Action primary disabled={dashboard.requesting}
       onPress={() => void dashboard.runAndroidRequest('pin')}>{copy(language, 'addWidget')}</Action>
   </>;
 }
-
-const styles = StyleSheet.create({
-  row: { minHeight: 48, paddingHorizontal: 11, borderRadius: 11, flexDirection: 'row', alignItems: 'center', gap: 8 },
-  themeRow: { borderWidth: 1, borderRadius: 13 },
-  themeIcon: { borderRadius: 6, overflow: 'hidden' },
-  transparency: { flexDirection: 'row', marginTop: 4 },
-});

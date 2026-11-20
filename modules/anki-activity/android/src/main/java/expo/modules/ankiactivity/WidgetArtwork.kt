@@ -11,20 +11,27 @@ import android.graphics.RectF
 import android.graphics.Typeface
 import android.net.Uri
 import android.util.AtomicFile
+import expo.modules.kotlin.records.Field
+import expo.modules.kotlin.records.Record
 import java.io.File
 
 private const val STATS_WIDTH = 1199
 private const val COMPACT_STATS_HEIGHT = 424
 private const val TALL_STATS_HEIGHT = 840
 internal const val HISTORY_COLUMNS = 17
-internal const val HISTORY_ROWS = 6
+internal const val HISTORY_ROWS = 7
 internal const val HISTORY_DAYS = HISTORY_COLUMNS * HISTORY_ROWS
+
+internal class ReviewHistory : Record {
+  @Field val counts: List<Int> = emptyList()
+  @Field val todayRow: Int = 0
+}
 
 internal fun renderWidgetArtwork(
   context: Context,
   streak: Int,
   today: Int,
-  history: List<Int>,
+  history: ReviewHistory,
   dailyReviewed: Int,
   dailyLearned: Int,
   theme: WidgetTheme,
@@ -136,28 +143,32 @@ private fun Canvas.drawStreak(streak: Int, streakLabel: String, theme: WidgetThe
   paint.clearShadowLayer()
 }
 
-private fun Canvas.drawHistory(history: List<Int>, happy: Boolean, theme: WidgetTheme, paint: Paint) {
-  val activeDays = history.filter { it > 0 }.sorted()
+private fun Canvas.drawHistory(history: ReviewHistory, happy: Boolean, theme: WidgetTheme, paint: Paint) {
+  val todaySlot = (HISTORY_COLUMNS - 1) * HISTORY_ROWS + history.todayRow
+  val counts = history.counts.takeLast(todaySlot + 1)
+  val activeDays = counts.filter { it > 0 }.sorted()
   val thresholds = listOf(45, 72, 90).map { percentile ->
     activeDays.getOrElse(activeDays.lastIndex * percentile / 100) { 0 }
   }
 
   for (row in 0 until HISTORY_ROWS) {
     for (column in 0 until HISTORY_COLUMNS) {
-      val day = row * HISTORY_COLUMNS + column
-      val count = history.getOrElse(day) { 0 }
+      val slot = column * HISTORY_ROWS + row
+      if (slot > todaySlot) continue
+      val count = counts[slot]
+      val isToday = slot == todaySlot
       val intensity = if (count == 0) 0 else 1 + thresholds.count { count > it }
 
       val x = 393f + 45.8f * column
-      val y = 75f + 43.4f * row
-      paint.color = if (happy && day == HISTORY_DAYS - 1) theme.accent else theme.heatmap[intensity]
-      drawRoundRect(x, y, x + 43f, y + 41f, 11f, 11f, paint)
+      val y = 75f + 37.2f * row
+      paint.color = if (happy && isToday) theme.accent else theme.heatmap[intensity]
+      drawRoundRect(x, y, x + 43f, y + 35f, 9f, 9f, paint)
 
-      if (!happy && day == HISTORY_DAYS - 1) {
+      if (!happy && isToday) {
         paint.style = Paint.Style.STROKE
         paint.strokeWidth = 3f
         paint.color = theme.accent
-        drawRoundRect(x + 2f, y + 2f, x + 41f, y + 39f, 9f, 9f, paint)
+        drawRoundRect(x + 2f, y + 2f, x + 41f, y + 33f, 7f, 7f, paint)
         paint.style = Paint.Style.FILL
       }
     }

@@ -12,6 +12,7 @@ import expo.modules.kotlin.Promise
 import expo.modules.kotlin.functions.Queues
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
+import java.util.Calendar
 import kotlin.math.roundToInt
 
 private const val ANKI_PACKAGE = "com.ichi2.anki"
@@ -19,13 +20,15 @@ private const val ANKI_PERMISSION = "com.ichi2.anki.permission.READ_WRITE_DATABA
 private const val PROVIDER = "com.ichi2.anki.flashcards"
 private val CARDS_URI = Uri.parse("content://$PROVIDER/cards")
 private const val AVERAGE_DAYS = 30
+private const val DEFAULT_DAY_ROLLOVER_HOUR = 4
 private val themeLock = Any()
 
 class AnkiActivityModule : Module() {
   override fun definition() = ModuleDefinition {
     Name("AnkiActivity")
 
-    Constant("historyDays") { HISTORY_DAYS }
+    Constant("historyRows") { HISTORY_ROWS }
+    Constant("historyColumns") { HISTORY_COLUMNS }
 
     Function("getWidgetTheme") {
       storedWidgetTheme().id
@@ -58,7 +61,7 @@ class AnkiActivityModule : Module() {
       readActivity(context)
     }
 
-    AsyncFunction("renderWidget") { streak: Int, today: Int, history: List<Int>, dailyReviewed: Int, dailyLearned: Int, theme: String, purpose: String, language: String ->
+    AsyncFunction("renderWidget") { streak: Int, today: Int, history: ReviewHistory, dailyReviewed: Int, dailyLearned: Int, theme: String, purpose: String, language: String ->
       renderWidgetArtwork(context, streak, today, history, dailyReviewed, dailyLearned, WidgetTheme.fromId(theme), purpose == "preview", language == "ru")
     }
 
@@ -106,6 +109,12 @@ class AnkiActivityModule : Module() {
     }
 
     return try {
+      val studyDate = Calendar.getInstance()
+      if (studyDate.get(Calendar.HOUR_OF_DAY) < DEFAULT_DAY_ROLLOVER_HOUR) {
+        studyDate.add(Calendar.DAY_OF_MONTH, -1)
+      }
+      val weekday = studyDate.get(Calendar.DAY_OF_WEEK)
+      val todayRow = (weekday + HISTORY_ROWS - Calendar.MONDAY) % HISTORY_ROWS
       val recent = (0 until HISTORY_DAYS).map { daysAgo -> reviewedCards(context, daysAgo) }
       var day = if (recent.first() > 0) 0 else 1
       val start = day
@@ -124,7 +133,7 @@ class AnkiActivityModule : Module() {
         "newToday" to countCards(context, "introduced:1"),
         "dueReviews" to countCards(context, "is:due -is:suspended -is:buried"),
         "streak" to day - start,
-        "history" to recent.reversed(),
+        "history" to mapOf("counts" to recent.reversed(), "todayRow" to todayRow),
         "dailyReviewed" to dailyReviewed,
         "dailyLearned" to dailyLearned
       )

@@ -26,7 +26,7 @@ export const themes = {
     waiting: require('../modules/anki-activity/android/src/main/res/drawable-nodpi/emilia_waiting.png'),
     happy: require('../modules/anki-activity/android/src/main/res/drawable-nodpi/emilia_happy.png'),
   },
-};
+} as const;
 
 export type WidgetTheme = keyof typeof themes;
 export const themeOrder: WidgetTheme[] = ['miku', '2b', 'emilia'];

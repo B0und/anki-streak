@@ -1,6 +1,6 @@
 # Anki Streak
 
-An Android home-screen widget and React Native companion app. Miku looks sad until you answer a card in AnkiDroid, then smiles. The widget shows your streak, a 102-day heatmap, and daily averages for reviews and new cards learned.
+An Android home-screen widget and React Native companion app. Miku looks sad until you answer a card in AnkiDroid, then smiles. The widget shows your streak, a 17-week heatmap, and daily averages for reviews and new cards learned.
 
 ## Add the widget
 
@@ -8,7 +8,7 @@ An Android home-screen widget and React Native companion app. Miku looks sad unt
 2. Open **Anki Streak**, tap **Connect AnkiDroid**, and allow access. AnkiDroid names its API permission “read and write.” Anki Streak only queries review counts.
 3. Tap **Add home screen widget** and confirm the launcher prompt. If your launcher has no prompt, touch and hold the home screen and find **Anki Streak** in its widget picker.
 
-Answering the same card multiple times counts as one card for that study day. Brighter heatmap cells mark busier days. Both averages cover the last 30 completed Anki study days, including days with zero. A new card counts on the day you first answer it. The streak includes yesterday if your current Anki study day is still open and you haven't answered a card. The app refreshes the widget when you open it. Android schedules background refreshes with a 15-minute minimum interval. To see an update immediately, open **Anki Streak** and tap **Refresh**.
+Answering the same card multiple times counts as one card for that study day. The heatmap uses Monday–Sunday rows and highlights the current study day. It uses AnkiDroid’s default 4 a.m. rollover for weekday labels. Brighter cells mark busier days. Both averages cover the last 30 completed Anki study days, including days with zero. A new card counts on the day you first answer it. The streak includes yesterday if your current Anki study day is still open and you haven't answered a card. The app refreshes the widget when you open it. Android schedules background refreshes with a 15-minute minimum interval. To see an update immediately, open **Anki Streak** and tap **Refresh**.
 
 Tap the widget to open Anki Streak. Choose **Miku**, **2B**, or **Emilia** in the app to change the artwork, palette, and launcher icon. Use **Background transparency** to fade the black panel behind the artwork and stats. Long-press the widget and drag the horizontal or vertical handles to resize it. The theme and background setting apply to every Anki Streak widget on your phone.
 
@@ -39,7 +39,7 @@ cd android
 
 The APK is at `android/app/build/outputs/apk/release/app-release.apk` relative to the project root. It is signed with the local development key for sideloading. The APK includes the JavaScript bundle and runs without Metro.
 
-Run `bun run lint` for Oxlint and `bun run typecheck` for TypeScript.
+Run `bun run lint` for Oxlint, `bun run typecheck` for TypeScript, and `bunx tamagui check --strict` for Tamagui. Run `bunx tamagui generate-prompt` to inspect the project’s style vocabulary.
 
 For a GitHub release, set `expo.version` in `app.json` to the release version and increase `expo.android.versionCode`. Sign the APK with the existing release key. Publish a stable release tagged `vMAJOR.MINOR.PATCH` and upload the APK as `Anki-Streak.apk`. Place it at `dist/<tag>/Anki-Streak.apk` and run `scripts/publish-release.sh <tag> <release-notes.md>` from the project root. This pushes the signed APK to a staging branch and GitHub Actions publishes the release using its repository token. After you verify the public release, delete the staging branch with `git push origin --delete release-assets/<tag>`. The updater reads the version from the tag and the SHA-256 digest from GitHub's asset metadata.
 

@@ -2,10 +2,11 @@ import { createEffectActor, createEffectLogic, join } from '@xstate/effect';
 import { useActor } from '@xstate/react';
 import { Effect, Option, Schema } from 'effect';
 import { requireNativeView } from 'expo';
-import { StyleSheet, Text, View, type ViewProps } from 'react-native';
+import { StyleSheet, type ViewProps } from 'react-native';
+import { Text, YStack } from 'tamagui';
 import { createAsyncLogic, types } from 'xstate';
 
-import { historyDays, renderWidget } from './activity';
+import { historyDays, historyRows, renderWidget } from './activity';
 import type { WidgetArtwork, WidgetProps } from './AnkiWidget';
 import { useDashboardContext } from './dashboardContext';
 import { copy } from './messages';
@@ -16,8 +17,11 @@ import { widgetBackdrop, widgetCard } from './widgetDesign';
 const NativePreview = requireNativeView<ViewProps & { widgetName: string; propsJson: string }>('ExpoWidgets', 'WidgetPreviewView');
 const previewAspect: Record<WidgetSize, number> = { compact: .27, tall: .56 };
 const sampleStats = { today: 18, streak: 24, dailyReviewed: 42, dailyLearned: 10 };
-const sampleHistory = Array.from({ length: historyDays }, (_, index) =>
-  index === historyDays - 1 ? sampleStats.today : ((index * 73 + index % 7 * 19) % 151) % 62);
+const sampleHistory = {
+  counts: Array.from({ length: historyDays }, (_, index) =>
+    index === historyDays - 1 ? sampleStats.today : ((index * 73 + index % historyRows * 19) % 151) % 62),
+  todayRow: historyRows - 1,
+};
 
 const sampleInput = Schema.Struct({
   theme: Schema.Literals(['miku', '2b', 'emilia']),
@@ -76,7 +80,7 @@ export function SampleWidgetPreviews({ render }: { render(content: PreviewConten
 export function WidgetPreview({ layout, size, content }: {
   layout: WidgetLayout; size: WidgetSize; content: ReturnType<typeof useWidgetPreview>;
 }) {
-  const { dashboard, palette, language } = useDashboardContext();
+  const { dashboard, language } = useDashboardContext();
   const theme = themes[dashboard.themeId];
   const { artwork, stats, sample } = content;
   const mood = dashboard.previewMood ?? (sample ? 'happy' : dashboard.mood);
@@ -96,17 +100,10 @@ export function WidgetPreview({ layout, size, content }: {
   };
   const backdrop = widgetBackdrop(artwork && card ? theme.card : '#000000', dashboard.transparency);
 
-  return <View style={[styles.frame, { aspectRatio: 1 / previewAspect[size], backgroundColor: palette.hero }]}>
-    <View pointerEvents="none" style={[styles.wallpaper, { backgroundColor: palette.line }]} />
-    <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: backdrop }]} />
-    {content.unavailable ? <Text style={[styles.placeholder, { color: palette.text }]}>{copy(language, 'previewUnavailable')}</Text>
+  return <YStack aspectRatio={1 / previewAspect[size]} bg="hero" justify="center" rounded={20} overflow="hidden">
+    <YStack pointerEvents="none" position="absolute" t={0} r={0} b={0} l={0} bg={backdrop} />
+    {content.unavailable ? <Text color="color" text="center">{copy(language, 'previewUnavailable')}</Text>
       : <NativePreview pointerEvents="none" style={StyleSheet.absoluteFill}
-      widgetName="AnkiStreak" propsJson={JSON.stringify({ ...payload, revision: content.revision })} />}
-  </View>;
+        widgetName="AnkiStreak" propsJson={JSON.stringify({ ...payload, revision: content.revision })} />}
+  </YStack>;
 }
-
-const styles = StyleSheet.create({
-  placeholder: { textAlign: 'center', margin: 'auto' },
-  frame: { justifyContent: 'center', borderRadius: 20, overflow: 'hidden' },
-  wallpaper: { position: 'absolute', width: '125%', height: '125%', left: '-35%', top: '48%', transform: [{ rotate: '-14deg' }] },
-});

@@ -8,7 +8,8 @@ import { themeOrder, type WidgetTheme } from './themes';
 export type ReviewMood = 'waiting' | 'happy';
 
 const anki = requireNativeModule<{
-  readonly historyDays: number;
+  readonly historyRows: number;
+  readonly historyColumns: number;
   getWidgetTheme(): unknown;
   setWidgetTheme(theme: WidgetTheme): void;
   getWidgetBackgroundTransparency(): number;
@@ -17,7 +18,7 @@ const anki = requireNativeModule<{
   renderWidget(
     streak: number,
     today: number,
-    history: readonly number[],
+    history: ReviewHistory,
     dailyReviewed: number,
     dailyLearned: number,
     theme: WidgetTheme,
@@ -30,15 +31,18 @@ const anki = requireNativeModule<{
 }>('AnkiActivity');
 
 export const {
-  historyDays, pinWidget, openAnki, getWidgetBackgroundTransparency, setWidgetBackgroundTransparency, setWidgetTheme,
+  pinWidget, openAnki, getWidgetBackgroundTransparency, setWidgetBackgroundTransparency, setWidgetTheme,
 } = anki;
+export const historyRows: number = anki.historyRows;
+export const historyColumns: number = anki.historyColumns;
+export const historyDays = historyRows * historyColumns;
 
 export const requestAnkiPermission = Effect.tryPromise(() => anki.requestPermission()).pipe(
   Effect.flatMap(Schema.decodeUnknownEffect(Schema.Struct({ granted: Schema.Boolean, canAskAgain: Schema.Boolean }))),
 );
 
 export function renderWidget(
-  streak: number, today: number, history: readonly number[], dailyReviewed: number, dailyLearned: number,
+  streak: number, today: number, history: ReviewHistory, dailyReviewed: number, dailyLearned: number,
   theme: WidgetTheme, purpose: 'widget' | 'preview' = 'widget', language = getLanguage(),
 ) {
   return anki.renderWidget(streak, today, history, dailyReviewed, dailyLearned, theme, purpose, language);
@@ -50,6 +54,12 @@ export function getWidgetTheme(): WidgetTheme {
 }
 
 const count = Schema.Int.check(Schema.isGreaterThanOrEqualTo(0), Schema.isLessThanOrEqualTo(Number.MAX_SAFE_INTEGER));
+const reviewHistory = Schema.Struct({
+  counts: Schema.Array(count).check(Schema.isMinLength(historyDays), Schema.isMaxLength(historyDays)),
+  todayRow: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0), Schema.isLessThan(historyRows)),
+});
+export type ReviewHistory = typeof reviewHistory.Type;
+
 const providerActivity = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal('ready'),
@@ -57,7 +67,7 @@ const providerActivity = Schema.Union([
     newToday: count,
     dueReviews: count,
     streak: count,
-    history: Schema.Array(count).check(Schema.isMinLength(historyDays), Schema.isMaxLength(historyDays)),
+    history: reviewHistory,
     dailyReviewed: count,
     dailyLearned: count,
   }),

@@ -1,8 +1,10 @@
 import type { WidgetTheme } from './themes';
 
+type HexColor = `#${string}`;
+
 export type Palette = {
   background: string; surface: string; subtle: string; hero: string; line: string;
-  text: string; muted: string; accent: string; onAccent: string; heat: string[];
+  text: string; muted: string; accent: string; onAccent: string; heat: readonly HexColor[];
 };
 
 const emilia = {
@@ -16,7 +18,7 @@ const emilia = {
     line: '#534268', text: '#FCF1FF', muted: '#CEC0DD', accent: '#E0BEFF',
     onAccent: '#291634', heat: ['#382C50', '#5C447C', '#8056AB', '#A171CE', '#D4AAFA'],
   },
-};
+} satisfies Record<'light' | 'dark', Palette>;
 
 export const palettes: Record<WidgetTheme, Record<'light' | 'dark', Palette>> = {
   emilia,

@@ -6,6 +6,7 @@ import { historyColumns, historyRows, type ReviewHistory } from './activity';
 import type { Palette } from './appearance';
 import { ReviewStamp } from './ReviewStamp';
 import { copy, weekdays, type Language } from './messages';
+import { cardContentInset } from './screenLayout';
 import { CountUp, Portrait, Section } from './studyComponents';
 import { themes } from './themes';
 import type { useDashboard } from './useDashboard';
@@ -41,7 +42,7 @@ export function TodayScreen({ dashboard, palette, language, celebration, stampIn
       </YStack>
     </YStack>
 
-    <XStack minH={60} rounded={14} bg={actionable ? 'accent' : 'subtle'} px={16} py={6}
+    <XStack minH={60} rounded={14} bg={actionable ? 'accent' : 'subtle'} px={cardContentInset} py={6}
       gap={12} items="center" accessibilityRole="button"
       accessibilityState={{ disabled: !actionable || dashboard.requesting }}
       opacity={actionable && !dashboard.requesting ? 'press:0.80' : undefined}
@@ -56,7 +57,7 @@ export function TodayScreen({ dashboard, palette, language, celebration, stampIn
     <XStack bg="surface" borderColor="border-color" borderWidth={1} rounded={16}>
       {([['reviewed', ready?.today, 'avgReviews', ready?.dailyReviewed], ['learned', ready?.newToday, 'avgNew', ready?.dailyLearned]] as const)
         .map(([label, value, average, averageValue], index) => (
-          <YStack key={label} flex={1} py={14} px={14} gap={4}
+          <YStack key={label} flex={1} py={14} px={cardContentInset - 1} gap={4}
             borderLeftWidth={index > 0 ? 1 : 0} borderLeftColor="border-color">
             <Text color="color" fontSize={13} fontWeight="600">{copy(language, label)}</Text>
             <Text color="color" fontSize={32} fontWeight="700" fontVariant={['tabular-nums']}

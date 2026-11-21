@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { Button, Image, Text, View, XStack, YStack } from 'tamagui';
 
 import { countUpMachine } from './countUpMachine';
+import { cardContentInset, settingsIconWidth } from './screenLayout';
 
 export function Action({ children, onPress, primary, disabled }: {
   children: ReactNode; onPress(): void; primary?: boolean; disabled?: boolean;
@@ -35,11 +36,15 @@ export function Choices<T extends string>({ choices, value, onChange, label }: {
 
 export function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <YStack bg="surface" borderColor="border-color" borderWidth={1} rounded={16} p={15} gap={12}>
+    <YStack bg="surface" borderColor="border-color" borderWidth={1} rounded={16} p={cardContentInset - 1} gap={12}>
       <Text accessibilityRole="header" color="color" fontWeight="700" fontSize={18}>{title}</Text>
       {children}
     </YStack>
   );
+}
+
+export function SettingsIconSlot({ children }: { children: ReactNode }) {
+  return <View w={settingsIconWidth} shrink={0} items="center">{children}</View>;
 }
 
 function AnimatedCount({ value, delay }: { value: number; delay: number }) {

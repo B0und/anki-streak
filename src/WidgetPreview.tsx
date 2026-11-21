@@ -5,6 +5,7 @@ import { YStack } from 'tamagui';
 import { historyDays } from './activity';
 import { useDashboardContext } from './dashboardContext';
 import { getQuestTargets, type WidgetLayout } from './preferences';
+import { screenInset, screenMaxWidth } from './screenLayout';
 import { widgetProps } from './widgetDesign';
 import type { WidgetPreviewSize } from './widgetSizeActor';
 
@@ -20,6 +21,9 @@ const sampleStats = {
   today: 200, newToday: 2, dueReviews: 7, streak: 20, dailyReviewed: 112, dailyLearned: 12,
   history: { counts: Array.from({ length: historyDays }, () => 1), todayRow: 4 },
 };
+
+export const galleryPadding = 7;
+export const galleryBorderWidth = 2;
 
 export function WidgetPreview({ bounds, layout, gallery = false }: {
   bounds: WidgetPreviewSize; layout?: WidgetLayout; gallery?: boolean;
@@ -37,7 +41,9 @@ export function WidgetPreview({ bounds, layout, gallery = false }: {
     targets: getQuestTargets(),
   });
   const maxHeight = gallery && bounds.size === 'compact' ? 118 : 188;
-  const displayWidth = Math.min(width - 48, bounds.width, maxHeight * bounds.width / bounds.height);
+  const displayInset = gallery ? screenInset + galleryPadding + galleryBorderWidth : screenInset + 4;
+  const displayWidth = Math.min(Math.min(width, screenMaxWidth) - displayInset * 2,
+    bounds.width, maxHeight * bounds.width / bounds.height);
 
   return <YStack w={displayWidth} h={displayWidth * bounds.height / bounds.width} self="center"
     rounded={16} overflow="hidden">

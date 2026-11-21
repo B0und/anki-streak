@@ -23,7 +23,7 @@ export default function ThemesRoute() {
           <Image objectFit="contain" source={{ uri: theme[selected ? dashboard.mood : 'happy'] }}
             style={{ width: '100%', height: '100%' }} />
         </YStack>
-        <YStack flex={1} px={12}>
+        <YStack flex={1} self="stretch" pt={36} pb={8} px={12}>
           <Text color="color" fontFamily="display" fontWeight="700" fontSize={23}>{theme.name}</Text>
           <Text color="muted" mt={3}>{sources[id]}</Text>
           {selected && <Text color="accent" mt={7} fontWeight="700">{copy(language, 'choose')}</Text>}

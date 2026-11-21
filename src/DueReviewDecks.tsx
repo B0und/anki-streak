@@ -7,7 +7,8 @@ import { setup, types } from 'xstate';
 import { getDueReviewExcludedDecks, readDecks, setDueReviewExcludedDecks, type AnkiDeck } from './activity';
 import type { Palette } from './appearance';
 import { copy, type Language } from './messages';
-import { Action } from './studyComponents';
+import { settingsIconGap, settingsRowPadding } from './screenLayout';
+import { Action, SettingsIconSlot } from './studyComponents';
 
 const deckSetup = setup({
   schemas: {
@@ -53,17 +54,20 @@ export function DueReviewDecks({ language, palette }: { language: Language; pale
   return <YStack gap={6} pt={12} borderTopWidth={1} borderTopColor="border-color">
     <Text accessibilityRole="header" color="color" fontWeight="700">{copy(language, 'excludedDueDecks')}</Text>
     <Text color="muted" fontSize={13}>{copy(language, 'excludedDueDecksDetail')}</Text>
-    <ScrollView h={136} nestedScrollEnabled>
+    <ScrollView h={136} mx={-settingsRowPadding} nestedScrollEnabled>
       {decks.map(({ id, name }) => {
         const checked = excluded.includes(id);
         return <XStack key={id} accessibilityRole="checkbox" accessibilityState={{ checked }}
-          onPress={loading || unavailable ? undefined : () => send({ type: 'toggle', id })} minH={48} px={10} py={8} gap={10} items="center"
+          onPress={loading || unavailable ? undefined : () => send({ type: 'toggle', id })} minH={48}
+          px={settingsRowPadding} py={8} gap={settingsIconGap} items="center"
           rounded={9} bg={checked ? 'subtle' : 'surface'} opacity="press:0.75">
-          {checked ? <CheckSquare size={18} color={palette.accent} /> : <Square size={18} color={palette.muted} />}
+          <SettingsIconSlot>
+            {checked ? <CheckSquare size={18} color={palette.accent} /> : <Square size={18} color={palette.muted} />}
+          </SettingsIconSlot>
           <Text color="color" flex={1}>{name}</Text>
         </XStack>;
       })}
-      {(decks.length === 0 || unavailable) && <Text color="muted" accessibilityLiveRegion="polite">
+      {(decks.length === 0 || unavailable) && <Text color="muted" mx={settingsRowPadding} accessibilityLiveRegion="polite">
         {copy(language, unavailable ? 'unavailableDueDecks' : loading ? 'loadingDueDecks' : 'emptyDueDecks')}
       </Text>}
     </ScrollView>

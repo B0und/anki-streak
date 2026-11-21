@@ -72,7 +72,7 @@ export function Onboarding({ flow }: { flow: ReturnType<typeof useOnboarding> })
   const description = welcome ? 'onboardingWelcomeDetail' : connect ? 'onboardingConnectDetail' : 'onboardingRoutineDetail';
 
   return <SafeAreaView edges={['bottom']} style={{ flex: 1, backgroundColor: palette.background }}>
-    <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}>
+    <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingTop: Math.min(44, height * .06) }}>
       <YStack self="center" w="100%" maxW={500} px={24} py={12} gap={22}>
         <XStack justify="space-between" items="center" minH={48}>
           <XStack accessibilityLabel={copy(language, 'onboardingStep', { step: welcome ? 1 : connect ? 2 : 3 })}

@@ -9,7 +9,8 @@ import {
   type Appearance, type LanguagePreference,
 } from './preferences';
 import { useRewardSettings } from './rewardSettingsMachine';
-import { Action, Choices } from './studyComponents';
+import { settingsIconGap, settingsRowPadding } from './screenLayout';
+import { Action, Choices, SettingsIconSlot } from './studyComponents';
 import type { useDashboard } from './useDashboard';
 
 export function SettingsScreen({ palette, language, appearance, setAppearance, languagePreference, setLanguage, dashboard }: {
@@ -32,9 +33,12 @@ export function SettingsScreen({ palette, language, appearance, setAppearance, l
       <Text color="muted" fontWeight="600">{copy(language, 'milestone')}</Text>
       {milestones.map((key) => (
         <XStack accessibilityRole="radio" accessibilityState={{ checked: milestone === key }} key={key}
-          onPress={() => send({ type: 'milestone', value: key })} minH={48} px={10} py={8} gap={10} items="center"
+          onPress={() => send({ type: 'milestone', value: key })} minH={48} mx={-settingsRowPadding}
+          px={settingsRowPadding} py={8} gap={settingsIconGap} items="center"
           rounded={8} bg={milestone === key ? 'subtle' : 'transparent'} opacity="press:0.75">
-          {milestone === key ? <CheckCircle2 size={18} color={palette.accent} /> : <Circle size={18} color={palette.muted} />}
+          <SettingsIconSlot>
+            {milestone === key ? <CheckCircle2 size={18} color={palette.accent} /> : <Circle size={18} color={palette.muted} />}
+          </SettingsIconSlot>
           <Text color="color" flex={1}>{copy(language, key)}</Text>
         </XStack>
       ))}
@@ -52,9 +56,11 @@ export function SettingsScreen({ palette, language, appearance, setAppearance, l
         ['notifications', notifications, (enabled: boolean) => send({ type: 'notifications', enabled })],
         ['animate', animate, (enabled: boolean) => send({ type: 'animate', enabled })],
       ] as const).map(([key, value, action]) => (
-        <XStack key={key} gap={10} minH={48} items="center" justify="space-between">
+        <XStack key={key} gap={settingsIconGap} minH={48} items="center">
+          <SettingsIconSlot>
+            {key === 'notifications' ? <Bell size={18} color={palette.muted} /> : <Sparkles size={18} color={palette.muted} />}
+          </SettingsIconSlot>
           <Text color="color" flex={1}>{copy(language, key)}</Text>
-          {key === 'notifications' ? <Bell size={18} color={palette.muted} /> : <Sparkles size={18} color={palette.muted} />}
           <Switch accessibilityLabel={copy(language, key)} hitSlop={8} checked={value} onCheckedChange={action}
             bg={value ? 'accent' : 'border-color'} borderColor="transparent">
             <Switch.Thumb bg={value ? 'on-accent' : 'surface'} />
@@ -88,8 +94,8 @@ export function SettingsGroup({ title, icon: Icon, color, children }: {
   children: React.ReactNode;
 }) {
   return <YStack gap={10} pt={14} pb={10} borderTopWidth={1} borderTopColor="border-color">
-    <XStack gap={10} items="center">
-      <Icon size={20} color={color} />
+    <XStack gap={settingsIconGap} items="center">
+      <SettingsIconSlot><Icon size={20} color={color} /></SettingsIconSlot>
       <Text accessibilityRole="header" color="color" fontSize={17} fontWeight="700">{title}</Text>
     </XStack>
     {children}

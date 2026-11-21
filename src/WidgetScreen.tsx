@@ -37,7 +37,7 @@ export function WidgetScreen({ openLayouts, openThemes }: {
           <MoodIcon color={palette.accent} size={22} />
         </View>
       </XStack>
-      <YStack h={188}>
+      <YStack h={188} justify="center">
         {bounds && <WidgetPreview bounds={bounds} />}
       </YStack>
       {showDimensions && <YStack h={56} overflow="hidden">
@@ -55,13 +55,13 @@ export function WidgetScreen({ openLayouts, openThemes }: {
     <Section title={copy(language, 'appearance')}>
       <XStack accessibilityRole="button" onPress={openThemes} minH={54} py={5}
         items="center" gap={10} opacity="press:0.75">
-        <XStack w={42} h={42} rounded={9} bg="hero" items="center" justify="center" overflow="hidden">
-          <Image source={{ uri: theme[dashboard.mood] }} objectFit="contain" style={{ width: 36, height: 36 }} />
-        </XStack>
         <YStack flex={1} gap={2}>
           <Text color="color" fontWeight="700">{copy(language, 'theme')}</Text>
           <Text color="muted" fontSize={13}>{theme.name}</Text>
         </YStack>
+        <XStack w={42} h={42} rounded={9} bg="hero" items="center" justify="center" overflow="hidden">
+          <Image source={{ uri: theme[dashboard.mood] }} objectFit="contain" style={{ width: 36, height: 36 }} />
+        </XStack>
         <ChevronRight size={20} color={palette.muted} />
       </XStack>
       <XStack accessibilityRole="button" onPress={() => openLayouts(size)} minH={48} gap={10}

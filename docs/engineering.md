@@ -10,6 +10,10 @@ For VS Code, the workspace recommends the Oxc extension and selects the native T
 
 The project vendors [Impeccable](../.agents/skills/impeccable/SKILL.md) 4.10.0 for Codex. The launcher downloads its pinned engine on first use. Refresh the skill with `bunx impeccable@4.10.0 install --project --providers=codex --no-hooks -y`, updating the version when upgrading. [Upstream repository](https://github.com/pbakaus/impeccable)
 
+## App screen alignment
+
+The app uses a centered 640 dp frame for screen content and tab buttons, with a 20 dp screen inset and 16 dp card content inset. In Settings, reserve 20 dp for the icon column and 10 dp between the icon and label. On Progress, quest and achievement rows share the same icon center, label start, and trailing edge. Use the project-local [Gridlines skill](../.agents/skills/gridlines/SKILL.md) to check new rows and screens against those positions.
+
 ## Read the installed API first
 
 Start with `node_modules/effect/AGENTS.md`. Follow its examples for Schema, services, schedules, resources, or testing. Search `node_modules/effect/src` before using an unfamiliar API. The installed Effect and `@xstate/effect` versions are the authority for what this app can call.

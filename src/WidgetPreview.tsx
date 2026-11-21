@@ -1,5 +1,6 @@
 import { requireNativeView } from 'expo';
 import { StyleSheet, useWindowDimensions, type ViewProps } from 'react-native';
+import Svg, { Defs, Path, Pattern, Rect } from 'react-native-svg';
 import { YStack } from 'tamagui';
 
 import { historyDays } from './activity';
@@ -39,8 +40,16 @@ export function WidgetPreview({ bounds, layout, gallery = false }: {
   const maxHeight = gallery && bounds.size === 'compact' ? 118 : 188;
   const displayWidth = Math.min(width - 48, bounds.width, maxHeight * bounds.width / bounds.height);
 
-  return <YStack w={displayWidth} h={displayWidth * bounds.height / bounds.width} self="center" bg="hero"
+  return <YStack w={displayWidth} h={displayWidth * bounds.height / bounds.width} self="center" bg="#23303A"
     rounded={16} overflow="hidden">
+    <Svg width="100%" height="100%" style={StyleSheet.absoluteFill} pointerEvents="none" accessible={false}>
+      <Defs>
+        <Pattern id="transparency-grid" width={20} height={20} patternUnits="userSpaceOnUse">
+          <Path d="M0 0h10v10H0z M10 10h10v10H10z" fill="#36434D" />
+        </Pattern>
+      </Defs>
+      <Rect width="100%" height="100%" fill="url(#transparency-grid)" />
+    </Svg>
     <NativePreview pointerEvents="none" style={StyleSheet.absoluteFill} widgetName="AnkiStreak"
       sampleProps={stats || dashboard.activity ? JSON.stringify(props) : ''} previewMood={dashboard.previewMood ?? 'live'}
       widthDp={bounds.width} heightDp={bounds.height} />

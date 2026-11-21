@@ -94,6 +94,9 @@ export default defineConfig({
   ignorePatterns: [
     ...cloudflare.ignorePatterns ?? [],
     '.agents/skills/impeccable/**',
+    // The vendored Gridlines browser tools retain their upstream source and CLI output.
+    '.agents/skills/gridlines/audit.mjs',
+    '.agents/skills/gridlines/probe.js',
     '.agent_sources/**',
     'scripts/.widget-check-*/**',
     'android/**',

@@ -28,7 +28,7 @@ The in-app updater is available on Android 8.0 or later with the project's relea
 
 ## Build an APK
 
-Use Bun, Node.js, JDK 21, and the Android SDK. Install Android SDK Platform 37.0, Build-Tools 37.0.0, NDK 27.1.12297006, and CMake 3.22.1. Set `JAVA_HOME` and `ANDROID_HOME`.
+Use Bun, Node.js, Python 3, JDK 21, and the Android SDK. Install Android SDK Platform 37.0, Build-Tools 37.0.0, NDK 27.1.12297006, and CMake 3.22.1. Set `JAVA_HOME` and `ANDROID_HOME`.
 
 ```sh
 bun install --frozen-lockfile
@@ -43,13 +43,19 @@ Run `bun run lint` for Oxlint, `bun run typecheck` for TypeScript, and `bunx tam
 
 For a GitHub release, set `expo.version` in `app.json` to the release version and increase `expo.android.versionCode`. Sign the APK with the existing release key. Publish a stable release tagged `vMAJOR.MINOR.PATCH` and upload the APK as `Anki-Streak.apk`. Place it at `dist/<tag>/Anki-Streak.apk` and run `scripts/publish-release.sh <tag> <release-notes.md>` from the project root. This pushes the signed APK to a staging branch and GitHub Actions publishes the release using its repository token. After you verify the public release, delete the staging branch with `git push origin --delete release-assets/<tag>`. The updater reads the version from the tag and the SHA-256 digest from GitHub's asset metadata.
 
+### APK size and character art
+
+The release script checks the signed APK before staging it, and the publisher repeats the same check against the tagged source. The APK has a 28 MB budget for everything outside the character portraits. Each waiting and happy portrait has its own 800 kB budget, so a new character has room for up to 1.6 MB of art. Check a built APK locally with `python3 scripts/check-apk-size.py path/to/Anki-Streak.apk`.
+
+Place new character art in the Android module’s `drawable-nodpi` directory as `<character>_waiting.webp` and `<character>_happy.webp`. Encode each with `cwebp -lossless -exact -m 6 input.png -o output.webp`. Use the Android drawable name in the theme so the app and launcher share one copy. Compare the decoded image to the original before replacing it. Review any budget change along with the files that need the extra space.
+
 ## State transitions
 
 The dashboard and its screens observe XState 6 actors. Effect 4 handles provider validation, cancellable release checks, and Android requests. Android owns launcher dimensions, OS permissions, and background scheduling. See the [glossary](GLOSSARY.md) for app terms.
 
 ## Development checks
 
-Run `bun run check` locally for TypeScript and Android lint, type checking, and widget refresh verification. The checks run concurrently once the Android project exists. Use the [Android build prerequisites](#build-an-apk) for the native checks. The [engineering guide](docs/engineering.md) covers editor setup.
+Run `bun run check` locally for TypeScript and Android lint, type checking, widget refresh verification, and portrait validation. The checks run concurrently once the Android project exists. Use the [Android build prerequisites](#build-an-apk) for the native checks. The [engineering guide](docs/engineering.md) covers editor setup.
 
 | Flow | Owner |
 | --- | --- |

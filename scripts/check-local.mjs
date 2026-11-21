@@ -4,6 +4,7 @@ const android = ['Android', ['bash', 'scripts/check-android.sh']];
 const checks = [
   ['TypeScript lint', ['bun', 'run', 'lint']],
   ['TypeScript', ['bun', 'run', 'typecheck']],
+  ['Portrait assets', ['python3', 'scripts/check-apk-size.py']],
   ['Widget model', ['bun', 'scripts/check-widget-model.mjs']],
   ['Widget refresh', ['bun', 'scripts/check-widget-refresh.mjs']],
 ];

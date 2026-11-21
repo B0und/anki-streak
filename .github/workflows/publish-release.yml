@@ -51,6 +51,11 @@ jobs:
           [[ "$package" == "package: name='com.ankistreak.anime' "* ]]
           [[ "$package" == *" versionName='${tag#v}' "* ]]
 
+          mkdir source
+          gh api "repos/$GH_REPO/tarball/$tag" |
+            tar -xz -C source --strip-components=1 --wildcards '*/scripts/check-apk-size.py' '*/modules/anki-activity/android/src/main/res/drawable-nodpi'
+          python3 source/scripts/check-apk-size.py Anki-Streak.apk
+
           apk_version_code() {
             local metadata
             metadata=$("$tools_dir/aapt2" dump badging "$1")

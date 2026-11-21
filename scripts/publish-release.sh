@@ -6,6 +6,7 @@ notes=${2:?Provide a release notes file}
 [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
 apk="dist/$tag/Anki-Streak.apk"
 [[ -s "$apk" && -s "$notes" ]]
+python3 scripts/check-apk-size.py "$apk"
 
 tag_commit=$(git rev-parse "refs/tags/$tag^{commit}")
 git merge-base --is-ancestor "$tag_commit" HEAD

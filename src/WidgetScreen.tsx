@@ -56,7 +56,7 @@ export function WidgetScreen({ openLayouts, openThemes }: {
       <XStack accessibilityRole="button" onPress={openThemes} minH={54} py={5}
         items="center" gap={10} opacity="press:0.75">
         <XStack w={42} h={42} rounded={9} bg="hero" items="center" justify="center" overflow="hidden">
-          <Image source={theme[dashboard.mood]} objectFit="contain" style={{ width: 36, height: 36 }} />
+          <Image source={{ uri: theme[dashboard.mood] }} objectFit="contain" style={{ width: 36, height: 36 }} />
         </XStack>
         <YStack flex={1} gap={2}>
           <Text color="color" fontWeight="700">{copy(language, 'theme')}</Text>

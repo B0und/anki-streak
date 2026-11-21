@@ -20,7 +20,7 @@ export default function ThemesRoute() {
         bg="surface" borderColor={selected ? 'accent' : 'border-color'} borderWidth={1.5} rounded={18}
         items="center" overflow="hidden" minH={127} opacity="press:0.8">
         <YStack bg={theme.card} w="43%" h={126} p={5} overflow="hidden">
-          <Image objectFit="contain" source={theme[selected ? dashboard.mood : 'happy']}
+          <Image objectFit="contain" source={{ uri: theme[selected ? dashboard.mood : 'happy'] }}
             style={{ width: '100%', height: '100%' }} />
         </YStack>
         <YStack flex={1} px={12}>

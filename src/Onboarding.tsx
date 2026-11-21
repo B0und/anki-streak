@@ -67,7 +67,7 @@ export function Onboarding({ flow }: { flow: ReturnType<typeof useOnboarding> })
   const activity = dashboard.activity;
   const ready = activity?.kind === 'ready';
   const canConnect = activity?.kind === 'permission';
-  const portrait: unknown = themes[dashboard.themeId].happy;
+  const portrait = themes[dashboard.themeId].happy;
   const title = welcome ? 'onboardingWelcome' : connect ? 'onboardingConnect' : 'onboardingRoutine';
   const description = welcome ? 'onboardingWelcomeDetail' : connect ? 'onboardingConnectDetail' : 'onboardingRoutineDetail';
 
@@ -88,8 +88,8 @@ export function Onboarding({ flow }: { flow: ReturnType<typeof useOnboarding> })
 
         <YStack gap={14}>
           <YStack h={Math.min(height * .30, 238)} rounded={18} bg="hero" overflow="hidden" items="center" justify="center">
-            {welcome && typeof portrait === 'number'
-              ? <Image source={portrait} resizeMode="contain" accessibilityIgnoresInvertColors
+            {welcome
+              ? <Image source={{ uri: portrait }} resizeMode="contain" accessibilityIgnoresInvertColors
                 style={{ width: '100%', height: '100%' }} />
               : <View w={104} h={104} rounded={52} borderWidth={1} borderColor="border-color" bg="surface" items="center" justify="center">
                 {connect ? <BookOpen color={palette.accent} size={46} strokeWidth={1.55} />

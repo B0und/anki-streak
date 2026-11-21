@@ -1,6 +1,5 @@
 import { useActor } from '@xstate/react';
 import type { ReactNode } from 'react';
-import { Image as NativeImage } from 'react-native';
 import { Button, Image, Text, View, XStack, YStack } from 'tamagui';
 
 import { countUpMachine } from './countUpMachine';
@@ -56,13 +55,11 @@ export function CountUp({ value, delay, celebration }: {
   return <AnimatedCount key={value} value={value} delay={delay} />;
 }
 
-export function Portrait({ source, height, maxWidth }: {
-  source: number; height: number; maxWidth: number;
+export function Portrait({ drawable, aspect, height, maxWidth }: {
+  drawable: string; aspect: number; height: number; maxWidth: number;
 }) {
-  const image = NativeImage.resolveAssetSource(source);
-  const aspect = image?.width && image.height ? image.width / image.height : 1;
   const portraitHeight = Math.min(height, maxWidth / aspect);
-  return <Image source={source} objectFit="contain" style={{
+  return <Image source={{ uri: drawable }} objectFit="contain" style={{
     position: 'absolute', bottom: 0, right: 0, height: portraitHeight,
     width: portraitHeight * aspect,
   }} />;

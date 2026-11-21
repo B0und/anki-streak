@@ -23,10 +23,11 @@ export function TodayScreen({ dashboard, palette, language, celebration, stampIn
   const reviewLabel = ready
     ? canStart ? 'startReviews' : ready.today > 0 ? 'reviewsComplete' : 'noReviewsDue'
     : canConnect ? 'connect' : dashboard.initialCheckComplete ? 'reviewsUnavailable' : 'startReviews';
-  const portrait = themes[themeId][ready?.mood ?? 'waiting'];
+  const theme = themes[themeId];
+  const mood = ready?.mood ?? 'waiting';
   return <>
     <YStack minH={208} rounded={22} bg="hero" overflow="hidden" justify="center">
-      <Portrait source={portrait} height={198} maxWidth={Math.min(width * .47, 240)} />
+      <Portrait drawable={theme[mood]} aspect={theme.portraitAspect[mood]} height={198} maxWidth={Math.min(width * .47, 240)} />
       <YStack w="53%" px={10} py={20} items="center">
         <YStack w="100%" maxW={192} items="center" justify="center" minH={112}>
           <VictoryLaurels color={palette.accent} />

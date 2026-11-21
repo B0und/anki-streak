@@ -53,14 +53,6 @@ export default defineConfig({
       },
     },
     {
-      files: ['src/themes.ts'],
-      rules: { 'typescript/no-require-imports': 'off' }, // Metro bundles the static PNG requires.
-    },
-    {
-      files: ['src/themes.ts', 'src/TodayScreen.tsx', 'src/WidgetScreen.tsx', 'src/app/**/widget/themes.tsx'],
-      rules: { 'typescript/no-unsafe-assignment': 'off' }, // Metro's require typing for portrait assets is any.
-    },
-    {
       files: ['src/activity.ts'],
       rules: {
         'quality/no-unknown-returns': 'off', // The native interface stays unknown until its Effect Schema decoders.

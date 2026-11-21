@@ -47,7 +47,7 @@ For a GitHub release, set `expo.version` in `app.json` to the release version an
 
 The release script checks the signed APK before staging it, and the publisher repeats the same check against the tagged source. The APK has a 28 MB budget for everything outside the character portraits. Each waiting and happy portrait has its own 800 kB budget, so a new character has room for up to 1.6 MB of art. Check a built APK locally with `python3 scripts/check-apk-size.py path/to/Anki-Streak.apk`.
 
-Place new character art in the Android module’s `drawable-nodpi` directory as `<character>_waiting.webp` and `<character>_happy.webp`. Encode each with `cwebp -lossless -exact -m 6 input.png -o output.webp`. Use the Android drawable name in the theme so the app and launcher share one copy. Compare the decoded image to the original before replacing it. Review any budget change along with the files that need the extra space.
+Place new character art in the Android module’s `drawable-nodpi` directory as `<character>_waiting.webp` and `<character>_happy.webp`. Encode each with `cwebp -lossless -exact -m 6 -q 100 input.png -o output.webp`. In lossless mode, `-q 100` sets the encoder’s compression effort. Use the Android drawable name in the theme so the app and launcher share one copy. Compare the decoded RGBA pixels and dimensions to the original before replacing it. Review any budget change along with the files that need the extra space.
 
 ## State transitions
 

@@ -180,7 +180,32 @@ try {
     read.resolve();
     resumed.widgetRefreshActor.stop();
   }
-  console.log('Widget refresh passed layout, portrait, language, opacity, queued publication, and cold-start activity checks.');
+  const questsHost = makeHost();
+  questsHost.state.layout = 'dailyQuests';
+  questsHost.first.finish();
+  globalThis[hostKey] = questsHost;
+  const quests = await import(`${bundle}?quests`);
+  try {
+    await quests.refreshWidget();
+    const initial = questsHost.publications.at(-1).props.cards;
+    assert.equal(initial.compact.value, '2/4');
+    assert.deepEqual(initial.tall.quests.goals.map((goal) => goal.value), ['2/20', '1/5']);
+
+    const blocked = questsHost.holdNext();
+    quests.republishWidgetAppearance();
+    await blocked.start;
+    questsHost.preferences.set('reviewTarget', '2');
+    questsHost.preferences.set('newTarget', '1');
+    quests.republishWidgetAppearance();
+    blocked.finish();
+    await waitFor(quests.widgetRefreshActor, (snapshot) => snapshot.matches({ appearance: 'quiet' }), waitOptions);
+    const updated = questsHost.publications.at(-1).props.cards;
+    assert.equal(updated.tall.value, '4/4');
+    assert.deepEqual(updated.tall.quests.goals.map((goal) => goal.fraction), [1, 1]);
+  } finally {
+    quests.widgetRefreshActor.stop();
+  }
+  console.log('Widget refresh passed layout, portrait, language, opacity, queued publication, cold-start activity, and daily quest checks.');
 } finally {
   delete globalThis[hostKey];
   if (await Bun.file(bundle).exists()) unlinkSync(bundle);

@@ -3,7 +3,8 @@ import { Text, View, XStack, YStack } from 'tamagui';
 
 import { useDashboardContext } from './dashboardContext';
 import { copy } from './messages';
-import { questTargets, useProgress } from './progressContext';
+import { getQuestTargets } from './preferences';
+import { useProgress } from './progressContext';
 import { Screen } from './Screen';
 import { achievements, dailyQuests } from './studyProgress';
 
@@ -14,7 +15,7 @@ export function ProgressScreen() {
   const { dashboard, language, palette } = useDashboardContext();
   const { earned, replay } = useProgress();
   const activity = dashboard.activity?.kind === 'ready' ? dashboard.activity : null;
-  const quests = dailyQuests(activity, questTargets());
+  const quests = dailyQuests(activity, getQuestTargets());
   const completed = quests.filter((quest) => quest.value >= quest.target).length;
 
   return <Screen title={copy(language, 'progress')}>

@@ -3,6 +3,7 @@ import { Effect } from 'effect';
 import { AppState } from 'react-native';
 import { createCallbackLogic, setup, types } from 'xstate';
 
+import { republishWidgetAppearance } from './widgetRefresh';
 import { getTarget, hasTarget, milestones, preference, settings, type Milestone } from './preferences';
 
 function initialPreferences() {
@@ -56,7 +57,10 @@ const rewards = rewardSetup.createMachine({
     draft: ({ context, event }, enq) => {
       if (!hasTarget(context.milestone)) return;
       const draft = event.value.replace(/[^0-9]/g, '').slice(0, 4);
-      if (Number(draft) > 0) enq(settings.setPreference, context.milestone, draft);
+      if (Number(draft) > 0) {
+        enq(settings.setPreference, context.milestone, draft);
+        if (context.milestone !== 'streakTarget') enq(republishWidgetAppearance);
+      }
       return { context: { ...context, draft } };
     },
     finishEditing: ({ context }) => ({ context: { ...context, draft: targetText(context.milestone) } }),

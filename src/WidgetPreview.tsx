@@ -4,7 +4,7 @@ import { YStack } from 'tamagui';
 
 import { historyDays } from './activity';
 import { useDashboardContext } from './dashboardContext';
-import type { WidgetLayout } from './preferences';
+import { getQuestTargets, type WidgetLayout } from './preferences';
 import { widgetProps } from './widgetDesign';
 import type { WidgetPreviewSize } from './widgetSizeActor';
 
@@ -17,7 +17,7 @@ const NativePreview = requireNativeView<ViewProps & {
 }>('ExpoWidgets', 'WidgetPreviewView');
 
 const sampleStats = {
-  today: 200, streak: 20, dailyReviewed: 112, dailyLearned: 12,
+  today: 200, newToday: 2, dueReviews: 7, streak: 20, dailyReviewed: 112, dailyLearned: 12,
   history: { counts: Array.from({ length: historyDays }, () => 1), todayRow: 4 },
 };
 
@@ -34,6 +34,7 @@ export function WidgetPreview({ bounds, layout, gallery = false }: {
     language,
     layouts: layout ? { ...layouts, [bounds.size]: layout } : layouts,
     transparency: dashboard.transparency,
+    targets: getQuestTargets(),
   });
   const maxHeight = gallery && bounds.size === 'compact' ? 118 : 188;
   const displayWidth = Math.min(width - 48, bounds.width, maxHeight * bounds.width / bounds.height);

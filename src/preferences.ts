@@ -5,7 +5,7 @@ export const languageOptions = ['system', 'en', 'ru'] as const;
 export const widgetSizes = ['compact', 'tall'] as const;
 export type WidgetSize = (typeof widgetSizes)[number];
 
-export const widgetLayouts = ['current', 'focus', 'first'] as const;
+export const widgetLayouts = ['current', 'focus', 'first', 'dailyQuests'] as const;
 export const milestones = ['firstReview', 'finishDue', 'reviewTarget', 'newTarget', 'streakTarget'] as const;
 
 export type Appearance = (typeof appearanceOptions)[number];
@@ -52,4 +52,8 @@ export function hasTarget(milestone: Milestone): milestone is keyof typeof defau
 export function getTarget(key: keyof typeof defaultTargets): number {
   const target = Number(settings.getPreference(key));
   return Number.isInteger(target) && target >= 1 && target <= 9999 ? target : defaultTargets[key];
+}
+
+export function getQuestTargets() {
+  return { reviews: getTarget('reviewTarget'), newCards: getTarget('newTarget') };
 }

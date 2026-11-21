@@ -9,7 +9,7 @@ import {
   getWidgetTheme, getWidgetBackgroundTransparency, readActivityEffect, readCachedActivity,
   setWidgetBackgroundTransparency, type AnkiActivity,
 } from './activity';
-import { getLanguage, getWidgetLayouts } from './preferences';
+import { getLanguage, getQuestTargets, getWidgetLayouts } from './preferences';
 import { recordReviewMilestone } from './celebration';
 import { widgetProps } from './widgetDesign';
 
@@ -39,6 +39,7 @@ const publishLatest = Effect.suspend(() => publishing.withPermit(
       language: getLanguage(),
       layouts: getWidgetLayouts(),
       transparency: getWidgetBackgroundTransparency(),
+      targets: getQuestTargets(),
     });
     yield* Effect.tryPromise({
       try: () => publishSnapshot('AnkiStreak', JSON.stringify(props)),

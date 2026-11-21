@@ -10,6 +10,11 @@ export type WidgetCard = {
   shortLabel?: string;
   shortSecondary?: string;
   averages?: string;
+  quests?: {
+    completed: number;
+    total: number;
+    goals: ReadonlyArray<{ label: string; value: string; fraction: number }>;
+  };
   days?: ReadonlyArray<{ label: string; state: 'reviewed' | 'missed' | 'today' | 'today-reviewed' | 'future' }>;
 };
 
@@ -42,20 +47,23 @@ function AnkiStreak(
   const card = cards?.[layout];
   const tall = layout === 'tall';
   const narrow = widgetWidth < 240;
-  const short = height < 100;
   const portraitHappy = previewMood === 'happy' || (previewMood !== 'waiting' && happy);
   const portrait = portraitHappy ? happyDrawable ?? waitingDrawable : waitingDrawable;
   const aspect = (portraitHappy ? portraitAspect?.happy : portraitAspect?.waiting) ?? 1;
   const margin = narrow ? 10 : 16;
-  const footer = tall && card?.days ? (narrow ? 34 : 42) : 0;
-  const available = height - footer;
+  const questFooter = tall && card?.quests && height >= 126 ? (narrow ? 44 : 52) : 0;
+  const weekFooter = tall && card?.days ? (narrow ? 34 : 42) : 0;
+  const available = height - questFooter - weekFooter;
+  const short = (card?.quests ? available : height) < 100;
   const stacked = tall && available >= Math.max(230, widgetWidth * 0.82);
   const textHeight = stacked ? available * 0.42 : available;
-  const imageWidthLimit = widgetWidth * (stacked ? 0.88 : tall ? 0.59 : 0.46);
+  const imageWidthLimit = widgetWidth * (stacked ? 0.88 : tall ? (card?.quests ? 0.55 : 0.59) : 0.46);
   const imageHeightLimit = stacked ? available - textHeight : available - 10;
   const imageHeight = Math.max(1, Math.min(imageHeightLimit, (imageWidthLimit - 6) / aspect));
   const imageWidth = imageHeight * aspect;
   const textWidth = Math.max(1, widgetWidth - (stacked ? margin : imageWidthLimit) - margin);
+  const questCompleted = card?.quests?.completed ?? 0;
+  const questSegmentWidth = Math.max(6, Math.min(24, Math.floor(textWidth / (card?.quests?.total ?? 1)) - 4));
   const numberMax = tall ? (narrow ? 42 : 64) : short ? 34 : 52;
   const valueSize = Math.min(numberMax, textWidth / Math.max(1, (card?.value.length ?? 1) * 0.63), textHeight * (short ? card?.averages ? 0.29 : 0.35 : 0.45));
   const labelSize = narrow || short ? 11 : 15;
@@ -76,18 +84,52 @@ function AnkiStreak(
                 <Text color="#DDD7CF" style={{ fontSize: labelSize }} maxLines={narrow && !short ? 2 : 1}>
                   {narrow && short ? card.shortLabel ?? card.label : card.label}
                 </Text>
-                <Text color={card.accent} style={{ fontSize: short ? 11 : narrow ? 14 : 18, fontWeight: 'bold' }}
+                {card.quests ? (
+                  <Row modifiers={[padding(0, short ? 4 : 7, 0, 0)]}>
+                    {Array.from({ length: card.quests.total }, (_, index) => (
+                      <Box key={index} modifiers={[padding(0, 0, 4, 0)]}>
+                        <Box modifiers={[
+                          size(questSegmentWidth, short ? 4 : 5),
+                          background(index < questCompleted ? card.accent : card.accent + '37'),
+                          cornerRadius(2),
+                        ]} />
+                      </Box>
+                    ))}
+                  </Row>
+                ) : <Text color={card.accent} style={{ fontSize: short ? 11 : narrow ? 14 : 18, fontWeight: 'bold' }}
                   modifiers={[padding(0, short ? 4 : 12, 0, 0)]} maxLines={short ? 1 : 2}>
                   {narrow && short ? card.shortSecondary ?? card.secondary : card.secondary}
-                </Text>
-                {card.averages && !footer && <Text color="#DDD7CF" style={{ fontSize: 10 }}
+                </Text>}
+                {card.averages && !weekFooter && <Text color="#DDD7CF" style={{ fontSize: 10 }}
                   modifiers={[padding(0, short ? 0 : 4, 0, 0)]} maxLines={1}>{card.averages}</Text>}
               </Column>
             </Box>
           </Box>
-          {footer > 0 && card.days && <Column>
+          {questFooter > 0 && card.quests && <Column>
             <Box modifiers={[size(widgetWidth, 1), background(card.accent + '33')]} />
-            <Row horizontalArrangement="center" verticalAlignment="center" modifiers={[size(widgetWidth, footer - 1)]}>
+            <Row horizontalArrangement="center" verticalAlignment="center" modifiers={[size(widgetWidth, questFooter - 1)]}>
+              {card.quests.goals.map(({ label, value, fraction }) => {
+                const goalWidth = Math.floor((widgetWidth - 2 * margin) / 2);
+                const track = goalWidth - 12;
+                const filled = Math.round(track * fraction);
+                return <Column key={label} modifiers={[width(goalWidth), padding(6, 0, 6, 0)]}>
+                  <Row verticalAlignment="center" modifiers={[width(track)]}>
+                    <Text color="#DDD7CF" style={{ fontSize: narrow ? 10 : 13 }} maxLines={1}>{label}</Text>
+                    <Text color={card.accent} style={{ fontSize: narrow ? 10 : 13, fontWeight: 'bold' }}
+                      modifiers={[padding(6, 0, 0, 0)]} maxLines={1}>{value}</Text>
+                  </Row>
+                  <Box modifiers={[padding(0, 5, 0, 0)]}>
+                    <Box contentAlignment="centerStart" modifiers={[size(track, 4), background(card.accent + '37'), cornerRadius(2)]}>
+                      {filled > 0 && <Box modifiers={[size(filled, 4), background(card.accent), cornerRadius(2)]} />}
+                    </Box>
+                  </Box>
+                </Column>;
+              })}
+            </Row>
+          </Column>}
+          {weekFooter > 0 && card.days && <Column>
+            <Box modifiers={[size(widgetWidth, 1), background(card.accent + '33')]} />
+            <Row horizontalArrangement="center" verticalAlignment="center" modifiers={[size(widgetWidth, weekFooter - 1)]}>
               {card.days.map(({ label, state }) => {
                 const dayWidth = Math.floor((widgetWidth - 2 * margin) / 7);
                 const current = state === 'today' || state === 'today-reviewed';

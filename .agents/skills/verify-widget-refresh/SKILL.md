@@ -12,7 +12,7 @@ Run `bun run check` from the repository root. To isolate the verification, run `
 ## Coverage and code mapping
 
 - [WidgetRefresh.tla](../../../verification/widget-refresh/WidgetRefresh.tla) checks that a queued request submits the current inputs when it gets the publication permit. The submit step represents the handoff to Android.
-- [The actor check](../../../scripts/check-widget-refresh.mjs) holds a native submission open and changes review data, layout, theme, language, and opacity. It checks the subsequent JSON sent to Android, including the switch from Streak First to Daily Progress. It also cold-starts the actor with the last successful review snapshot and holds the provider read open to verify the displayed counts stay available.
+- [The actor check](../../../scripts/check-widget-refresh.mjs) holds a native submission open and changes review data, layout, theme, language, and opacity. It checks the subsequent JSON sent to Android, including the switch from Streak First to Daily Progress. It also cold-starts the actor with the last successful review snapshot and holds the provider read open to verify the displayed counts stay available. The Daily Quests scenario edits review targets during a pending publication and checks the next widget snapshot.
 - Verify Android rendering separately. The preview builds its own snapshot from the current app preferences through the same renderer as the launcher.
 
 ## Investigate a failure

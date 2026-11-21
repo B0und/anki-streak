@@ -3,7 +3,7 @@ import { compileMessage } from '@lingui/message-utils/compileMessage';
 
 const en = {
   progress: 'Progress',
-  dailyQuests: 'Daily quests',
+  dailyQuests: 'Daily quests', widgetDailyQuests: 'Daily quests',
   questsComplete: '{count} of {total} done',
   questsUnavailable: 'Connect AnkiDroid to track today’s quests.',
   questDone: 'Done',
@@ -101,7 +101,7 @@ const en = {
 
 const ru: Record<keyof typeof en, string> = {
   progress: 'Прогресс',
-  dailyQuests: 'Ежедневные задания',
+  dailyQuests: 'Ежедневные задания', widgetDailyQuests: 'Задания дня',
   questsComplete: '{count} из {total} выполнено',
   questsUnavailable: 'Подключи AnkiDroid, чтобы отслеживать задания на сегодня.',
   questDone: 'Готово',

@@ -17,7 +17,10 @@ export function readEarned(value: string | null): Achievement[] {
   return achievements.flatMap(({ id }) => stored.has(id) ? [id] : []);
 }
 
-export function dailyQuests(activity: StudyActivity | null, targets: { reviews: number; newCards: number }) {
+export function dailyQuests(
+  activity: Pick<StudyActivity, 'today' | 'newToday' | 'dueReviews'> | null,
+  targets: { reviews: number; newCards: number },
+) {
   return [
     { id: 'firstReview', title: 'firstReview', value: activity?.today ? 1 : 0, target: 1 },
     { id: 'reviewTarget', title: 'questReviews', value: activity?.today ?? 0, target: targets.reviews },

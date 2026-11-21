@@ -1,7 +1,8 @@
 import type { ReviewHistory } from './activity';
 import type { WidgetCard, WidgetProps } from './AnkiWidget';
 import { copy, weekdays, type Language } from './messages';
-import type { WidgetLayout, WidgetSize } from './preferences';
+import type { getQuestTargets, WidgetLayout, WidgetSize } from './preferences';
+import { dailyQuests, type StudyActivity } from './studyProgress';
 import { themes, type WidgetTheme } from './themes';
 
 function widgetBackdrop(color: `#${string}`, transparency: number): `#${string}` {
@@ -9,7 +10,29 @@ function widgetBackdrop(color: `#${string}`, transparency: number): `#${string}`
   return `${color}${alpha}`;
 }
 
-function widgetCard(layout: WidgetLayout, language: Language, stats: WidgetStats, accent: `#${string}`): WidgetCard {
+function widgetCard(
+  layout: WidgetLayout, language: Language, stats: WidgetStats, accent: `#${string}`,
+  targets: ReturnType<typeof getQuestTargets>,
+): WidgetCard {
+  if (layout === 'dailyQuests') {
+    const quests = dailyQuests(stats, targets);
+    const completed = quests.filter(({ value, target }) => value >= target).length;
+    const goals = quests.flatMap(({ id, value, target }) => {
+      if (id !== 'reviewTarget' && id !== 'newTarget') return [];
+      return [{
+        label: copy(language, id === 'reviewTarget' ? 'shortReviews' : 'newCards'),
+        value: `${Math.min(value, target)}/${target}`,
+        fraction: Math.min(1, value / target),
+      }];
+    });
+    return {
+      value: `${completed}/${quests.length}`,
+      label: copy(language, 'widgetDailyQuests'),
+      secondary: '',
+      accent,
+      quests: { completed, total: quests.length, goals },
+    };
+  }
   const focus = layout !== 'first';
   const secondary = focus ? stats.streak : stats.today;
   return {
@@ -37,14 +60,15 @@ function widgetWeek(language: Language, stats: { today: number; history: ReviewH
   });
 }
 
-type WidgetStats = { today: number; streak: number; history: ReviewHistory; dailyReviewed: number; dailyLearned: number };
+type WidgetStats = Pick<StudyActivity, 'today' | 'newToday' | 'dueReviews' | 'streak' | 'history' | 'dailyReviewed' | 'dailyLearned'>;
 
-export function widgetProps({ stats, language, themeId, layouts, transparency }: {
+export function widgetProps({ stats, language, themeId, layouts, transparency, targets }: {
   stats: WidgetStats | null;
   language: Language;
   themeId: WidgetTheme;
   layouts: Record<WidgetSize, WidgetLayout>;
   transparency: number;
+  targets: ReturnType<typeof getQuestTargets>;
 }): WidgetProps {
   const theme = themes[themeId];
   return {
@@ -60,8 +84,8 @@ export function widgetProps({ stats, language, themeId, layouts, transparency }:
     cardBackdrop: widgetBackdrop(stats ? theme.card : '#000000', transparency),
     connectLabel: copy(language, 'connectWidget'),
     cards: stats ? {
-      compact: widgetCard(layouts.compact, language, stats, theme.accent),
-      tall: { ...widgetCard(layouts.tall, language, stats, theme.accent),
+      compact: widgetCard(layouts.compact, language, stats, theme.accent, targets),
+      tall: { ...widgetCard(layouts.tall, language, stats, theme.accent, targets),
         days: layouts.tall === 'current' ? widgetWeek(language, stats) : undefined },
     } : undefined,
   };

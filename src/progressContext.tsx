@@ -2,7 +2,7 @@ import { useActor } from '@xstate/react';
 import { createContext, use, type ReactNode } from 'react';
 import { createCallbackLogic, setup, types } from 'xstate';
 
-import { getTarget, settings } from './preferences';
+import { settings } from './preferences';
 import { newlyEarned, readEarned, type Achievement, type StudyActivity } from './studyProgress';
 import { widgetRefreshActor } from './widgetRefresh';
 
@@ -76,8 +76,4 @@ export function useProgress() {
   const progress = use(ProgressContext);
   if (!progress) throw new Error('ProgressProvider is missing');
   return progress;
-}
-
-export function questTargets() {
-  return { reviews: getTarget('reviewTarget'), newCards: getTarget('newTarget') };
 }

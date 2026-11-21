@@ -26,6 +26,8 @@ class StudyPreferencesModule : Module() {
   override fun definition() = ModuleDefinition {
     Name("StudyPreferences")
 
+    Function("shouldOnboard") { shouldOnboard() }
+
     Function("getPreference") { key: String -> preferences.getString(key, null) }
 
     Function("setPreference") { key: String, value: String ->
@@ -81,6 +83,17 @@ class StudyPreferencesModule : Module() {
         pending == day
       }
     }
+  }
+
+  private fun shouldOnboard(): Boolean {
+    when (preferences.getString("onboarding", null)) {
+      "complete" -> return false
+      "started" -> return true
+    }
+    // The flags overload requires Android 13. Anki Streak runs on Android 7 and later.
+    @Suppress("DEPRECATION")
+    val app = context.packageManager.getPackageInfo(context.packageName, 0)
+    return app.lastUpdateTime <= app.firstInstallTime
   }
 
   private fun canPostMilestone(): Boolean =

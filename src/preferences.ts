@@ -16,6 +16,7 @@ export type Milestone = (typeof milestones)[number];
 export const defaultTargets = { reviewTarget: 20, newTarget: 5, streakTarget: 7 };
 
 export const settings = requireNativeModule<{
+  shouldOnboard(): boolean;
   getPreference(key: string): string | null;
   setPreference(key: string, value: string): void;
   getSystemLanguage(): string;

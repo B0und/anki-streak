@@ -59,8 +59,9 @@ function makeHost() {
   const first = holdNext();
   const state = { reviews: 2, theme: 'miku', language: 'en', transparency: 0, layout: 'first' };
   const publications = [];
+  const preferences = new Map();
   return {
-    state, publications, first, holdNext,
+    state, preferences, publications, first, holdNext,
     AnkiActivity: {
       historyRows: 7,
       historyColumns: 1,
@@ -76,7 +77,8 @@ function makeHost() {
     },
     StudyPreferences: {
       getPreference: (key) => key === 'language' ? state.language : key === 'animate' ? 'off'
-        : key.startsWith('layout-') ? state.layout : null,
+        : key.startsWith('layout-') ? state.layout : preferences.get(key) ?? null,
+      setPreference: (key, value) => preferences.set(key, value),
     },
     ExpoWidgets: {
       async publishSnapshot(name, json) {
@@ -154,7 +156,31 @@ try {
   } finally {
     next.widgetRefreshActor.stop();
   }
-  console.log('Widget refresh passed layout, portrait, language, opacity, and queued publication checks.');
+  const restarting = makeHost();
+  restarting.first.finish();
+  restarting.preferences.set('last-review-activity', nextHost.preferences.get('last-review-activity'));
+  const read = Promise.withResolvers();
+  const readActivity = restarting.AnkiActivity.readActivity;
+  restarting.AnkiActivity.readActivity = async () => {
+    await read.promise;
+    return readActivity();
+  };
+  globalThis[hostKey] = restarting;
+  const resumed = await import(`${bundle}?restart`);
+  try {
+    const fresh = resumed.refreshWidget();
+    await waitFor(resumed.widgetRefreshActor, (snapshot) => snapshot.matches({ data: 'reading' }), waitOptions);
+    const { activity, check } = resumed.widgetRefreshActor.getSnapshot().context;
+    assert.equal(activity?.today, 3, 'Keep the last successful counts visible while reopening');
+    assert.equal(check, null, 'The cached snapshot is not a new review check');
+    read.resolve();
+    await fresh;
+    assert.equal(resumed.widgetRefreshActor.getSnapshot().context.activity?.today, 2);
+  } finally {
+    read.resolve();
+    resumed.widgetRefreshActor.stop();
+  }
+  console.log('Widget refresh passed layout, portrait, language, opacity, queued publication, and cold-start activity checks.');
 } finally {
   delete globalThis[hostKey];
   if (await Bun.file(bundle).exists()) unlinkSync(bundle);

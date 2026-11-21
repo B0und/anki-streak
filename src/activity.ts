@@ -1,6 +1,7 @@
-import { Effect, Schema } from 'effect';
+import { Effect, Option, Schema } from 'effect';
 import { requireNativeModule } from 'expo';
 
+import { settings } from './preferences';
 import { themeOrder, type WidgetTheme } from './themes';
 
 export type ReviewMood = 'waiting' | 'happy';
@@ -52,17 +53,18 @@ const reviewHistory = Schema.Struct({
 });
 export type ReviewHistory = typeof reviewHistory.Type;
 
+const readyActivity = Schema.Struct({
+  kind: Schema.Literal('ready'),
+  today: count,
+  newToday: count,
+  dueReviews: count,
+  streak: count,
+  history: reviewHistory,
+  dailyReviewed: count,
+  dailyLearned: count,
+});
 const providerActivity = Schema.Union([
-  Schema.Struct({
-    kind: Schema.Literal('ready'),
-    today: count,
-    newToday: count,
-    dueReviews: count,
-    streak: count,
-    history: reviewHistory,
-    dailyReviewed: count,
-    dailyLearned: count,
-  }),
+  readyActivity,
   Schema.Struct({ kind: Schema.Literals(['permission', 'missing', 'unsupported']) }),
 ]);
 type ProviderActivity = typeof providerActivity.Type;
@@ -70,11 +72,28 @@ export type AnkiActivity = (Extract<ProviderActivity, { kind: 'ready' }> & { moo
   | Exclude<ProviderActivity, { kind: 'ready' }>
   | { kind: 'unavailable' };
 
+const activityPreference = 'last-review-activity';
+const decodeSnapshot = Schema.decodeUnknownOption(Schema.fromJsonString(readyActivity));
+
+function withMood(data: typeof readyActivity.Type): Extract<AnkiActivity, { kind: 'ready' }> {
+  return { ...data, mood: data.today > 0 ? 'happy' : 'waiting' };
+}
+
+export function readCachedActivity() {
+  const snapshot = decodeSnapshot(settings.getPreference(activityPreference));
+  return Option.isSome(snapshot) ? withMood(snapshot.value) : null;
+}
+
+function cacheActivity(data: ProviderActivity) {
+  settings.setPreference(activityPreference, data.kind === 'ready' ? JSON.stringify(data) : '');
+}
+
 export const readActivityEffect = Effect.tryPromise(() => anki.readActivity()).pipe(
   Effect.flatMap(Schema.decodeUnknownEffect(providerActivity)),
-  Effect.map((data): AnkiActivity => data.kind === 'ready'
-    ? { ...data, mood: data.today > 0 ? 'happy' : 'waiting' }
-    : data),
+  Effect.tap((data) => Effect.try(() => cacheActivity(data)).pipe(
+    Effect.catch((error) => Effect.logWarning('Could not save review activity', error)),
+  )),
+  Effect.map((data): AnkiActivity => data.kind === 'ready' ? withMood(data) : data),
   Effect.catch((error) => Effect.logWarning('AnkiDroid activity unavailable', error).pipe(
     Effect.as<AnkiActivity>({ kind: 'unavailable' }),
   )),

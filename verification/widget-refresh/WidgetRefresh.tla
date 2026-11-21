@@ -6,13 +6,13 @@ VARIABLES current, queued, submitted, expectedAtHandoff
 NoSnapshot == [reviews |-> "none", theme |-> "none", language |-> "none"]
 
 Init ==
-    /\ current = [reviews |-> "earlier", theme |-> "miku", language |-> "en"]
+    /\ current \in [reviews: {"none", "earlier"}, theme: {"miku"}, language: {"en"}]
     /\ queued = NoSnapshot
     /\ submitted = NoSnapshot
     /\ expectedAtHandoff = NoSnapshot
 
 ChangeReviews ==
-    /\ current.reviews = "earlier"
+    /\ current.reviews # "later"
     /\ current' = [current EXCEPT !.reviews = "later"]
     /\ UNCHANGED <<queued, submitted, expectedAtHandoff>>
 
@@ -27,6 +27,7 @@ ChangeLanguage ==
     /\ UNCHANGED <<queued, submitted, expectedAtHandoff>>
 
 QueuePublication ==
+    /\ current.reviews # "none"
     /\ queued = NoSnapshot
     /\ queued' = current
     /\ UNCHANGED <<current, submitted, expectedAtHandoff>>

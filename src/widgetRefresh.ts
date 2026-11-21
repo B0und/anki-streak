@@ -6,7 +6,7 @@ import { createActor, createAsyncLogic, setup, types, waitFor } from 'xstate';
 
 import './AnkiWidget';
 import {
-  getWidgetTheme, getWidgetBackgroundTransparency, readActivityEffect,
+  getWidgetTheme, getWidgetBackgroundTransparency, readActivityEffect, readCachedActivity,
   setWidgetBackgroundTransparency, type AnkiActivity,
 } from './activity';
 import { getLanguage, getWidgetLayouts } from './preferences';
@@ -91,7 +91,10 @@ const refreshSetup = setup({
 const refreshMachine = refreshSetup.createMachine({
   id: 'widgetRefresh',
   type: 'parallel',
-  context: { check: null, activity: null, error: null, appearanceError: false, appearancePending: false, backgroundError: false },
+  context: () => ({
+    check: null, activity: readCachedActivity(), error: null,
+    appearanceError: false, appearancePending: false, backgroundError: false,
+  }),
   on: {
     widgetPublished: ({ context }) => ({ context: { ...context, appearanceError: false } }),
 

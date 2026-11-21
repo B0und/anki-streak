@@ -1,21 +1,28 @@
-import { ArrowUpRight, Check } from 'lucide-react-native';
+import { ArrowUpRight } from 'lucide-react-native';
 import { useWindowDimensions } from 'react-native';
 import { Text, View, XStack, YStack } from 'tamagui';
 
 import { historyColumns, historyRows, type ReviewHistory } from './activity';
 import type { Palette } from './appearance';
+import { ReviewStamp } from './ReviewStamp';
 import { copy, weekdays, type Language } from './messages';
-import { Action, CountUp, Portrait, Section } from './studyComponents';
+import { CountUp, Portrait, Section } from './studyComponents';
 import { themes } from './themes';
 import type { useDashboard } from './useDashboard';
 import { VictoryLaurels } from './VictoryLaurels';
 
-export function TodayScreen({ dashboard, palette, language, celebration }: {
-  dashboard: ReturnType<typeof useDashboard>; palette: Palette; language: Language; celebration: number;
+export function TodayScreen({ dashboard, palette, language, celebration, stampInk }: {
+  dashboard: ReturnType<typeof useDashboard>; palette: Palette; language: Language; celebration: number; stampInk: string;
 }) {
   const { width } = useWindowDimensions();
   const { activity, themeId } = dashboard;
   const ready = activity?.kind === 'ready' ? activity : null;
+  const canStart = Boolean(ready && ready.dueReviews > 0);
+  const canConnect = activity?.kind === 'permission';
+  const actionable = canStart || canConnect;
+  const reviewLabel = ready
+    ? canStart ? 'startReviews' : ready.today > 0 ? 'reviewsComplete' : 'noReviewsDue'
+    : canConnect ? 'connect' : dashboard.initialCheckComplete ? 'reviewsUnavailable' : 'startReviews';
   const portrait = themes[themeId][ready?.mood ?? 'waiting'];
   return <>
     <YStack minH={208} rounded={22} bg="hero" overflow="hidden" justify="center">
@@ -33,46 +40,46 @@ export function TodayScreen({ dashboard, palette, language, celebration }: {
       </YStack>
     </YStack>
 
-    {ready && <XStack minH={56} rounded={14} bg={ready.dueReviews === 0 ? 'subtle' : 'accent'} px={16}
-      gap={12} items="center" accessibilityRole="button" accessibilityState={{ disabled: ready.dueReviews === 0 || dashboard.requesting }}
-      onPress={ready.dueReviews === 0 || dashboard.requesting ? undefined : () => void dashboard.runAndroidRequest('open')}>
-      <Text flex={1} fontSize={16} fontWeight="700" color={ready.dueReviews === 0 ? 'color' : 'on-accent'}>
-        {copy(language, ready.dueReviews === 0 ? 'reviewsComplete' : 'startReviews')}
+    <XStack minH={60} rounded={14} bg={actionable ? 'accent' : 'subtle'} px={16} py={6}
+      gap={12} items="center" accessibilityRole="button"
+      accessibilityState={{ disabled: !actionable || dashboard.requesting }}
+      opacity={actionable && !dashboard.requesting ? 'press:0.80' : undefined}
+      onPress={actionable && !dashboard.requesting ? () => dashboard.runAndroidRequest(canConnect ? 'permission' : 'open') : undefined}>
+      <Text flex={1} fontSize={16} fontWeight="700" color={actionable ? 'on-accent' : 'color'}>
+        {copy(language, reviewLabel)}
       </Text>
-      {ready.dueReviews === 0 ? <Check color={palette.accent} size={22} /> : <ArrowUpRight color={palette.onAccent} size={22} />}
-    </XStack>}
+      {reviewLabel === 'reviewsComplete' && <ReviewStamp ink={stampInk} />}
+      {actionable && <ArrowUpRight color={palette.onAccent} size={22} />}
+    </XStack>
 
-    {ready ? <>
-      <XStack bg="surface" borderColor="border-color" borderWidth={1} rounded={16}>
-        {([['reviewed', ready.today, 'avgReviews', ready.dailyReviewed], ['learned', ready.newToday, 'avgNew', ready.dailyLearned]] as const)
-          .map(([label, value, average, averageValue], index) => (
-            <YStack key={label} flex={1} py={14} px={14} gap={4}
-              borderLeftWidth={index > 0 ? 1 : 0} borderLeftColor="border-color">
-              <Text color="color" fontSize={13} fontWeight="600">{copy(language, label)}</Text>
-              <Text color="color" fontSize={32} fontWeight="700" fontVariant={['tabular-nums']}
-                adjustsFontSizeToFit numberOfLines={1} style={{ includeFontPadding: false }}>
-                <CountUp value={value} delay={160 + 145 * index} celebration={celebration} />
-              </Text>
-              <Text color="muted" fontSize={12}>{averageValue} · {copy(language, average)}</Text>
-            </YStack>
-          ))}
-      </XStack>
-    </> : <Section title="AnkiDroid">
-      <Text color="muted">{copy(language, activity && activity.kind !== 'ready' ? activity.kind : 'unavailable')}</Text>
-      {activity?.kind === 'permission' && <Action primary disabled={dashboard.requesting}
-        onPress={() => void dashboard.runAndroidRequest('permission')}>{copy(language, 'connect')}</Action>}
-    </Section>}
+    <XStack bg="surface" borderColor="border-color" borderWidth={1} rounded={16}>
+      {([['reviewed', ready?.today, 'avgReviews', ready?.dailyReviewed], ['learned', ready?.newToday, 'avgNew', ready?.dailyLearned]] as const)
+        .map(([label, value, average, averageValue], index) => (
+          <YStack key={label} flex={1} py={14} px={14} gap={4}
+            borderLeftWidth={index > 0 ? 1 : 0} borderLeftColor="border-color">
+            <Text color="color" fontSize={13} fontWeight="600">{copy(language, label)}</Text>
+            <Text color="color" fontSize={32} fontWeight="700" fontVariant={['tabular-nums']}
+              adjustsFontSizeToFit numberOfLines={1} style={{ includeFontPadding: false }}>
+              <CountUp value={value} delay={160 + 145 * index} celebration={celebration} />
+            </Text>
+            <Text color="muted" fontSize={12}>{averageValue ?? '—'} · {copy(language, average)}</Text>
+          </YStack>
+        ))}
+    </XStack>
 
-    {ready && <ActivityHeatmap history={ready.history} palette={palette} language={language} />}
+    <ActivityHeatmap history={ready?.history} palette={palette} language={language} />
+    {activity?.kind !== 'ready' && dashboard.initialCheckComplete && <Text color="muted">
+      {copy(language, activity?.kind ?? 'unavailable')}
+    </Text>}
   </>;
 }
 
 function ActivityHeatmap({ history, palette, language }: {
-  history: ReviewHistory;
+  history: ReviewHistory | undefined;
   palette: Palette; language: Language;
 }) {
-  const todaySlot = (historyColumns - 1) * historyRows + history.todayRow;
-  const counts = history.counts.slice(-(todaySlot + 1));
+  const todaySlot = (historyColumns - 1) * historyRows + (history?.todayRow ?? historyRows - 1);
+  const counts = history?.counts.slice(-(todaySlot + 1)) ?? [];
   const activeDays = counts.filter((count) => count > 0).sort((a, b) => a - b);
   const thresholds = [.45, .72, .90].map((rank) => activeDays[Math.floor((activeDays.length - 1) * rank)] ?? 0);
   const title = copy(language, 'activity');
@@ -89,7 +96,7 @@ function ActivityHeatmap({ history, palette, language }: {
             const intensity = count > 0 ? 1 + thresholds.filter((threshold) => count > threshold).length : 0;
             return <View key={column} flex={1} aspectRatio={1.12} rounded={3}
               bg={slot > todaySlot ? 'transparent' : palette.heat[intensity]}
-              borderColor="accent" borderWidth={slot === todaySlot ? 1.4 : 0} />;
+              borderColor="accent" borderWidth={history && slot === todaySlot ? 1.4 : 0} />;
           })}
         </XStack>
       ))}

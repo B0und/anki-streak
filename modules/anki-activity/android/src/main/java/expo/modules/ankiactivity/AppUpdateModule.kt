@@ -6,6 +6,7 @@ import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import android.os.SystemClock
 import android.provider.Settings
 import androidx.core.content.FileProvider
 import androidx.core.content.pm.PackageInfoCompat
@@ -16,13 +17,19 @@ import expo.modules.kotlin.modules.ModuleDefinition
 import java.io.File
 import java.net.URI
 import java.security.MessageDigest
+import java.util.concurrent.atomic.AtomicLong
 import javax.net.ssl.HttpsURLConnection
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 private const val RELEASE_CERTIFICATE = "15ccfdb1ab164994b925cbe9667218be7073815cf7892af5c43300fed06e9a13"
 private const val MIN_APK_BYTES = 1L
 private const val MAX_APK_BYTES = 128L * 1024 * 1024
+private const val PROGRESS_INTERVAL_MS = 500L
+private const val DOWNLOAD_PROGRESS_EVENT = "downloadProgress"
 private const val APK_MIME_TYPE = "application/vnd.android.package-archive"
 private val releaseTag = Regex("v[0-9]+\\.[0-9]+\\.[0-9]+")
 private val sha256Hex = Regex("[0-9a-f]{64}")
@@ -32,6 +39,7 @@ class ApkUpdateProvider : FileProvider()
 class AppUpdateModule : Module() {
   override fun definition() = ModuleDefinition {
     Name("AppUpdate")
+    Events(DOWNLOAD_PROGRESS_EVENT)
 
     Function("getInstalledBuild") {
       val installed = installedPackage()
@@ -65,11 +73,30 @@ class AppUpdateModule : Module() {
         val destination = updateFile
         check(destination.parentFile?.let { it.isDirectory || it.mkdirs() } == true)
         val pending = File.createTempFile("apk-", ".apk", context.cacheDir)
+        val received = AtomicLong()
+        val reporting = launch {
+          var previousBytes = 0L
+          var previousTime = SystemClock.elapsedRealtime()
+          var previousRate = 0L
+          while (true) {
+            delay(PROGRESS_INTERVAL_MS)
+            val bytes = received.get()
+            val now = SystemClock.elapsedRealtime()
+            val rate = (bytes - previousBytes) * 1_000 / (now - previousTime).coerceAtLeast(1)
+            if (bytes != previousBytes || rate != previousRate) reportProgress(tag, bytes, rate)
+            previousBytes = bytes
+            previousTime = now
+            previousRate = rate
+          }
+        }
         try {
-          downloadApk(tag, size, pending, digest)
+          downloadApk(tag, size, pending, digest) { received.set(it) }
+          reporting.cancelAndJoin()
+          reportProgress(tag, size, 0)
           validateUpdate(pending, installed, tag)
           check(pending.renameTo(destination))
         } finally {
+          reporting.cancel()
           pending.delete()
         }
         Unit
@@ -86,6 +113,12 @@ class AppUpdateModule : Module() {
           .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
       )
     }.runOnQueue(Queues.MAIN)
+  }
+
+  private fun reportProgress(tag: String, bytesReceived: Long, bytesPerSecond: Long) {
+    sendEvent(DOWNLOAD_PROGRESS_EVENT, mapOf(
+      "tag" to tag, "bytesReceived" to bytesReceived, "bytesPerSecond" to bytesPerSecond,
+    ))
   }
 
   private fun canInstallUpdates(): Boolean =
@@ -111,7 +144,9 @@ class AppUpdateModule : Module() {
     get() = File(context.cacheDir, "app-update/Anki-Streak.apk")
 }
 
-private fun downloadApk(tag: String, expectedSize: Long, file: File, expectedDigest: String) {
+private fun downloadApk(
+  tag: String, expectedSize: Long, file: File, expectedDigest: String, onProgress: (Long) -> Unit,
+) {
   var url = URI("https://github.com/B0und/anki-streak/releases/download/$tag/Anki-Streak.apk")
   repeat(4) {
     require(url.scheme == "https" && url.userInfo == null && url.port == -1)
@@ -139,6 +174,7 @@ private fun downloadApk(tag: String, expectedSize: Long, file: File, expectedDig
                 check(total <= expectedSize)
                 digest.update(buffer, 0, bytes)
                 output.write(buffer, 0, bytes)
+                onProgress(total)
               }
             }
           }

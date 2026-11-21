@@ -1,9 +1,9 @@
 import { useActor } from '@xstate/react';
-import { Effect } from 'effect';
+import { Effect, Option } from 'effect';
 import { AppState } from 'react-native';
 import { createCallbackLogic, setup, types } from 'xstate';
 
-import { appUpdater, checkForAppUpdate, type AppUpdate } from './appUpdateRelease';
+import { appUpdater, checkForAppUpdate, decodeDownloadProgress, type AppUpdate, type DownloadProgress } from './appUpdateRelease';
 
 const automaticCheckIntervalMs = 5 * 60 * 1000;
 type CheckPhase = 'idle' | 'current' | 'check-failed' | 'available' | 'download-failed' | 'permission' | 'ready';
@@ -13,6 +13,7 @@ type UpdateContext = {
   canUpdate: boolean;
   lastCheck: number;
   update: AppUpdate | null;
+  progress: DownloadProgress | null;
   resume: CheckPhase;
   manual: boolean;
 };
@@ -32,6 +33,16 @@ const automaticChecks = createCallbackLogic({
   },
 });
 
+const observeProgress = createCallbackLogic({
+  run: ({ sendBack }) => {
+    const listener = appUpdater.addListener('downloadProgress', (event) => {
+      const sample = decodeDownloadProgress(event);
+      if (Option.isSome(sample)) sendBack({ type: 'progress', sample: sample.value });
+    });
+    return () => listener.remove();
+  },
+});
+
 function startCheck(resume: CheckPhase) {
   return ({ context, event }: { context: UpdateContext; event: { manual: boolean } }) => {
     const now = Date.now();
@@ -43,14 +54,14 @@ function startCheck(resume: CheckPhase) {
 const updatesSetup = setup({
   schemas: {
     context: types<UpdateContext>(),
-    events: { check: types<{ manual: boolean }>(), install: types<void>() },
+    events: { check: types<{ manual: boolean }>(), install: types<void>(), progress: types<{ sample: DownloadProgress }>() },
   },
 });
 
 const updatesMachine = updatesSetup.createMachine({
   id: 'appUpdates',
   context: () => ({
-    ...appUpdater.getInstalledBuild(), lastCheck: -Infinity, update: null, manual: false, resume: 'idle',
+    ...appUpdater.getInstalledBuild(), lastCheck: -Infinity, update: null, progress: null, manual: false, resume: 'idle',
   }),
   initial: 'idle',
   invoke: { src: automaticChecks },
@@ -82,7 +93,16 @@ const updatesMachine = updatesSetup.createMachine({
     available: { on: { check: startCheck('available'), install: { target: 'downloading' } } },
     'download-failed': { on: { check: startCheck('download-failed'), install: { target: 'downloading' } } },
     downloading: {
-      invoke: updatesSetup.createInvoke({
+      entry: ({ context }) => ({ context: { ...context, progress: null } }),
+      on: {
+        progress: ({ context, event }) => {
+          const { sample } = event;
+          if (!context.update || sample.tag !== context.update.tag || sample.bytesReceived > context.update.size) return;
+          if (context.progress && sample.bytesReceived < context.progress.bytesReceived) return;
+          return { context: { ...context, progress: sample } };
+        },
+      },
+      invoke: [{ src: observeProgress }, updatesSetup.createInvoke({
         schemas: { input: types<AppUpdate | null>() },
         src: ({ input, signal }) => Effect.runPromise(
           Effect.tryPromise(() => {
@@ -93,7 +113,7 @@ const updatesMachine = updatesSetup.createMachine({
         input: ({ context }) => context.update,
         onDone: { target: 'opening-installer' },
         onError: { target: 'download-failed' },
-      }),
+      })],
     },
     'opening-installer': {
       invoke: updatesSetup.createInvoke({

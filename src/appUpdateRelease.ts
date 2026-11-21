@@ -2,6 +2,7 @@ import { Effect, Schema } from 'effect';
 import { requireNativeModule } from 'expo';
 
 export const appUpdater = requireNativeModule<{
+  addListener(event: 'downloadProgress', listener: (event: unknown) => void): { remove(): void };
   getInstalledBuild(): { version: string; canUpdate: boolean };
   canInstallUpdates(): boolean;
   openInstallSettings(): Promise<void>;
@@ -33,6 +34,14 @@ function isNewer(candidate: Version, installed: Version): boolean {
 }
 
 export type AppUpdate = { tag: string; version: string; digest: string; size: number };
+
+const downloadProgress = Schema.Struct({
+  tag: Schema.String,
+  bytesReceived: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
+  bytesPerSecond: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
+});
+export type DownloadProgress = typeof downloadProgress.Type;
+export const decodeDownloadProgress = Schema.decodeUnknownOption(downloadProgress);
 
 const apkMetadata = Schema.Struct({
   browser_download_url: Schema.String,

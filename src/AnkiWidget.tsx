@@ -52,14 +52,19 @@ function AnkiStreak(
   const aspect = (portraitHappy ? portraitAspect?.happy : portraitAspect?.waiting) ?? 1;
   const margin = narrow ? 10 : 16;
   const questFooter = tall && card?.quests && height >= 126 ? (narrow ? 44 : 52) : 0;
-  const weekFooter = tall && card?.days ? (narrow ? 34 : 42) : 0;
+  const weekGap = narrow ? 7 : 10;
+  const weekBarGap = narrow ? 5 : 6;
+  const weekFooter = tall && card?.days ? (narrow ? 36 : 46) : 0;
   const available = height - questFooter - weekFooter;
   const short = (card?.quests ? available : height) < 100;
   const stacked = tall && available >= Math.max(230, widgetWidth * 0.82);
   const textHeight = stacked ? available * 0.42 : available;
-  const imageWidthLimit = widgetWidth * (stacked ? 0.88 : tall ? (card?.quests ? 0.55 : 0.59) : 0.46);
-  const imageHeightLimit = stacked ? available - textHeight : available - 10;
-  const imageHeight = Math.max(1, Math.min(imageHeightLimit, (imageWidthLimit - 6) / aspect));
+  const weekTextWidth = Math.floor((widgetWidth - 2 * margin - 8) * 0.48);
+  const imageWidthLimit = weekFooter
+    ? widgetWidth - 2 * margin - weekTextWidth - 8
+    : widgetWidth * (stacked ? 0.88 : tall ? (card?.quests ? 0.55 : 0.59) : 0.46);
+  const imageHeightLimit = stacked && !weekFooter ? available - textHeight : available - 10;
+  const imageHeight = Math.max(1, Math.min(imageHeightLimit, (imageWidthLimit - (weekFooter ? 0 : 6)) / aspect));
   const imageWidth = imageHeight * aspect;
   const textWidth = Math.max(1, widgetWidth - (stacked ? margin : imageWidthLimit) - margin);
   const questCompleted = card?.quests?.completed ?? 0;
@@ -67,6 +72,14 @@ function AnkiStreak(
   const numberMax = tall ? (narrow ? 42 : 64) : short ? 34 : 52;
   const valueSize = Math.min(numberMax, textWidth / Math.max(1, (card?.value.length ?? 1) * 0.63), textHeight * (short ? card?.averages ? 0.29 : 0.35 : 0.45));
   const labelSize = narrow || short ? 11 : 15;
+  const weekLabelSize = Math.min(labelSize, weekTextWidth / Math.max(1, (card?.label.length ?? 1) * 0.55));
+  const streakSize = Math.min(narrow ? 14 : 18, weekTextWidth / Math.max(1, (card?.secondary.length ?? 1) * 0.51));
+  const weekMetricArea = available - Math.ceil(streakSize * 1.25) - weekGap - 4;
+  const weekValueSize = Math.max(1, Math.min(numberMax, weekTextWidth / Math.max(1, (card?.value.length ?? 1) * 0.63),
+    (weekMetricArea - weekLabelSize * 1.3) / 1.08));
+  // The caption overlaps the empty space at the bottom of the native number's line box.
+  const weekLabelTop = Math.ceil(weekValueSize);
+  const weekPitch = (Math.round(widgetWidth) - 2 * margin + weekBarGap) / 7;
   const surface = cardBackdrop ?? backdrop ?? '#000000';
   const actions = previewMood ? [] : [{ $type: 'openAppOnTap' }];
 
@@ -75,10 +88,24 @@ function AnkiStreak(
       {card ? (
         <Column>
           <Box modifiers={[size(widgetWidth, available)]} contentAlignment="topStart">
-            <Box modifiers={[fillMaxSize(), padding(0, 0, 6, 0)]} contentAlignment="bottomEnd">
+            <Box modifiers={[fillMaxSize(), padding(0, 0, weekFooter ? margin : 6, 0)]} contentAlignment="bottomEnd">
               <Image source={{ uri: portrait }} contentScale="fit" modifiers={[size(imageWidth, imageHeight)]} />
             </Box>
-            <Box modifiers={[size(widgetWidth, textHeight), padding(margin, 0, 0, 0)]} contentAlignment="centerStart">
+            {weekFooter > 0 ? <Box modifiers={[fillMaxSize()]} contentAlignment="topStart">
+              <Box modifiers={[size(widgetWidth, weekMetricArea), padding(margin, 0, 0, 0)]} contentAlignment="centerStart">
+                <Box modifiers={[size(weekTextWidth, weekLabelTop + Math.ceil(weekLabelSize * 1.3))]} contentAlignment="topStart">
+                  <Text color="#FFFDF8" style={{ fontSize: weekValueSize, fontWeight: 'bold' }} maxLines={1}>{card.value}</Text>
+                  <Text color="#BDB5AB" style={{ fontSize: weekLabelSize }}
+                    modifiers={[padding(0, weekLabelTop, 0, 0)]} maxLines={1}>
+                    {card.label.toLowerCase()}
+                  </Text>
+                </Box>
+              </Box>
+              <Box modifiers={[fillMaxSize(), padding(margin, 0, 0, weekGap)]} contentAlignment="bottomStart">
+                <Text color={card.accent} style={{ fontSize: streakSize, fontWeight: 'bold' }}
+                  modifiers={[width(weekTextWidth)]} maxLines={1}>{card.secondary}</Text>
+              </Box>
+            </Box> : <Box modifiers={[size(widgetWidth, textHeight), padding(margin, 0, 0, 0)]} contentAlignment="centerStart">
               <Column modifiers={[width(textWidth)]}>
                 <Text color="#FFFDF8" style={{ fontSize: valueSize, fontWeight: 'bold' }} maxLines={1}>{card.value}</Text>
                 <Text color="#DDD7CF" style={{ fontSize: labelSize }} maxLines={narrow && !short ? 2 : 1}>
@@ -103,7 +130,7 @@ function AnkiStreak(
                 {card.averages && !weekFooter && <Text color="#DDD7CF" style={{ fontSize: 10 }}
                   modifiers={[padding(0, short ? 0 : 4, 0, 0)]} maxLines={1}>{card.averages}</Text>}
               </Column>
-            </Box>
+            </Box>}
           </Box>
           {questFooter > 0 && card.quests && <Column>
             <Box modifiers={[size(widgetWidth, 1), background(card.accent + '33')]} />
@@ -129,19 +156,23 @@ function AnkiStreak(
           </Column>}
           {weekFooter > 0 && card.days && <Column>
             <Box modifiers={[size(widgetWidth, 1), background(card.accent + '33')]} />
-            <Row horizontalArrangement="center" verticalAlignment="center" modifiers={[size(widgetWidth, weekFooter - 1)]}>
-              {card.days.map(({ label, state }) => {
-                const dayWidth = Math.floor((widgetWidth - 2 * margin) / 7);
+            <Row verticalAlignment="top" modifiers={[size(widgetWidth, weekFooter - 1), padding(margin, weekGap, margin, 0)]}>
+              {card.days.map(({ label, state }, index) => {
+                const gap = index === 6 ? 0 : weekBarGap;
+                const dayWidth = Math.round((index + 1) * weekPitch) - Math.round(index * weekPitch) - weekBarGap;
                 const current = state === 'today' || state === 'today-reviewed';
                 const reviewed = state === 'reviewed' || state === 'today-reviewed';
                 const fill = reviewed ? card.accent : state === 'future' ? card.accent + '1A' : card.accent + '44';
-                return <Column key={label} horizontalAlignment="center" modifiers={[width(dayWidth)]}>
-                  <Box contentAlignment="center" modifiers={[size(dayWidth - 6, current ? 6 : 4), background(current ? card.accent : fill)]}>
-                    {state === 'today' && <Box modifiers={[size(dayWidth - 8, 4), background(surface)]} />}
-                  </Box>
-                  <Text color={current ? card.accent : '#FFFDF8'} style={{ fontSize: narrow ? 9 : 11, fontWeight: current ? 'bold' : 'normal' }}
-                    modifiers={[padding(0, 4, 0, 0)]} maxLines={1}>{label}</Text>
-                </Column>;
+                return <Box key={label} modifiers={[padding(0, 0, gap, 0)]}>
+                  <Column horizontalAlignment="center" modifiers={[width(dayWidth)]}>
+                    <Box contentAlignment="center" modifiers={[size(dayWidth, 5), background(current ? card.accent : fill)]}>
+                      {state === 'today' && <Box modifiers={[size(dayWidth - 2, 3), background(surface)]} />}
+                    </Box>
+                    <Text color={current ? '#D4CCC0' : '#BDB5AB'}
+                      style={{ fontSize: narrow ? 9 : 11, fontWeight: current ? 'bold' : 'normal' }}
+                      modifiers={[padding(0, 4, 0, 0)]} maxLines={1}>{label.toLowerCase()}</Text>
+                  </Column>
+                </Box>;
               })}
             </Row>
           </Column>}

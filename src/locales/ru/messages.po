@@ -1,0 +1,913 @@
+msgid ""
+msgstr ""
+"Language: ru\n"
+"Content-Type: text/plain; charset=utf-8\n"
+
+#. Number of weeks visible in the review history.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "historyWeeks"
+msgstr "{count, plural, one {# неделя} few {# недели} many {# недель} other {# недели}}"
+
+#. Repeat the streak reward at this interval, measured in days.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "every"
+msgstr "Интервал в днях: {count}"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "questsComplete"
+msgstr "{count} из {total} выполнено"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "achievementsEarned"
+msgstr "{count} из {total} получено"
+
+#. Number of consecutive study days shown on the widget.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "widgetStreak"
+msgstr "Дней подряд: {count}"
+
+#. Accessibility description of the widget. name is the character’s name.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "activityDescription"
+msgstr "{name}. Дней подряд: {streak}. Повторено сегодня: {today}. Повторов в среднем: {reviews}. Новых в среднем: {learned}."
+
+#. received and total are formatted amounts of data in megabytes.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "downloadSize"
+msgstr "{received} / {total} МБ"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "widgetAverages"
+msgstr "{reviews} повторов · {learned} новых в день"
+
+#. speed is the formatted download rate in kilobytes per second.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "downloadSpeedKb"
+msgstr "{speed} КБ/с"
+
+#. speed is the formatted download rate in megabytes per second.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "downloadSpeedMb"
+msgstr "{speed} МБ/с"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "achievement"
+msgstr "Достижение"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "awardUnlocked"
+msgstr "Достижение получено"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "achievements"
+msgstr "Достижения"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "addWidgetShort"
+msgstr "Добавить"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "onboardingWidget"
+msgstr "Добавь персонажа на главный экран во вкладке «Виджет»."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "addWidget"
+msgstr "Добавить виджет на главный экран"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "clearQueueAward"
+msgstr "Всё повторено"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "permission"
+msgstr "Разреши чтение статистики AnkiDroid."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "onboardingConnectDetail"
+msgstr "Разреши Anki Streak читать количество повторов и карточек на сегодня из AnkiDroid."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "installPermission"
+msgstr "Разреши установку из Anki Streak в настройках Android, затем нажми «Установить обновление»."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "notificationsBlocked"
+msgstr "Разреши уведомления Anki Streak в настройках Android."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "permissions"
+msgstr "Разрешения Android"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "animate"
+msgstr "Показывать анимацию"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "updateAvailable"
+msgstr "Доступна Anki Streak {version}"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "onboardingConnected"
+msgstr "AnkiDroid подключён"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "sync"
+msgstr "Синхронизация с AnkiDroid"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "updates"
+msgstr "Обновления"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "appearance"
+msgstr "Оформление"
+
+#. Compact widget label for average new cards answered per day. Keep it short.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "pulseNew"
+msgstr "ср. новые"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "avgNew"
+msgstr "Новых в день"
+
+#. Compact widget label for average card reviews per day. Keep it short.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "pulseReviews"
+msgstr "ср. повторы"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "avgReviews"
+msgstr "Повторов в день"
+
+#. Button to return to the previous screen.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "back"
+msgstr "Назад"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "transparency"
+msgstr "Прозрачность фона"
+
+#. Captions the large count of cards reviewed today in Study Pulse. Use lowercase.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "pulseToday"
+msgstr "карточек сегодня"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "character"
+msgstr "Персонаж"
+
+#. Button to check for an app update.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "check"
+msgstr "Проверить обновления"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "excludedDueDecksDetail"
+msgstr "Отмеченные колоды не учитываются для этой награды. Подколоды выбираются отдельно."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "checking"
+msgstr "Проверяем обновления…"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "questDue"
+msgstr "Заверши повторы на сегодня"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "compact"
+msgstr "Компактный"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "connect"
+msgstr "Подключить AnkiDroid"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "questsUnavailable"
+msgstr "Подключи AnkiDroid, чтобы отслеживать задания на сегодня."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "onboardingLater"
+msgstr "Подключить позже"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "onboardingConnect"
+msgstr "Подключи повторы"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "awardContinue"
+msgstr "Продолжить"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "onboardingContinue"
+msgstr "Продолжить"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "themeError"
+msgstr "Не удалось применить тему. Попробуй обновить."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "widgetAppearanceFailed"
+msgstr "Не удалось обновить оформление виджета. Нажми «Обновить» и попробуй ещё раз."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "checkFailed"
+msgstr "Не удалось проверить обновления. Попробуй ещё раз."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "unavailableDueDecks"
+msgstr "Не удалось загрузить колоды. Откройте AnkiDroid и проверьте разрешения доступа."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "settingsError"
+msgstr "Не удалось открыть настройки Android."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "openError"
+msgstr "Не удалось открыть AnkiDroid."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "permissionError"
+msgstr "Не удалось запросить доступ. Проверь разрешения Android."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "updateFailed"
+msgstr "Не удалось подготовить обновление. Попробуй ещё раз."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "refreshError"
+msgstr "Не удалось обновить виджет. Попробуй ещё раз."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "transparencyError"
+msgstr "Не удалось изменить фон. Попробуй ещё раз."
+
+#. Name of a widget layout.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "focus"
+msgstr "Фокус на сегодня"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "newTarget"
+msgstr "Цель по новым карточкам"
+
+#. Name of a widget layout.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "current"
+msgstr "Прогресс за день"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "dailyQuests"
+msgstr "Ежедневные задания"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "widgetDailyQuests"
+msgstr "Задания дня"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "onboardingRoutineDetail"
+msgstr "Ежедневные задания помогают выбрать цель, а серии занятий открывают достижения."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "reviewTarget"
+msgstr "Цель по повторам за день"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "dark"
+msgstr "Тёмное"
+
+#. Consecutive days with at least one completed Anki review.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "streak"
+msgstr "Дней подряд"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "questDone"
+msgstr "Готово"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "downloadInstall"
+msgstr "Скачать и установить"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "downloading"
+msgstr "Скачиваем обновление…"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "excludedDueDecks"
+msgstr "Исключённые колоды"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "clearQueueAwardDetail"
+msgstr "Заверши все повторы за день."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "finishDue"
+msgstr "Завершение повторов на сегодня"
+
+#. Celebrate the first Anki card reviewed that day.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "firstReview"
+msgstr "Первая карточка за день"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "firstReviewAward"
+msgstr "Первые шаги"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "themePreview"
+msgstr "Сменить настроение в предпросмотре"
+
+#. Short lowercase form of friday under the widget week bar.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "widgetFriday"
+msgstr "пт"
+
+#. Short form of friday in the review history.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "friday"
+msgstr "Пт"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "onboardingRoutine"
+msgstr "Поставь цель на сегодня"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "onboardingFinish"
+msgstr "Открыть «Сегодня»"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "happyMood"
+msgstr "Радость"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "homeWidgetPreview"
+msgstr "Предпросмотр виджета"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "missing"
+msgstr "Установи AnkiDroid, чтобы увидеть статистику."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "installUpdate"
+msgstr "Установить обновление"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "cheers"
+msgstr "Так держать!"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "language"
+msgstr "Язык"
+
+#. time is the formatted timestamp of the last AnkiDroid refresh.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "lastCheck"
+msgstr "Последняя проверка: {time}"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "layout"
+msgstr "Макет"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "questNew"
+msgstr "Выучи новые карточки"
+
+#. Show fewer weeks in the review history.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "less"
+msgstr "Меньше"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "light"
+msgstr "Светлое"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "loadingDueDecks"
+msgstr "Загружаем колоды AnkiDroid…"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "awardLocked"
+msgstr "Пока закрыто"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "onboardingWelcome"
+msgstr "Начни свою серию"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "resizeWidget"
+msgstr "Для высокого макета увеличь высоту виджета на главном экране."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "milestone"
+msgstr "Повод для награды"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "rewardToast"
+msgstr "Цель достигнута!"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "targetInput"
+msgstr "Значение цели"
+
+#. Short lowercase form of monday under the widget week bar.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "widgetMonday"
+msgstr "пн"
+
+#. Short form of monday in the review history.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "monday"
+msgstr "Пн"
+
+#. Show more weeks in the review history.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "more"
+msgstr "Больше"
+
+#. Short label for Anki cards reviewed for the first time.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "newCards"
+msgstr "Новые"
+
+#. Number of cards answered for the first time today.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "learned"
+msgstr "Новых сегодня"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "emptyDueDecks"
+msgstr "В AnkiDroid не найдено ни одной колоды."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "noReviewsDue"
+msgstr "На сегодня повторов нет"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "rewardTiming"
+msgstr "Одна награда в день. Уведомление придёт, когда Android проверит статистику."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "weekStreakAward"
+msgstr "Целая неделя"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "connectWidget"
+msgstr "Открой Anki Streak для подключения"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "openAnki"
+msgstr "Открыть AnkiDroid"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "unavailable"
+msgstr "Открой коллекцию в AnkiDroid и обнови статистику."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "installer"
+msgstr "Открываем установщик Android…"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "previewUnavailable"
+msgstr "Предпросмотр недоступен"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "progress"
+msgstr "Прогресс"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "waiting"
+msgstr "Начнём, когда будешь готов."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "refresh"
+msgstr "Обновить"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "refreshing"
+msgstr "Обновляем…"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "reloadDueDecks"
+msgstr "Обновить список колод"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "replayAward"
+msgstr "Повторить анимацию"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "questReviews"
+msgstr "Повтори карточки"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "rewards"
+msgstr "Награды за занятия"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "syncDetail"
+msgstr "Anki Streak читает данные при запуске, при возврате в приложение, по кнопке «Обновить» и в фоне. Интервал между фоновыми проверками — не меньше 15 минут, точное время выбирает Android. События AnkiDroid не используются."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "monthStreakAwardDetail"
+msgstr "Занимайся 30 дней подряд."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "weekStreakAwardDetail"
+msgstr "Занимайся 7 дней подряд."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "activity"
+msgstr "История занятий"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "firstReviewAwardDetail"
+msgstr "Повтори первую карточку."
+
+#. Short label for the number of Anki card reviews.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "shortReviews"
+msgstr "Повторы"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "refreshSuccess"
+msgstr "Статистика и виджет обновлены."
+
+#. Captions the large count of reviews in the tall Daily Progress widget. Use lowercase.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "widgetReviewed"
+msgstr "повторено сегодня"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "reviewed"
+msgstr "Повторено сегодня"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "reviewsUnavailable"
+msgstr "Повторы недоступны"
+
+#. Compact metric showing the number of Anki card reviews today.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "widgetReviewCount"
+msgstr "Повторы: {count}"
+
+#. Short lowercase form of saturday under the widget week bar.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "widgetSaturday"
+msgstr "сб"
+
+#. Short form of saturday in the review history.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "saturday"
+msgstr "Сб"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "onboardingWelcomeDetail"
+msgstr "Следи за занятиями, продолжай серию и радуй любимого персонажа своими успехами."
+
+#. State of the selected character in the character picker.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "choose"
+msgstr "Выбрано"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "notifications"
+msgstr "Присылать уведомление"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "settings"
+msgstr "Настройки"
+
+#. Skip onboarding and open the app.
+#. js-lingui-explicit-id
+#: src/Onboarding.tsx
+msgid "onboardingSkip"
+msgstr "Пропустить"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "startReviews"
+msgstr "Начать повторения"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "onboardingStep"
+msgstr "Шаг {step} из 3"
+
+#. Compact widget label for consecutive study days. Use lowercase.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "pulseStreak"
+msgstr "серия"
+
+#. Short label for consecutive Anki study days.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "shortStreak"
+msgstr "Серия"
+
+#. Name of a widget layout that emphasizes the review streak.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "first"
+msgstr "Серия на первом плане"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "streakTarget"
+msgstr "Длина серии"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "currentDetail"
+msgstr "Серия, история занятий и средние показатели"
+
+#. Compact metric showing the number of consecutive study days.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "widgetStreakCount"
+msgstr "Серия: {count}"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "studyPulse"
+msgstr "Пульс занятий"
+
+#. Short lowercase form of sunday under the widget week bar.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "widgetSunday"
+msgstr "вс"
+
+#. Short form of sunday in the review history.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "sunday"
+msgstr "Вс"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "system"
+msgstr "Системный"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "tall"
+msgstr "Высокий"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "theme"
+msgstr "Тема"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "themes"
+msgstr "Темы"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "monthStreakAward"
+msgstr "Тридцать дней"
+
+#. Short lowercase form of thursday under the widget week bar.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "widgetThursday"
+msgstr "чт"
+
+#. Short form of thursday in the review history.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "thursday"
+msgstr "Чт"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "today"
+msgstr "Сегодня"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "focusDetail"
+msgstr "Повторы за сегодня"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "reviewsComplete"
+msgstr "Повторения на сегодня завершены"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "currentTallDetail"
+msgstr "Повторы за сегодня, серия и активность за неделю"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "pinFallback"
+msgstr "Нажми и удерживай главный экран, затем выбери «Виджеты → Anki Streak»."
+
+#. Short lowercase form of tuesday under the widget week bar.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "widgetTuesday"
+msgstr "вт"
+
+#. Short form of tuesday in the review history.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "tuesday"
+msgstr "Вт"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "unsupported"
+msgstr "Обнови AnkiDroid до версии с поддержкой поиска карточек."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "verifyingUpdate"
+msgstr "Проверяем обновление…"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "version"
+msgstr "Версия {version}"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "upToDate"
+msgstr "Установлена актуальная версия {version}."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "waitingMood"
+msgstr "Ждёт"
+
+#. Short lowercase form of wednesday under the widget week bar.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "widgetWednesday"
+msgstr "ср"
+
+#. Short form of wednesday in the review history.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "wednesday"
+msgstr "Ср"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "widget"
+msgstr "Виджет"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "widgetLayouts"
+msgstr "Макеты виджета"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "additionalAwards"
+msgstr "Ещё открыто — {count}"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "firstDetail"
+msgstr "Сколько дней подряд ты занимаешься"

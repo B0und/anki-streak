@@ -1,16 +1,19 @@
 import { accessSync, constants } from 'node:fs';
 
-const android = ['Android', ['bash', 'scripts/check-android.sh']];
-const checks = [
+type Check = [name: string, command: string[]];
+
+const android: Check = ['Android', ['bash', 'scripts/check-android.sh']];
+const checks: Check[] = [
   ['TypeScript lint', ['bun', 'run', 'lint']],
   ['TypeScript', ['bun', 'run', 'typecheck']],
-  ['Portrait assets', ['python3', 'scripts/check-apk-size.py']],
-  ['Character palettes', ['bun', 'scripts/generate-character-palettes.mjs', '--check']],
-  ['Widget model', ['bun', 'scripts/check-widget-model.mjs']],
-  ['Widget refresh', ['bun', 'scripts/check-widget-refresh.mjs']],
+  ['Portrait assets', ['bun', 'scripts/check-apk-size.ts']],
+  ['Character palettes', ['bun', 'scripts/generate-character-palettes.ts', '--check']],
+  ['Translations', ['bun', 'scripts/check-locales.ts']],
+  ['Widget model', ['bun', 'scripts/check-widget-model.ts']],
+  ['Widget refresh', ['bun', 'scripts/check-widget-refresh.ts']],
 ];
 
-async function run([name, command]) {
+async function run([name, command]: Check) {
   console.log(`Running ${name}…`);
   const child = Bun.spawn(command, { stdout: 'pipe', stderr: 'pipe' });
   const [stdout, stderr, status] = await Promise.all([

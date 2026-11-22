@@ -1,0 +1,913 @@
+msgid ""
+msgstr ""
+"Language: en\n"
+"Content-Type: text/plain; charset=utf-8\n"
+
+#. Number of weeks visible in the review history.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "historyWeeks"
+msgstr "{count, plural, one {# week} other {# weeks}}"
+
+#. Repeat the streak reward at this interval, measured in days.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "every"
+msgstr "{count, plural, one {Every day} other {Every # days}}"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "questsComplete"
+msgstr "{count} of {total} done"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "achievementsEarned"
+msgstr "{count} of {total} earned"
+
+#. Number of consecutive study days shown on the widget.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "widgetStreak"
+msgstr "{count}-day streak"
+
+#. Accessibility description of the widget. name is the character’s name.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "activityDescription"
+msgstr "{name}. Streak: {streak}. Reviews today: {today}. Average reviews: {reviews}. Average new cards: {learned}."
+
+#. received and total are formatted amounts of data in megabytes.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "downloadSize"
+msgstr "{received} / {total} MB"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "widgetAverages"
+msgstr "{reviews} reviews · {learned} new per day"
+
+#. speed is the formatted download rate in kilobytes per second.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "downloadSpeedKb"
+msgstr "{speed} kB/s"
+
+#. speed is the formatted download rate in megabytes per second.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "downloadSpeedMb"
+msgstr "{speed} MB/s"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "achievement"
+msgstr "Achievement"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "awardUnlocked"
+msgstr "Achievement unlocked"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "achievements"
+msgstr "Achievements"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "addWidgetShort"
+msgstr "Add"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "onboardingWidget"
+msgstr "Add a character to your home screen from the Widget tab."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "addWidget"
+msgstr "Add home-screen widget"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "clearQueueAward"
+msgstr "All Caught Up"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "permission"
+msgstr "Allow access to read your review activity."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "onboardingConnectDetail"
+msgstr "Allow Anki Streak to read your review counts and due cards from AnkiDroid."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "installPermission"
+msgstr "Allow installs from Anki Streak in Android settings, then return and tap Install update."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "notificationsBlocked"
+msgstr "Allow notifications for Anki Streak in Android settings."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "permissions"
+msgstr "Android permissions"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "animate"
+msgstr "Animate the celebration"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "updateAvailable"
+msgstr "Anki Streak {version} available"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "onboardingConnected"
+msgstr "AnkiDroid connected"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "sync"
+msgstr "AnkiDroid sync"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "updates"
+msgstr "App updates"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "appearance"
+msgstr "Appearance"
+
+#. Compact widget label for average new cards answered per day. Keep it short.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "pulseNew"
+msgstr "avg. new"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "avgNew"
+msgstr "Avg. new cards/day"
+
+#. Compact widget label for average card reviews per day. Keep it short.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "pulseReviews"
+msgstr "avg. reviews"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "avgReviews"
+msgstr "Avg. reviews/day"
+
+#. Button to return to the previous screen.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "back"
+msgstr "Back"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "transparency"
+msgstr "Background transparency"
+
+#. Captions the large count of cards reviewed today in Study Pulse. Use lowercase.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "pulseToday"
+msgstr "cards today"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "character"
+msgstr "Character"
+
+#. Button to check for an app update.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "check"
+msgstr "Check for updates"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "excludedDueDecksDetail"
+msgstr "Checked decks don’t count toward this milestone. Select subdecks individually."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "checking"
+msgstr "Checking for updates…"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "questDue"
+msgstr "Clear due reviews"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "compact"
+msgstr "Compact"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "connect"
+msgstr "Connect AnkiDroid"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "questsUnavailable"
+msgstr "Connect AnkiDroid to track today’s quests."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "onboardingLater"
+msgstr "Connect later"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "onboardingConnect"
+msgstr "Connect your reviews"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "awardContinue"
+msgstr "Continue"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "onboardingContinue"
+msgstr "Continue"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "themeError"
+msgstr "Couldn’t apply the theme. Try refreshing."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "widgetAppearanceFailed"
+msgstr "Couldn’t apply the widget appearance. Tap Refresh to retry."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "checkFailed"
+msgstr "Couldn’t check for updates. Try again."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "unavailableDueDecks"
+msgstr "Couldn’t load decks. Open AnkiDroid and check its access permissions."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "settingsError"
+msgstr "Couldn’t open Android settings."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "openError"
+msgstr "Couldn’t open AnkiDroid."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "permissionError"
+msgstr "Couldn’t open the permission prompt. Check Android permissions."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "updateFailed"
+msgstr "Couldn’t prepare the update. Try again."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "refreshError"
+msgstr "Couldn’t refresh the widget. Try again."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "transparencyError"
+msgstr "Couldn’t update the background. Try again."
+
+#. Name of a widget layout.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "focus"
+msgstr "Daily Focus"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "newTarget"
+msgstr "Daily new-card target"
+
+#. Name of a widget layout.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "current"
+msgstr "Daily Progress"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "dailyQuests"
+msgstr "Daily quests"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "widgetDailyQuests"
+msgstr "Daily quests"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "onboardingRoutineDetail"
+msgstr "Daily quests give you something to aim for. Over time, your study streak earns permanent achievements."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "reviewTarget"
+msgstr "Daily review target"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "dark"
+msgstr "Dark"
+
+#. Consecutive days with at least one completed Anki review.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "streak"
+msgstr "Day streak"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "questDone"
+msgstr "Done"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "downloadInstall"
+msgstr "Download and install"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "downloading"
+msgstr "Downloading update…"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "excludedDueDecks"
+msgstr "Excluded decks"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "clearQueueAwardDetail"
+msgstr "Finish a day’s due reviews."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "finishDue"
+msgstr "Finish due reviews"
+
+#. Celebrate the first Anki card reviewed that day.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "firstReview"
+msgstr "First review of the day"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "firstReviewAward"
+msgstr "First Steps"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "themePreview"
+msgstr "Flip preview mood"
+
+#. Short lowercase form of friday under the widget week bar.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "widgetFriday"
+msgstr "fri"
+
+#. Short form of friday in the review history.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "friday"
+msgstr "Fri"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "onboardingRoutine"
+msgstr "Give today a goal"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "onboardingFinish"
+msgstr "Go to Today"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "happyMood"
+msgstr "Happy"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "homeWidgetPreview"
+msgstr "Home widget preview"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "missing"
+msgstr "Install AnkiDroid to see your review activity."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "installUpdate"
+msgstr "Install update"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "cheers"
+msgstr "Keep up the great reviews!"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "language"
+msgstr "Language"
+
+#. time is the formatted timestamp of the last AnkiDroid refresh.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "lastCheck"
+msgstr "Last check: {time}"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "layout"
+msgstr "Layout"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "questNew"
+msgstr "Learn new cards"
+
+#. Show fewer weeks in the review history.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "less"
+msgstr "Less"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "light"
+msgstr "Light"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "loadingDueDecks"
+msgstr "Loading AnkiDroid decks…"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "awardLocked"
+msgstr "Locked"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "onboardingWelcome"
+msgstr "Make it a streak"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "resizeWidget"
+msgstr "Make the widget taller on your home screen to use this layout."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "milestone"
+msgstr "Milestone"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "rewardToast"
+msgstr "Milestone reached!"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "targetInput"
+msgstr "Milestone target"
+
+#. Short lowercase form of monday under the widget week bar.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "widgetMonday"
+msgstr "mon"
+
+#. Short form of monday in the review history.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "monday"
+msgstr "Mon"
+
+#. Show more weeks in the review history.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "more"
+msgstr "More"
+
+#. Short label for Anki cards reviewed for the first time.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "newCards"
+msgstr "New"
+
+#. Number of cards answered for the first time today.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "learned"
+msgstr "New cards today"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "emptyDueDecks"
+msgstr "No decks found in AnkiDroid."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "noReviewsDue"
+msgstr "No reviews due today"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "rewardTiming"
+msgstr "One celebration per day. Background notifications arrive when Android checks your progress."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "weekStreakAward"
+msgstr "One Full Week"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "connectWidget"
+msgstr "Open Anki Streak to connect"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "openAnki"
+msgstr "Open AnkiDroid"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "unavailable"
+msgstr "Open your collection in AnkiDroid, then refresh."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "installer"
+msgstr "Opening Android installer…"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "previewUnavailable"
+msgstr "Preview unavailable"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "progress"
+msgstr "Progress"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "waiting"
+msgstr "Ready when you are."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "refresh"
+msgstr "Refresh"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "refreshing"
+msgstr "Refreshing…"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "reloadDueDecks"
+msgstr "Reload decks"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "replayAward"
+msgstr "Replay celebration"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "questReviews"
+msgstr "Review cards"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "rewards"
+msgstr "Review celebrations"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "syncDetail"
+msgstr "Review data is read from AnkiDroid when you open or return to Anki Streak, when you tap Refresh, and in the background. Android schedules background checks at least 15 minutes apart. AnkiDroid events aren’t used."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "monthStreakAwardDetail"
+msgstr "Review for 30 days in a row."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "weekStreakAwardDetail"
+msgstr "Review for 7 days in a row."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "activity"
+msgstr "Review history"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "firstReviewAwardDetail"
+msgstr "Review your first card."
+
+#. Short label for the number of Anki card reviews.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "shortReviews"
+msgstr "Reviews"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "refreshSuccess"
+msgstr "Reviews and widget refreshed."
+
+#. Captions the large count of reviews in the tall Daily Progress widget. Use lowercase.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "widgetReviewed"
+msgstr "reviews today"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "reviewed"
+msgstr "Reviews today"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "reviewsUnavailable"
+msgstr "Reviews unavailable"
+
+#. Compact metric showing the number of Anki card reviews today.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "widgetReviewCount"
+msgstr "Reviews: {count}"
+
+#. Short lowercase form of saturday under the widget week bar.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "widgetSaturday"
+msgstr "sat"
+
+#. Short form of saturday in the review history.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "saturday"
+msgstr "Sat"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "onboardingWelcomeDetail"
+msgstr "See what you’ve studied, keep your streak going, and give your favorite character a reason to smile."
+
+#. State of the selected character in the character picker.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "choose"
+msgstr "Selected"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "notifications"
+msgstr "Send a notification"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "settings"
+msgstr "Settings"
+
+#. Skip onboarding and open the app.
+#. js-lingui-explicit-id
+#: src/Onboarding.tsx
+msgid "onboardingSkip"
+msgstr "Skip"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "startReviews"
+msgstr "Start today’s reviews"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "onboardingStep"
+msgstr "Step {step} of 3"
+
+#. Compact widget label for consecutive study days. Use lowercase.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "pulseStreak"
+msgstr "streak"
+
+#. Short label for consecutive Anki study days.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "shortStreak"
+msgstr "Streak"
+
+#. Name of a widget layout that emphasizes the review streak.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "first"
+msgstr "Streak First"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "streakTarget"
+msgstr "Streak milestones"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "currentDetail"
+msgstr "Streak, review history, and daily averages"
+
+#. Compact metric showing the number of consecutive study days.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "widgetStreakCount"
+msgstr "Streak: {count}"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "studyPulse"
+msgstr "Study Pulse"
+
+#. Short lowercase form of sunday under the widget week bar.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "widgetSunday"
+msgstr "sun"
+
+#. Short form of sunday in the review history.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "sunday"
+msgstr "Sun"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "system"
+msgstr "System"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "tall"
+msgstr "Tall"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "theme"
+msgstr "Theme"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "themes"
+msgstr "Themes"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "monthStreakAward"
+msgstr "Thirty Strong"
+
+#. Short lowercase form of thursday under the widget week bar.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "widgetThursday"
+msgstr "thu"
+
+#. Short form of thursday in the review history.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "thursday"
+msgstr "Thu"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "today"
+msgstr "Today"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "focusDetail"
+msgstr "Today’s reviews at a glance"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "reviewsComplete"
+msgstr "Today’s reviews complete"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "currentTallDetail"
+msgstr "Today’s reviews, streak, and seven-day activity"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "pinFallback"
+msgstr "Touch and hold your home screen, then choose Widgets → Anki Streak."
+
+#. Short lowercase form of tuesday under the widget week bar.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "widgetTuesday"
+msgstr "tue"
+
+#. Short form of tuesday in the review history.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "tuesday"
+msgstr "Tue"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "unsupported"
+msgstr "Update AnkiDroid to a version that supports card searches."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "verifyingUpdate"
+msgstr "Verifying update…"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "version"
+msgstr "Version {version}"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "upToDate"
+msgstr "Version {version} is up to date."
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "waitingMood"
+msgstr "Waiting"
+
+#. Short lowercase form of wednesday under the widget week bar.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "widgetWednesday"
+msgstr "wed"
+
+#. Short form of wednesday in the review history.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "wednesday"
+msgstr "Wed"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "widget"
+msgstr "Widget"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "widgetLayouts"
+msgstr "Widget layouts"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "additionalAwards"
+msgstr "You unlocked {count} more"
+
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "firstDetail"
+msgstr "Your day streak at a glance"

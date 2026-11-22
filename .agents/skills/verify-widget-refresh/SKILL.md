@@ -7,12 +7,12 @@ description: Verify widget publication and launcher parity when changing AnkiDro
 
 When the app submits a widget snapshot, its artwork must reflect the review data, theme, and language current at that handoff. A slow render must never put old stats or the wrong character back on the launcher.
 
-Run `bun run check` from the repository root. To isolate the verification, run `bun scripts/check-widget-model.mjs` and `bun scripts/check-widget-refresh.mjs`. The model runs with the pinned [`tla-ts`](https://github.com/aidenybai/tla-ts) dev dependency under Bun.
+To isolate the verification, run `bun scripts/check-widget-model.ts` and `bun scripts/check-widget-refresh.ts`.
 
 ## Coverage and code mapping
 
 - [WidgetRefresh.tla](../../../verification/widget-refresh/WidgetRefresh.tla) checks that a queued request submits the current inputs when it gets the publication permit. The submit step represents the handoff to Android.
-- [The actor check](../../../scripts/check-widget-refresh.mjs) holds a native submission open and changes review data, layout, theme, language, and opacity. It checks the subsequent JSON sent to Android, including the switch from Streak First to Daily Progress. It also cold-starts the actor with the last successful review snapshot and holds the provider read open to verify the displayed counts stay available. The Daily Quests scenario edits review targets during a pending publication and checks the next widget snapshot.
+- [The actor check](../../../scripts/check-widget-refresh.ts) holds a native submission open and changes review data, layout, theme, language, and opacity. It checks the subsequent JSON sent to Android, including the switch from Streak First to Daily Progress. It also cold-starts the actor with the last successful review snapshot and holds the provider read open to verify the displayed counts stay available. The Daily Quests scenario edits review targets during a pending publication and checks the next widget snapshot.
 - Verify Android rendering separately. The preview builds its own snapshot from the current app preferences through the same renderer as the launcher.
 
 ## Investigate a failure
@@ -22,11 +22,9 @@ Translate the model checker's trace into the user's steps. Replay a failing inpu
 Run each mutation after editing the verification. The model should report `NoStalePublication` and the actor should report a stale widget snapshot. Both mutations run in scratch files.
 
 ```sh
-bun scripts/check-widget-model.mjs --mutate-freshness
-bun scripts/check-widget-refresh.mjs --mutate-freshness
+bun scripts/check-widget-model.ts --mutate-freshness
+bun scripts/check-widget-refresh.ts --mutate-freshness
 ```
-
-Then run the normal local gate.
 
 ## Verify launcher parity
 

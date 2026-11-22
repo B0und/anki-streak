@@ -1,7 +1,8 @@
 import type { ReviewHistory } from './activity';
 import type { WidgetCard, WidgetProps } from './AnkiWidget';
 import { characterPalettes } from './character-palettes';
-import { copy, weekdays, type Language } from './messages';
+import { getI18n, type Language } from './i18n';
+import { messages, widgetWeekdays } from './messages';
 import type { getQuestTargets, WidgetLayout, WidgetSize } from './preferences';
 import { dailyQuests, type StudyActivity } from './studyProgress';
 import { themes, type WidgetTheme } from './themes';
@@ -16,10 +17,11 @@ function widgetCard(
   targets: ReturnType<typeof getQuestTargets>, transparency: number,
 ): WidgetCard {
   const { accent, pulse } = palette;
+  const i18n = getI18n(language);
   if (layout === 'studyPulse') {
     return {
       value: String(stats.today),
-      label: copy(language, 'pulseToday'),
+      label: i18n.t(messages.pulseToday),
       secondary: '',
       accent,
       pulse: {
@@ -29,9 +31,9 @@ function widgetCard(
         muted: pulse.label,
         detail: pulse.value,
         metrics: [
-          { label: copy(language, 'pulseStreak'), value: String(stats.streak), icon: 'widget_pulse_streak' },
-          { label: copy(language, 'pulseReviews'), value: String(stats.dailyReviewed), icon: 'widget_pulse_reviews' },
-          { label: copy(language, 'pulseNew'), value: String(stats.dailyLearned), icon: 'widget_pulse_new' },
+          { label: i18n.t(messages.pulseStreak), value: String(stats.streak), icon: 'widget_pulse_streak' },
+          { label: i18n.t(messages.pulseReviews), value: String(stats.dailyReviewed), icon: 'widget_pulse_reviews' },
+          { label: i18n.t(messages.pulseNew), value: String(stats.dailyLearned), icon: 'widget_pulse_new' },
         ],
       },
     };
@@ -42,14 +44,14 @@ function widgetCard(
     const goals = quests.flatMap(({ id, value, target }) => {
       if (id !== 'reviewTarget' && id !== 'newTarget') return [];
       return [{
-        label: copy(language, id === 'reviewTarget' ? 'shortReviews' : 'newCards'),
+        label: i18n.t(messages[id === 'reviewTarget' ? 'shortReviews' : 'newCards']),
         value: `${Math.min(value, target)}/${target}`,
         fraction: Math.min(1, value / target),
       }];
     });
     return {
       value: `${completed}/${quests.length}`,
-      label: copy(language, 'widgetDailyQuests'),
+      label: i18n.t(messages.widgetDailyQuests),
       secondary: '',
       accent,
       quests: { completed, total: quests.length, goals },
@@ -59,11 +61,11 @@ function widgetCard(
   const secondary = focus ? stats.streak : stats.today;
   return {
     value: String(focus ? stats.today : stats.streak),
-    label: copy(language, focus ? 'reviewed' : 'streak'),
-    secondary: focus ? copy(language, 'widgetStreak', { count: secondary }) : `${copy(language, 'shortReviews')}: ${secondary}`,
-    shortLabel: copy(language, focus ? 'shortReviews' : 'shortStreak'),
-    averages: layout === 'current' ? copy(language, 'widgetAverages', { reviews: stats.dailyReviewed, learned: stats.dailyLearned }) : undefined,
-    shortSecondary: `${copy(language, focus ? 'shortStreak' : 'shortReviews')}: ${secondary}`,
+    label: i18n.t(messages[focus ? 'reviewed' : 'streak']),
+    secondary: i18n.t(messages[focus ? 'widgetStreak' : 'widgetReviewCount'].id, { count: secondary }),
+    shortLabel: i18n.t(messages[focus ? 'shortReviews' : 'shortStreak']),
+    averages: layout === 'current' ? i18n.t(messages.widgetAverages.id, { reviews: stats.dailyReviewed, learned: stats.dailyLearned }) : undefined,
+    shortSecondary: i18n.t(messages[focus ? 'widgetStreakCount' : 'widgetReviewCount'].id, { count: secondary }),
     accent,
   };
 }
@@ -71,7 +73,9 @@ function widgetCard(
 function widgetWeek(language: Language, stats: { today: number; history: ReviewHistory }): NonNullable<WidgetCard["days"]> {
   const { counts, todayRow } = stats.history;
   const monday = counts.length - 1 - todayRow;
-  return weekdays[language].map((label, index) => {
+  const i18n = getI18n(language);
+  return widgetWeekdays.map((day, index) => {
+    const label = i18n.t(day);
     if (index > todayRow) {
       return { label, state: 'future' };
     }
@@ -92,13 +96,14 @@ export function widgetProps({ stats, language, themeId, layouts, transparency, t
   transparency: number;
   targets: ReturnType<typeof getQuestTargets>;
 }): WidgetProps {
+  const i18n = getI18n(language);
   const theme = themes[themeId];
   const palette = characterPalettes[themeId].widget;
   const backdrop = widgetBackdrop(stats ? palette.card : palette.shade, transparency);
   return {
     happy: !!stats && stats.today > 0,
     portraitAspect: theme.portraitAspect,
-    description: stats ? copy(language, 'activityDescription', {
+    description: stats ? i18n.t(messages.activityDescription.id, {
       name: theme.name, streak: stats.streak, today: stats.today,
       reviews: stats.dailyReviewed, learned: stats.dailyLearned,
     }) : '',
@@ -106,11 +111,13 @@ export function widgetProps({ stats, language, themeId, layouts, transparency, t
     happyDrawable: theme.happy,
     backdrop,
     cardBackdrop: backdrop,
-    connectLabel: copy(language, 'connectWidget'),
+    connectLabel: i18n.t(messages.connectWidget),
     cards: stats ? {
       compact: widgetCard(layouts.compact, language, stats, palette, targets, transparency),
-      tall: { ...widgetCard(layouts.tall, language, stats, palette, targets, transparency),
-        days: layouts.tall === 'current' ? widgetWeek(language, stats) : undefined },
+      tall: {
+        ...widgetCard(layouts.tall, language, stats, palette, targets, transparency),
+        ...(layouts.tall === 'current' && { label: i18n.t(messages.widgetReviewed), days: widgetWeek(language, stats) }),
+      },
     } : undefined,
   };
 }

@@ -1,5 +1,6 @@
 import type { AnkiActivity } from './activity';
-import { copy } from './messages';
+import { getI18n } from './i18n';
+import { messages } from './messages';
 import { getLanguage, getTarget, milestones, preference, settings } from './preferences';
 
 export function celebrationDay() {
@@ -23,9 +24,9 @@ export function recordReviewMilestone(activity: AnkiActivity) {
     streakTarget: activity.streak > 0 && activity.streak % getTarget('streakTarget') === 0,
   };
   if (!reached[milestone]) return;
-  const language = getLanguage();
+  const i18n = getI18n(getLanguage());
   settings.recordMilestone(
     celebrationDay(), animate, notify,
-    copy(language, 'rewardToast'), copy(language, 'cheers'), copy(language, 'rewards'),
+    i18n.t(messages.rewardToast), i18n.t(messages.cheers), i18n.t(messages.rewards),
   );
 }

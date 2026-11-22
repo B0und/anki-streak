@@ -25,6 +25,8 @@
   },
   "include": [
     "index.ts",
+    "lingui.config.ts",
+    "plugins/**/*.ts",
     "src/**/*.ts",
     "src/**/*.tsx"
   ]

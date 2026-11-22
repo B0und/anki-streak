@@ -1,14 +1,18 @@
+import { useLingui } from '@lingui/react';
 import { Tabs } from 'expo-router/js-tabs';
 import { House, PanelsTopLeft, Settings, Trophy } from 'lucide-react-native';
 import { useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useDashboardContext } from '../../dashboardContext';
-import { copy } from '../../messages';
+import { useAppAppearance } from '../../useAppAppearance';
+import { UpdatesActorContext } from '../../updateMachine';
+import { messages } from '../../messages';
 import { screenMaxWidth } from '../../screenLayout';
 
 export default function TabLayout() {
-  const { language, palette, updates } = useDashboardContext();
+  const { _ } = useLingui();
+  const { palette } = useAppAppearance();
+  const updateAvailable = UpdatesActorContext.useSelector(({ context }) => context.update !== null);
   const { width } = useWindowDimensions();
   const { left, right } = useSafeAreaInsets();
   return <Tabs backBehavior="initialRoute" screenOptions={{
@@ -22,13 +26,13 @@ export default function TabLayout() {
     },
     tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
   }}>
-    <Tabs.Screen name="index" options={{ title: copy(language, 'today'), tabBarIcon: ({ color, size }) => <House color={color} size={size} /> }} />
-    <Tabs.Screen name="widget" options={{ title: copy(language, 'widget'), tabBarIcon: ({ color, size }) => <PanelsTopLeft color={color} size={size} /> }} />
-    <Tabs.Screen name="progress" options={{ title: copy(language, 'progress'), tabBarIcon: ({ color, size }) => <Trophy color={color} size={size} /> }} />
+    <Tabs.Screen name="index" options={{ title: _(messages.today), tabBarIcon: ({ color, size }) => <House color={color} size={size} /> }} />
+    <Tabs.Screen name="widget" options={{ title: _(messages.widget), tabBarIcon: ({ color, size }) => <PanelsTopLeft color={color} size={size} /> }} />
+    <Tabs.Screen name="progress" options={{ title: _(messages.progress), tabBarIcon: ({ color, size }) => <Trophy color={color} size={size} /> }} />
     <Tabs.Screen name="settings" options={{
-      title: copy(language, 'settings'),
+      title: _(messages.settings),
       tabBarIcon: ({ color, size }) => <Settings color={color} size={size} />,
-      tabBarBadge: updates.update ? 1 : undefined,
+      tabBarBadge: updateAvailable ? 1 : undefined,
     }} />
   </Tabs>;
 }

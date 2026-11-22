@@ -1,15 +1,13 @@
+import { useLingui } from '@lingui/react';
 import { AppUpdates } from '../../AppUpdates';
-import { useDashboardContext } from '../../dashboardContext';
-import { copy } from '../../messages';
+import { messages } from '../../messages';
 import { Screen } from '../../Screen';
 import { SettingsScreen } from '../../SettingsScreen';
 
 export default function SettingsRoute() {
-  const preferences = useDashboardContext();
-  const { language, updates } = preferences;
-
-  return <Screen title={copy(language, 'settings')}>
-    <AppUpdates accent={preferences.palette.accent} language={language} updates={updates} />
-    <SettingsScreen {...preferences} />
+  const { _ } = useLingui();
+  return <Screen title={_(messages.settings)}>
+    <AppUpdates />
+    <SettingsScreen />
   </Screen>;
 }

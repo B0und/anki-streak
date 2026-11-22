@@ -1,16 +1,18 @@
+import { useLingui } from '@lingui/react';
 import { Download } from 'lucide-react-native';
 import { useWindowDimensions } from 'react-native';
 import { Text, View, XStack, YStack } from 'tamagui';
 
-import { copy, type Language } from './messages';
+import { messages } from './messages';
 import { SettingsGroup } from './SettingsScreen';
-import type { useAppUpdates } from './updateMachine';
+import { useAppUpdates } from './updateMachine';
+import { useAppAppearance } from './useAppAppearance';
 
-export function AppUpdates({ language, updates, accent }: {
-  accent: string; language: Language; updates: ReturnType<typeof useAppUpdates>;
-}) {
+export function AppUpdates() {
+  const { _, i18n } = useLingui();
   const { fontScale } = useWindowDimensions();
-  const { kind, update, version, canUpdate, check, install, progress } = updates;
+  const { palette: { accent } } = useAppAppearance();
+  const { kind, update, version, canUpdate, check, install, progress } = useAppUpdates();
   if (!canUpdate) return null;
 
   const rowHeight = Math.max(58, 52 * fontScale);
@@ -19,12 +21,12 @@ export function AppUpdates({ language, updates, accent }: {
     const rate = progress?.bytesPerSecond ?? 0;
     const percent = Math.floor(received / update.size * 100);
     const verifying = received === update.size;
-    const label = copy(language, verifying ? 'verifyingUpdate' : 'downloading');
+    const label = _(messages[verifying ? 'verifyingUpdate' : 'downloading']);
     const speed = rate >= 1_000_000
-      ? copy(language, 'downloadSpeedMb', { speed: formatMegabytes(rate, language) })
-      : copy(language, 'downloadSpeedKb', { speed: Math.round(rate / 1000) });
+      ? _(messages.downloadSpeedMb.id, { speed: formatMegabytes(rate, i18n.locale) })
+      : _(messages.downloadSpeedKb.id, { speed: Math.round(rate / 1000) });
 
-    return <SettingsGroup title={copy(language, 'updates')} icon={Download} color={accent}>
+    return <SettingsGroup title={_(messages.updates)} icon={Download} color={accent}>
       <YStack minH={rowHeight} gap={6}>
         <XStack items="center" justify="space-between" gap={8} flexWrap="wrap">
           <Text accessibilityLiveRegion="polite" color="color" fontSize={13} fontWeight="600">{label}</Text>
@@ -36,9 +38,9 @@ export function AppUpdates({ language, updates, accent }: {
           <View w={`${percent}%`} h="100%" rounded={3} bg="accent" />
         </View>
         <XStack justify="space-between" gap={8} flexWrap="wrap">
-          <Text color="muted" fontSize={12} fontVariant={['tabular-nums']}>{copy(language, 'downloadSize', {
-            received: formatMegabytes(received, language),
-            total: formatMegabytes(update.size, language),
+          <Text color="muted" fontSize={12} fontVariant={['tabular-nums']}>{_(messages.downloadSize.id, {
+            received: formatMegabytes(received, i18n.locale),
+            total: formatMegabytes(update.size, i18n.locale),
           })}</Text>
           {!verifying && <Text color="muted" fontSize={12} fontVariant={['tabular-nums']}>{speed}</Text>}
         </XStack>
@@ -48,23 +50,23 @@ export function AppUpdates({ language, updates, accent }: {
 
   const busy = kind === 'checking' || kind === 'downloading' || kind === 'opening-installer';
   const installReady = kind === 'ready' || kind === 'permission';
-  const status = kind === 'checking' ? copy(language, 'checking')
-    : kind === 'download-failed' ? copy(language, 'updateFailed')
-    : kind === 'downloading' ? copy(language, 'downloading')
-    : kind === 'opening-installer' ? copy(language, 'installer')
-    : kind === 'permission' ? copy(language, 'installPermission')
-    : kind === 'check-failed' ? copy(language, 'checkFailed')
-    : update ? copy(language, 'updateAvailable', { version: update.version })
-    : copy(language, kind === 'current' ? 'upToDate' : 'version', { version });
+  const status = kind === 'checking' ? _(messages.checking)
+    : kind === 'download-failed' ? _(messages.updateFailed)
+    : kind === 'downloading' ? _(messages.downloading)
+    : kind === 'opening-installer' ? _(messages.installer)
+    : kind === 'permission' ? _(messages.installPermission)
+    : kind === 'check-failed' ? _(messages.checkFailed)
+    : update ? _(messages.updateAvailable.id, { version: update.version })
+    : _(messages[kind === 'current' ? 'upToDate' : 'version'].id, { version });
 
-  return <SettingsGroup title={copy(language, 'updates')} icon={Download} color={accent}>
+  return <SettingsGroup title={_(messages.updates)} icon={Download} color={accent}>
     <XStack items="center" gap={12} h={rowHeight}>
       <Text accessibilityLiveRegion="polite" color="muted" fontSize={13} flex={1} numberOfLines={2}>{status}</Text>
       <View accessibilityRole="button" accessibilityState={{ disabled: busy }}
         onPress={busy ? undefined : update ? install : check}
         w="43%" justify="center" h="100%" opacity={busy ? 0.55 : 'press:0.75'}>
         <Text color="accent" fontSize={13} fontWeight="700" numberOfLines={2} text="right">
-          {copy(language, update ? installReady ? 'installUpdate' : 'downloadInstall' : 'check')}
+          {_(messages[update ? installReady ? 'installUpdate' : 'downloadInstall' : 'check'])}
         </Text>
       </View>
     </XStack>
@@ -72,7 +74,6 @@ export function AppUpdates({ language, updates, accent }: {
 }
 
 
-function formatMegabytes(bytes: number, language: Language) {
-  const value = (bytes / 1_000_000).toFixed(1);
-  return language === 'ru' ? value.replace('.', ',') : value;
+function formatMegabytes(bytes: number, locale: string) {
+  return (bytes / 1_000_000).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1, useGrouping: false });
 }

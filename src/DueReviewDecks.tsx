@@ -1,3 +1,4 @@
+import { useLingui } from '@lingui/react';
 import { useActor } from '@xstate/react';
 import { Effect } from 'effect';
 import { CheckSquare, Square } from 'lucide-react-native';
@@ -6,7 +7,7 @@ import { setup, types } from 'xstate';
 
 import { getDueReviewExcludedDecks, readDecks, setDueReviewExcludedDecks, type AnkiDeck } from './activity';
 import type { Palette } from './appearance';
-import { copy, type Language } from './messages';
+import { messages } from './messages';
 import { settingsIconGap, settingsRowPadding } from './screenLayout';
 import { Action, SettingsIconSlot } from './studyComponents';
 
@@ -45,15 +46,16 @@ const dueReviewDecks = deckSetup.createMachine({
   },
 });
 
-export function DueReviewDecks({ language, palette }: { language: Language; palette: Palette }) {
+export function DueReviewDecks({ palette }: { palette: Palette }) {
+  const { _ } = useLingui();
   const [snapshot, send] = useActor(dueReviewDecks);
   const { decks, excluded } = snapshot.context;
   const loading = snapshot.matches('loading');
   const unavailable = snapshot.matches('unavailable');
 
   return <YStack gap={6} pt={12} borderTopWidth={1} borderTopColor="border-color">
-    <Text accessibilityRole="header" color="color" fontWeight="700">{copy(language, 'excludedDueDecks')}</Text>
-    <Text color="muted" fontSize={13}>{copy(language, 'excludedDueDecksDetail')}</Text>
+    <Text accessibilityRole="header" color="color" fontWeight="700">{_(messages.excludedDueDecks)}</Text>
+    <Text color="muted" fontSize={13}>{_(messages.excludedDueDecksDetail)}</Text>
     <ScrollView h={136} mx={-settingsRowPadding} nestedScrollEnabled>
       {decks.map(({ id, name }) => {
         const checked = excluded.includes(id);
@@ -68,9 +70,9 @@ export function DueReviewDecks({ language, palette }: { language: Language; pale
         </XStack>;
       })}
       {(decks.length === 0 || unavailable) && <Text color="muted" mx={settingsRowPadding} accessibilityLiveRegion="polite">
-        {copy(language, unavailable ? 'unavailableDueDecks' : loading ? 'loadingDueDecks' : 'emptyDueDecks')}
+        {_(messages[unavailable ? 'unavailableDueDecks' : loading ? 'loadingDueDecks' : 'emptyDueDecks'])}
       </Text>}
     </ScrollView>
-    <Action disabled={loading} onPress={() => send({ type: 'reload' })}>{copy(language, 'reloadDueDecks')}</Action>
+    <Action disabled={loading} onPress={() => send({ type: 'reload' })}>{_(messages.reloadDueDecks)}</Action>
   </YStack>;
 }

@@ -1,3 +1,4 @@
+import { useLingui } from '@lingui/react';
 import { Canvas, Circle, Group, LinearGradient, Path, vec } from '@shopify/react-native-skia';
 import { useActorRef } from '@xstate/react';
 import { StatusBar } from 'expo-status-bar';
@@ -10,8 +11,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScrollView, Text, YStack } from 'tamagui';
 import { createCallbackLogic } from 'xstate';
 
-import { useDashboardContext } from './dashboardContext';
-import { copy } from './messages';
+import { useAppAppearance } from './useAppAppearance';
+import { messages } from './messages';
 import { useProgress } from './progressContext';
 import { achievements, type Achievement } from './studyProgress';
 import { Action } from './studyComponents';
@@ -121,7 +122,8 @@ function MedalBurst({ award, accent }: { award: Achievement; accent: string }) {
 }
 
 export function AchievementCelebration() {
-  const { language, palette } = useDashboardContext();
+  const { _ } = useLingui();
+  const { palette } = useAppAppearance();
   const { unveiling, dismiss } = useProgress();
   if (!unveiling) return null;
   const award = unveiling.kind === 'replay' ? unveiling.award : unveiling.awards.at(-1);
@@ -137,16 +139,16 @@ export function AchievementCelebration() {
         <MedalBurst key={entry.id} award={entry.id} accent={palette.accent} />
         <YStack w="100%" maxW={440} px={26} mt={-7} pb={20} gap={10} items="center">
           <Text accessibilityRole="header" text="center" color="#FFF3CE" fontFamily="display"
-            fontSize={37} fontWeight="700" style={{ includeFontPadding: false }}>{copy(language, entry.title)}</Text>
+            fontSize={37} fontWeight="700" style={{ includeFontPadding: false }}>{_(messages[entry.title])}</Text>
           <Text accessibilityLiveRegion="polite" text="center" color="#E4B777" fontWeight="700" fontSize={14}>
-            {copy(language, unveiling.kind === 'new' ? 'awardUnlocked' : 'achievement')}
+            {_(messages[unveiling.kind === 'new' ? 'awardUnlocked' : 'achievement'])}
           </Text>
-          <Text text="center" color="#E0C9B4" fontSize={16}>{copy(language, entry.detail)}</Text>
+          <Text text="center" color="#E0C9B4" fontSize={16}>{_(messages[entry.detail])}</Text>
           {additional > 0 && <Text text="center" color="#E4B777" fontSize={14}>
-            {copy(language, 'additionalAwards', { count: additional })}
+            {_(messages.additionalAwards.id, { count: additional })}
           </Text>}
           <YStack mt={13} w="100%">
-            <Action primary onPress={dismiss}>{copy(language, 'awardContinue')}</Action>
+            <Action primary onPress={dismiss}>{_(messages.awardContinue)}</Action>
           </YStack>
         </YStack>
       </ScrollView>

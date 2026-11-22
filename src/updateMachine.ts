@@ -1,4 +1,4 @@
-import { useActor } from '@xstate/react';
+import { createActorContext } from '@xstate/react';
 import { Effect, Option } from 'effect';
 import { AppState } from 'react-native';
 import { createCallbackLogic, setup, types } from 'xstate';
@@ -134,8 +134,11 @@ const updatesMachine = updatesSetup.createMachine({
   },
 });
 
+export const UpdatesActorContext = createActorContext(updatesMachine);
+
 export function useAppUpdates() {
-  const [snapshot, send] = useActor(updatesMachine);
+  const snapshot = UpdatesActorContext.useSelector((value) => value);
+  const { send } = UpdatesActorContext.useActorRef();
   const kind = snapshot.value;
   return {
     ...snapshot.context,

@@ -1,16 +1,18 @@
+import { useLingui } from '@lingui/react';
 import { useRouter } from 'expo-router';
 import { Image, Text, XStack, YStack } from 'tamagui';
 
 import { characterPalettes } from '../../../character-palettes';
-import { useDashboardContext } from '../../../dashboardContext';
-import { copy } from '../../../messages';
+import { useDashboard } from '../../../dashboardMachine';
+import { messages } from '../../../messages';
 import { Screen } from '../../../Screen';
 import { themeOrder, themes } from '../../../themes';
 
 export default function ThemesRoute() {
-  const { dashboard, language } = useDashboardContext();
+  const { _ } = useLingui();
+  const dashboard = useDashboard();
   const router = useRouter();
-  return <Screen title={copy(language, 'themes')} onBack={() => router.canGoBack() ? router.back() : router.replace('/widget')}>
+  return <Screen title={_(messages.themes)} onBack={() => router.canGoBack() ? router.back() : router.replace('/widget')}>
     {themeOrder.map((id) => {
       const theme = themes[id];
       const selected = id === dashboard.themeId;
@@ -25,7 +27,7 @@ export default function ThemesRoute() {
         <YStack flex={1} self="stretch" pt={36} pb={8} px={12}>
           <Text color="color" fontFamily="display" fontWeight="700" fontSize={23}>{theme.name}</Text>
           <Text color="muted" mt={3}>{theme.source}</Text>
-          {selected && <Text color="accent" mt={7} fontWeight="700">{copy(language, 'choose')}</Text>}
+          {selected && <Text color="accent" mt={7} fontWeight="700">{_(messages.choose)}</Text>}
         </YStack>
       </XStack>;
     })}

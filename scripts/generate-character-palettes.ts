@@ -2,15 +2,17 @@ import assert from 'node:assert/strict';
 import { readFile, writeFile } from 'node:fs/promises';
 import Color from 'colorjs.io';
 
-import { themes } from '../src/themes.ts';
+import { themes } from '../src/themes';
 import approved from './character-palette-overrides.json' with { type: 'json' };
 
 const reference = approved['2b'];
+type PaletteSet = typeof reference;
+const overrides: Partial<Record<string, PaletteSet>> = approved;
 const output = new URL('../src/character-palettes.ts', import.meta.url);
-const modes = ['light', 'dark'];
+const modes = ['light', 'dark'] as const;
 const readableContrast = 4.5;
 
-function srgb(lightness, chroma, hue) {
+function srgb(lightness: number, chroma: number, hue: number) {
   return new Color('oklch', [lightness, chroma, hue])
     .toGamut({ space: 'srgb', method: 'oklch.c' })
     .to('srgb')
@@ -18,35 +20,35 @@ function srgb(lightness, chroma, hue) {
     .toUpperCase();
 }
 
-function themeFromSeed(seed) {
+function themeFromSeed(seed: string): PaletteSet {
   const [, seedChroma, hue] = new Color(seed).to('oklch').coords;
-  const chromaScale = Math.min(1.5, seedChroma / 0.04);
-  const tint = (color) => {
+  const chromaScale = Math.min(1.5, (seedChroma ?? 0) / 0.04);
+  const tint = (color: string) => {
     const [lightness, chroma] = new Color(color).to('oklch').coords;
-    return srgb(lightness, chroma * chromaScale, hue ?? 0);
+    return srgb(lightness ?? 0, (chroma ?? 0) * chromaScale, hue ?? 0);
   };
-  const tintRoles = (roles) => Object.fromEntries(
-    Object.entries(roles).map(([role, color]) => [role, tint(color)]),
-  );
+  function tintRoles<K extends string>(roles: Record<K, string>) {
+    const result = { ...roles };
+    for (const role in roles) result[role] = tint(roles[role]);
+    return result;
+  }
+  const tintApp = ({ heat, ...roles }: PaletteSet['app']['light']) => ({ ...tintRoles(roles), heat: heat.map(tint) });
   const { pulse, ...widget } = reference.widget;
   return {
     widget: { ...tintRoles(widget), pulse: tintRoles(pulse) },
-    app: Object.fromEntries(modes.map((mode) => {
-      const { heat, ...roles } = reference.app[mode];
-      return [mode, { ...tintRoles(roles), heat: heat.map(tint) }];
-    })),
+    app: { light: tintApp(reference.app.light), dark: tintApp(reference.app.dark) },
   };
 }
 
-function verifyPalette(name, { widget, app }) {
-  const contrast = (front, back, label, minimum = readableContrast) => {
+function verifyPalette(name: string, { widget, app }: PaletteSet) {
+  const contrast = (front: string, back: string, label: string, minimum = readableContrast) => {
     const ratio = new Color(front).contrast(back, 'WCAG21');
     assert.ok(ratio >= minimum, `${name} ${label} contrast ${ratio.toFixed(2)} is below ${minimum}:1`);
   };
-  const hierarchy = (colors, gaps, label) => {
+  const hierarchy = (colors: string[], gaps: number[], label: string) => {
     const lightness = colors.map((color) => new Color(color).to('oklch').coords[0]);
     for (const [index, gap] of gaps.entries()) {
-      assert.ok(lightness[index] - lightness[index + 1] >= gap, `${name} ${label} lost its lightness hierarchy`);
+      assert.ok((lightness[index] ?? Number.NaN) - (lightness[index + 1] ?? Number.NaN) >= gap, `${name} ${label} lost its lightness hierarchy`);
     }
   };
 
@@ -62,8 +64,8 @@ function verifyPalette(name, { widget, app }) {
 
   for (const mode of modes) {
     const palette = app[mode];
-    for (const background of ['background', 'surface', 'subtle', 'hero']) {
-      for (const role of ['text', 'muted', 'accent']) {
+    for (const background of ['background', 'surface', 'subtle', 'hero'] as const) {
+      for (const role of ['text', 'muted', 'accent'] as const) {
         contrast(palette[role], palette[background], `${mode} ${role} on ${background}`);
       }
     }
@@ -77,7 +79,7 @@ function verifyPalette(name, { widget, app }) {
 
 const palettes = Object.fromEntries(Object.entries(themes).map(([id, { seed }]) => {
   assert.match(seed, /^#[0-9a-f]{6}$/i, `${id} needs a six-digit sRGB seed`);
-  const palette = approved[id] ?? themeFromSeed(seed);
+  const palette = overrides[id] ?? themeFromSeed(seed);
   verifyPalette(id, palette);
   return [id, palette];
 }));

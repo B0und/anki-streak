@@ -3,7 +3,10 @@ import { mkdtempSync, rmdirSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { waitFor } from 'xstate';
-import { characterPalettes } from '../src/character-palettes.ts';
+import type { WidgetProps } from '../src/AnkiWidget';
+import { characterPalettes } from '../src/character-palettes';
+// oxlint-disable-next-line import/no-namespace -- The fixture builds and imports the complete production module.
+import type * as WidgetRefreshModule from '../src/widgetRefresh';
 
 const source = fileURLToPath(new URL('../src/widgetRefresh.ts', import.meta.url));
 const mutate = process.argv.includes('--mutate-freshness');
@@ -21,12 +24,12 @@ async function bundleWidget() {
           ({ path }) => ({ path, namespace: 'verification' }));
         build.onLoad({ filter: /.*/, namespace: 'verification' }, ({ path }) => {
           const native = `globalThis.${hostKey}`;
-          const adapters = {
-            expo: `export const requireNativeModule = (name) => ${native}[name];`,
-            'expo-background-task': 'export async function registerTaskAsync() {}',
-            'expo-task-manager': 'export function defineTask() {}\nexport async function isTaskRegisteredAsync() { return true }',
-          };
-          return { loader: 'js', contents: adapters[path] ?? 'export default undefined;' };
+          const adapters = new Map([
+            ['expo', `export const requireNativeModule = (name) => ${native}[name];`],
+            ['expo-background-task', 'export async function registerTaskAsync() {}'],
+            ['expo-task-manager', 'export function defineTask() {}\nexport async function isTaskRegisteredAsync() { return true }'],
+          ]);
+          return { loader: 'js', contents: adapters.get(path) ?? 'export default undefined;' };
         });
 
         if (mutate) {
@@ -45,22 +48,23 @@ async function bundleWidget() {
       },
     }],
   });
-  assert.equal(result.outputs.length, 1);
-  return result.outputs[0].text();
+  const [output] = result.outputs;
+  assert.ok(output && result.outputs.length === 1);
+  return output.text();
 }
 
 function makeHost() {
-  let blocker;
+  let blocker: { start: PromiseWithResolvers<void>; finish: PromiseWithResolvers<void> } | undefined;
   const holdNext = () => {
-    const start = Promise.withResolvers();
-    const finish = Promise.withResolvers();
+    const start = Promise.withResolvers<void>();
+    const finish = Promise.withResolvers<void>();
     blocker = { start, finish };
     return { start: start.promise, finish: finish.resolve };
   };
   const first = holdNext();
   const state = { reviews: 2, theme: 'miku', language: 'en', transparency: 0, layout: 'first' };
-  const publications = [];
-  const preferences = new Map();
+  const publications: WidgetProps[] = [];
+  const preferences = new Map<string, string>();
   return {
     state, preferences, publications, first, holdNext,
     AnkiActivity: {
@@ -68,7 +72,7 @@ function makeHost() {
       historyColumns: 1,
       getWidgetTheme: () => state.theme,
       getWidgetBackgroundTransparency: () => state.transparency,
-      setWidgetBackgroundTransparency(value) { state.transparency = value; },
+      setWidgetBackgroundTransparency(value: number) { state.transparency = value; },
       async readActivity() {
         return {
           kind: 'ready', today: state.reviews, newToday: 1, dueReviews: 0, streak: 20,
@@ -77,14 +81,15 @@ function makeHost() {
       },
     },
     StudyPreferences: {
-      getPreference: (key) => key === 'language' ? state.language : key === 'animate' ? 'off'
+      getPreference: (key: string) => key === 'language' ? state.language : key === 'animate' ? 'off'
         : key.startsWith('layout-') ? state.layout : preferences.get(key) ?? null,
-      setPreference: (key, value) => preferences.set(key, value),
+      setPreference: (key: string, value: string) => preferences.set(key, value),
     },
     ExpoWidgets: {
-      async publishSnapshot(name, json) {
+      async publishSnapshot(name: string, json: string) {
         assert.equal(name, 'AnkiStreak');
-        publications.push({ props: JSON.parse(json), state: { ...state } });
+        // oxlint-disable-next-line typescript/no-unsafe-argument -- The production actor serializes WidgetProps for this adapter.
+        publications.push(JSON.parse(json));
         const active = blocker;
         blocker = undefined;
         if (active) {
@@ -100,11 +105,21 @@ const directory = mkdtempSync(fileURLToPath(new URL('.widget-check-', import.met
 const bundle = join(directory, 'widget.mjs');
 const waitOptions = { timeout: 3000 };
 
+function latestPublication({ publications }: ReturnType<typeof makeHost>) {
+  const props = publications.at(-1);
+  assert.ok(props, 'Expected a widget publication.');
+  return props;
+}
+
+function loadWidgetModule(instance = ''): Promise<typeof WidgetRefreshModule> {
+  return import(bundle + instance);
+}
+
 try {
   await Bun.write(bundle, await bundleWidget());
   const host = makeHost();
-  globalThis[hostKey] = host;
-  const app = await import(bundle);
+  Reflect.set(globalThis, hostKey, host);
+  const app = await loadWidgetModule();
   try {
     const initial = app.refreshWidget();
     await host.first.start;
@@ -119,10 +134,13 @@ try {
     app.changeWidgetBackgroundTransparency(25);
     app.republishWidgetAppearance();
     await waitFor(app.widgetRefreshActor, (snapshot) => snapshot.matches({ appearance: 'quiet' }), waitOptions);
-    const { props } = host.publications.at(-1);
+    const props = latestPublication(host);
+    assert.ok(props.cards?.tall?.days && props.cards.compact);
     assert.equal(props.waitingDrawable, 'emilia_waiting');
     assert.equal(props.cards.tall.value, '3');
-    assert.equal(props.cards.tall.days[2].label, 'Ср');
+    assert.equal(props.cards.tall.label, 'повторено сегодня');
+    assert.equal(props.cards.compact.label, 'Повторено сегодня');
+    assert.equal(props.cards.tall.days[2]?.label, 'ср');
     assert.equal(props.cards.compact.averages, '3 повторов · 1 новых в день');
     const { card, pulse } = characterPalettes.emilia.widget;
     const expectedOpacity = 'bf';
@@ -130,7 +148,8 @@ try {
     host.state.layout = 'studyPulse';
     app.republishWidgetAppearance();
     await waitFor(app.widgetRefreshActor, (snapshot) => snapshot.matches({ appearance: 'quiet' }), waitOptions);
-    const activeCards = host.publications.at(-1).props.cards;
+    const activeCards = latestPublication(host).cards;
+    assert.ok(activeCards?.compact?.pulse && activeCards.tall?.days);
     assert.deepEqual(activeCards.compact.pulse.metrics.map(({ value }) => value), ['20', '3', '1']);
     assert.equal(activeCards.compact.pulse.surface, pulse.surface + expectedOpacity);
     assert.equal(activeCards.compact.pulse.shade, pulse.footer + expectedOpacity);
@@ -142,8 +161,8 @@ try {
   }
 
   const nextHost = makeHost();
-  globalThis[hostKey] = nextHost;
-  const next = await import(`${bundle}?concurrent`);
+  Reflect.set(globalThis, hostKey, nextHost);
+  const next = await loadWidgetModule('?concurrent');
   try {
     // Hold an appearance submission so a second appearance request waits while a fresh read completes.
     const initial = next.refreshWidget();
@@ -164,30 +183,33 @@ try {
     blocked.finish();
     await fresh;
     await waitFor(next.widgetRefreshActor, (snapshot) => snapshot.matches({ appearance: 'quiet' }), waitOptions);
-    assert.ok(nextHost.publications.slice(2).every(({ props }) => props.cards.tall.value === '3' && props.waitingDrawable === 'emilia_waiting'), 'Stale widget snapshot behind the publication permit');
+    assert.ok(nextHost.publications.slice(2).every((props) => props.cards?.tall?.value === '3' && props.waitingDrawable === 'emilia_waiting'), 'Stale widget snapshot behind the publication permit');
   } finally {
     next.widgetRefreshActor.stop();
   }
   const restarting = makeHost();
   restarting.first.finish();
-  restarting.preferences.set('last-review-activity', nextHost.preferences.get('last-review-activity'));
-  const read = Promise.withResolvers();
+  const cachedActivity = nextHost.preferences.get('last-review-activity');
+  assert.ok(cachedActivity);
+  restarting.preferences.set('last-review-activity', cachedActivity);
+  const read = Promise.withResolvers<void>();
   const readActivity = restarting.AnkiActivity.readActivity;
   restarting.AnkiActivity.readActivity = async () => {
     await read.promise;
     return readActivity();
   };
-  globalThis[hostKey] = restarting;
-  const resumed = await import(`${bundle}?restart`);
+  Reflect.set(globalThis, hostKey, restarting);
+  const resumed = await loadWidgetModule('?restart');
   try {
     const fresh = resumed.refreshWidget();
     await waitFor(resumed.widgetRefreshActor, (snapshot) => snapshot.matches({ data: 'reading' }), waitOptions);
     const { activity, check } = resumed.widgetRefreshActor.getSnapshot().context;
-    assert.equal(activity?.today, 3, 'Keep the last successful counts visible while reopening');
+    assert.ok(activity?.kind === 'ready' && activity.today === 3, 'Keep the last successful counts visible while reopening');
     assert.equal(check, null, 'The cached snapshot is not a new review check');
     read.resolve();
     await fresh;
-    assert.equal(resumed.widgetRefreshActor.getSnapshot().context.activity?.today, 2);
+    const refreshed = resumed.widgetRefreshActor.getSnapshot().context.activity;
+    assert.ok(refreshed?.kind === 'ready' && refreshed.today === 2);
   } finally {
     read.resolve();
     resumed.widgetRefreshActor.stop();
@@ -195,11 +217,12 @@ try {
   const questsHost = makeHost();
   questsHost.state.layout = 'dailyQuests';
   questsHost.first.finish();
-  globalThis[hostKey] = questsHost;
-  const quests = await import(`${bundle}?quests`);
+  Reflect.set(globalThis, hostKey, questsHost);
+  const quests = await loadWidgetModule('?quests');
   try {
     await quests.refreshWidget();
-    const initial = questsHost.publications.at(-1).props.cards;
+    const initial = latestPublication(questsHost).cards;
+    assert.ok(initial?.compact && initial.tall?.quests);
     assert.equal(initial.compact.value, '2/4');
     assert.deepEqual(initial.tall.quests.goals.map((goal) => goal.value), ['2/20', '1/5']);
 
@@ -211,7 +234,8 @@ try {
     quests.republishWidgetAppearance();
     blocked.finish();
     await waitFor(quests.widgetRefreshActor, (snapshot) => snapshot.matches({ appearance: 'quiet' }), waitOptions);
-    const updated = questsHost.publications.at(-1).props.cards;
+    const updated = latestPublication(questsHost).cards;
+    assert.ok(updated?.tall?.quests);
     assert.equal(updated.tall.value, '4/4');
     assert.deepEqual(updated.tall.quests.goals.map((goal) => goal.fraction), [1, 1]);
   } finally {
@@ -219,7 +243,7 @@ try {
   }
   console.log('Widget refresh passed layout, portrait, language, opacity, queued publication, cold-start activity, and daily quest checks.');
 } finally {
-  delete globalThis[hostKey];
+  Reflect.deleteProperty(globalThis, hostKey);
   if (await Bun.file(bundle).exists()) unlinkSync(bundle);
   rmdirSync(directory);
 }

@@ -1,0 +1,8 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "types": ["bun", "react", "react-native"],
+    "lib": ["ESNext", "DOM"]
+  },
+  "include": ["./*.ts"]
+}

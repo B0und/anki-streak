@@ -7,10 +7,10 @@
 
 ## Compare captures
 
-[`scripts/check-widget-screenshot.py`](../scripts/check-widget-screenshot.py) runs locally with Python and Pillow 9.1 or later. Crop coordinates are `left,top,right,bottom` in pixels, with exclusive right and bottom edges.
+[`scripts/check-widget-screenshot.ts`](../scripts/check-widget-screenshot.ts) runs locally with Bun and Sharp. Crop coordinates are `left,top,right,bottom` in pixels, with exclusive right and bottom edges.
 
 ```sh
-python3 scripts/check-widget-screenshot.py compare reference.png launcher.png \
+bun scripts/check-widget-screenshot.ts compare reference.png launcher.png \
   --reference-crop 17,6,729,200 --actual-crop 30,640,602,796 \
   --scale-for-review --output .gridlines/widget-comparison.png
 ```
@@ -18,7 +18,7 @@ python3 scripts/check-widget-screenshot.py compare reference.png launcher.png \
 For a regression check against an approved capture, use crops of equal size and replace `--scale-for-review` with `--max-changed-percent`. Choose the limit on repeated captures of the same state. Scaled comparisons require matching aspect ratios and are useful for visual review. Resizing changes anti-aliased edges.
 
 ```sh
-python3 scripts/check-widget-screenshot.py rail tall.png \
+bun scripts/check-widget-screenshot.ts rail tall.png \
   --count-box 0,100,347,225 --label-box 0,230,347,272 \
   --count-color '#FFFDF8' --label-color '#BDB5AB' --max-offset 2
 ```
@@ -29,4 +29,4 @@ The rail check samples pixels close to each text color, prints both visible edge
 
 - Android's screenshot-testing guide describes using reference images and controlling for render differences. Capturing a pinned widget exercises the Android launcher host and the app's RemoteViews handoff. [Android screenshot testing](https://developer.android.com/training/testing/ui-tests/screenshot)
 - Paparazzi and Roborazzi offer host-side snapshot suites. They suit isolated view or Compose components. The preview and the launcher for this project also depend on worklet data, Glance-generated RemoteViews and real launcher bounds, so the emulator remains the capture source for parity. [Paparazzi](https://shot.cashapp.dev/) · [Roborazzi](https://github.com/takahirom/roborazzi)
-- Pixelmatch provides configurable image comparison and anti-alias detection. For this repository, a Pillow script handles crops, comparison sheets and the glyph measurements with one local dependency. The project-local Gridlines and Impeccable skills cover the visual review. [Pixelmatch](https://github.com/mapbox/pixelmatch)
+- Pixelmatch provides configurable image comparison and anti-alias detection. For this repository, the screenshot script handles crops, comparison sheets and the glyph measurements with one local dependency. [Pixelmatch](https://github.com/mapbox/pixelmatch)

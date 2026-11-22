@@ -1,4 +1,4 @@
-import { useActor, useSelector } from '@xstate/react';
+import { createActorContext, useSelector } from '@xstate/react';
 import { Effect } from 'effect';
 import { AppState, Linking, ToastAndroid } from 'react-native';
 import { createAsyncLogic, createCallbackLogic, setup, types } from 'xstate';
@@ -6,7 +6,8 @@ import { createAsyncLogic, createCallbackLogic, setup, types } from 'xstate';
 import {
   getWidgetBackgroundTransparency, getWidgetTheme, openAnki, pinWidget, requestAnkiPermission, setWidgetTheme,
 } from './activity';
-import { copy, type Message } from './messages';
+import { getI18n } from './i18n';
+import { messages, type Message } from './messages';
 import { appearanceOptions, getLanguage, getWidgetLayouts, languageOptions, preference, settings, widgetLayouts, type Appearance,
   type LanguagePreference, type WidgetLayout, type WidgetSize } from './preferences';
 import type { WidgetTheme } from './themes';
@@ -90,7 +91,7 @@ function manualRefresh() {
     Effect.tryPromise(refreshWidget).pipe(
       Effect.map((activity): Message => activity.kind === 'ready' ? 'refreshSuccess' : activity.kind),
       Effect.orElseSucceed(() => 'refreshError' as const),
-      Effect.tap((message) => Effect.sync(() => ToastAndroid.show(copy(getLanguage(), message), ToastAndroid.LONG))),
+      Effect.tap((message) => Effect.sync(() => ToastAndroid.show(getI18n(getLanguage()).t(messages[message]), ToastAndroid.LONG))),
     ),
   );
 }
@@ -189,8 +190,11 @@ const dashboardMachine = dashboardSetup.createMachine({
   },
 });
 
+export const DashboardActorContext = createActorContext(dashboardMachine);
+
 export function useDashboard() {
-  const [snapshot, send] = useActor(dashboardMachine);
+  const snapshot = DashboardActorContext.useSelector((value) => value);
+  const { send } = DashboardActorContext.useActorRef();
   const widget = useSelector(widgetRefreshActor, (value) => value);
   const { context } = snapshot;
   const { activity, check, appearanceError, backgroundError } = widget.context;
@@ -210,7 +214,6 @@ export function useDashboard() {
     selectTheme(value: WidgetTheme) { send({ type: 'widget.theme', value }); },
     changeTransparency(value: number) { send({ type: 'widget.transparency', value }); },
     refresh() { send({ type: 'anki.refresh' }); },
-    setLayout(size: WidgetSize, value: WidgetLayout) { send({ type: 'widget.layout', size, value }); },
     setAppearance(value: Appearance) { send({ type: 'appearance.select', value }); },
     setLanguage(value: LanguagePreference) { send({ type: 'language.select', value }); },
   };

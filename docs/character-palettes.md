@@ -2,7 +2,7 @@
 
 Choose one six-digit sRGB seed from the character art. Add the character and its position in the picker to [themes.ts](../src/themes.ts). Choose a hue that reads as the character even when the art is absent.
 
-Add the portrait assets and register the character and launcher icon. [WidgetTheme.kt](../modules/anki-activity/android/src/main/java/expo/modules/ankiactivity/WidgetTheme.kt) · [Launcher themes plugin](../plugins/withLauncherThemes.js)
+Add the portrait assets and register the character and launcher icon. [WidgetTheme.kt](../modules/anki-activity/android/src/main/java/expo/modules/ankiactivity/WidgetTheme.kt) · [Launcher themes plugin](../plugins/withLauncherThemes.ts)
 
 Run `bun run palettes:generate` and commit the generated palette with the character. The command supplies the light and dark app themes, review-history colors, and widget colors. The existing characters have approved palettes in [character-palette-overrides.json](../scripts/character-palette-overrides.json). Use an override when there is an approved design to preserve. The local check validates overrides and generated colors against the same requirements.
 

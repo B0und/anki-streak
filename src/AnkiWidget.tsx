@@ -157,7 +157,7 @@ function AnkiStreak(
                     modifiers={[{ $type: 'alignTextInkStart', rail: margin }]}>{card.value}</Text>
                   <Text color="#BDB5AB" style={{ fontSize: weekLabelSize }}
                     modifiers={[padding(0, weekLabelTop, 0, 0), { $type: 'alignTextInkStart', rail: margin }]} maxLines={1}>
-                    {card.label.toLowerCase()}
+                    {card.label}
                   </Text>
                 </Box>
               </Box>
@@ -230,7 +230,7 @@ function AnkiStreak(
                     </Box>
                     <Text color={current ? '#D4CCC0' : '#BDB5AB'}
                       style={{ fontSize: narrow ? 9 : 11, fontWeight: current ? 'bold' : 'normal' }}
-                      modifiers={[padding(0, 4, 0, 0)]} maxLines={1}>{label.toLowerCase()}</Text>
+                      modifiers={[padding(0, 4, 0, 0)]} maxLines={1}>{label}</Text>
                   </Column>
                 </Box>;
               })}

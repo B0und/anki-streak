@@ -1,3 +1,4 @@
+import { useLingui } from '@lingui/react';
 import { ArrowUpRight } from 'lucide-react-native';
 import { useWindowDimensions } from 'react-native';
 import { Text, View, XStack, YStack } from 'tamagui';
@@ -5,16 +6,17 @@ import { Text, View, XStack, YStack } from 'tamagui';
 import { historyColumns, historyRows, type ReviewHistory } from './activity';
 import type { Palette } from './appearance';
 import { ReviewStamp } from './ReviewStamp';
-import { copy, weekdays, type Language } from './messages';
+import { messages, weekdays } from './messages';
 import { cardContentInset } from './screenLayout';
 import { CountUp, Portrait, Section } from './studyComponents';
 import { themes } from './themes';
-import type { useDashboard } from './useDashboard';
+import type { useDashboard } from './dashboardMachine';
 import { VictoryLaurels } from './VictoryLaurels';
 
-export function TodayScreen({ dashboard, palette, language, celebration, stampInk }: {
-  dashboard: ReturnType<typeof useDashboard>; palette: Palette; language: Language; celebration: number; stampInk: string;
+export function TodayScreen({ dashboard, palette, celebration, stampInk }: {
+  dashboard: ReturnType<typeof useDashboard>; palette: Palette; celebration: number; stampInk: string;
 }) {
+  const { _ } = useLingui();
   const { width } = useWindowDimensions();
   const { activity, themeId } = dashboard;
   const ready = activity?.kind === 'ready' ? activity : null;
@@ -37,7 +39,7 @@ export function TodayScreen({ dashboard, palette, language, celebration, stampIn
             adjustsFontSizeToFit numberOfLines={1}>
             <CountUp value={ready?.streak} delay={0} celebration={celebration} />
           </Text>
-          <Text color="accent" fontWeight="700" fontSize={14} text="center" style={{ marginTop: -4 }}>{copy(language, 'streak')}</Text>
+          <Text color="accent" fontWeight="700" fontSize={14} text="center" style={{ marginTop: -4 }}>{_(messages.streak)}</Text>
         </YStack>
       </YStack>
     </YStack>
@@ -48,7 +50,7 @@ export function TodayScreen({ dashboard, palette, language, celebration, stampIn
       opacity={actionable && !dashboard.requesting ? 'press:0.80' : undefined}
       onPress={actionable && !dashboard.requesting ? () => dashboard.runAndroidRequest(canConnect ? 'permission' : 'open') : undefined}>
       <Text flex={1} fontSize={16} fontWeight="700" color={actionable ? 'on-accent' : 'color'}>
-        {copy(language, reviewLabel)}
+        {_(messages[reviewLabel])}
       </Text>
       {reviewLabel === 'reviewsComplete' && <ReviewStamp ink={stampInk} />}
       {actionable && <ArrowUpRight color={palette.onAccent} size={22} />}
@@ -59,39 +61,40 @@ export function TodayScreen({ dashboard, palette, language, celebration, stampIn
         .map(([label, value, average, averageValue], index) => (
           <YStack key={label} flex={1} py={14} px={cardContentInset - 1} gap={4}
             borderLeftWidth={index > 0 ? 1 : 0} borderLeftColor="border-color">
-            <Text color="color" fontSize={13} fontWeight="600">{copy(language, label)}</Text>
+            <Text color="color" fontSize={13} fontWeight="600">{_(messages[label])}</Text>
             <Text color="color" fontSize={32} fontWeight="700" fontVariant={['tabular-nums']}
               adjustsFontSizeToFit numberOfLines={1} style={{ includeFontPadding: false }}>
               <CountUp value={value} delay={160 + 145 * index} celebration={celebration} />
             </Text>
-            <Text color="muted" fontSize={12}>{averageValue ?? '—'} · {copy(language, average)}</Text>
+            <Text color="muted" fontSize={12}>{averageValue ?? '—'} · {_(messages[average])}</Text>
           </YStack>
         ))}
     </XStack>
 
-    <ActivityHeatmap history={ready?.history} palette={palette} language={language} />
+    <ActivityHeatmap history={ready?.history} palette={palette} />
     {activity?.kind !== 'ready' && dashboard.initialCheckComplete && <Text color="muted">
-      {copy(language, activity?.kind ?? 'unavailable')}
+      {_(messages[activity?.kind ?? 'unavailable'])}
     </Text>}
   </>;
 }
 
-function ActivityHeatmap({ history, palette, language }: {
+function ActivityHeatmap({ history, palette }: {
   history: ReviewHistory | undefined;
-  palette: Palette; language: Language;
+  palette: Palette;
 }) {
+  const { _ } = useLingui();
   const todaySlot = (historyColumns - 1) * historyRows + (history?.todayRow ?? historyRows - 1);
   const counts = history?.counts.slice(-(todaySlot + 1)) ?? [];
   const activeDays = counts.filter((count) => count > 0).sort((a, b) => a - b);
   const thresholds = [.45, .72, .90].map((rank) => activeDays[Math.floor((activeDays.length - 1) * rank)] ?? 0);
-  const title = copy(language, 'activity');
-  const period = copy(language, 'historyWeeks', { count: historyColumns });
+  const title = _(messages.activity);
+  const period = _(messages.historyWeeks.id, { count: historyColumns });
 
   return <Section title={title}>
     <YStack accessible accessibilityLabel={`${title} · ${period}`} gap={3}>
-      {Array.from({ length: historyRows }, (_, row) => (
-        <XStack key={row} gap={3} items="center">
-          <Text w={27} color="muted" fontSize={9} lineHeight="12px">{weekdays[language][row]}</Text>
+      {weekdays.map((weekday, row) => (
+        <XStack key={weekday.id} gap={3} items="center">
+          <Text w={27} color="muted" fontSize={9} lineHeight="12px">{_(weekday)}</Text>
           {Array.from({ length: historyColumns }, (_, column) => {
             const slot = column * historyRows + row;
             const count = counts[slot] ?? 0;
@@ -106,9 +109,9 @@ function ActivityHeatmap({ history, palette, language }: {
     <XStack justify="space-between" flexWrap="wrap" gap={6}>
       <Text color="muted" fontSize={12}>{period}</Text>
       <XStack items="center" gap={3}>
-        <Text color="muted" fontSize={12}>{copy(language, 'less')}</Text>
+        <Text color="muted" fontSize={12}>{_(messages.less)}</Text>
         {palette.heat.map((color) => <View key={color} w={10} h={10} rounded={2} bg={color} />)}
-        <Text color="muted" fontSize={12}>{copy(language, 'more')}</Text>
+        <Text color="muted" fontSize={12}>{_(messages.more)}</Text>
       </XStack>
     </XStack>
   </Section>;

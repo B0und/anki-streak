@@ -3,7 +3,7 @@ import { StyleSheet, useWindowDimensions, type ViewProps } from 'react-native';
 import { YStack } from 'tamagui';
 
 import { historyDays, type ReviewMood } from './activity';
-import { useDashboardContext } from './dashboardContext';
+import { useDashboard } from './dashboardMachine';
 import { getQuestTargets, type WidgetLayout } from './preferences';
 import { screenInset, screenMaxWidth } from './screenLayout';
 import { widgetProps } from './widgetDesign';
@@ -25,7 +25,8 @@ const sampleStats = {
 export function WidgetPreview({ bounds, layout, horizontalInset, maxHeight, mood }: {
   bounds: WidgetPreviewSize; layout?: WidgetLayout; horizontalInset: number; maxHeight: number; mood?: ReviewMood;
 }) {
-  const { dashboard, language, layouts } = useDashboardContext();
+  const dashboard = useDashboard();
+  const { layouts, language } = dashboard;
   const { width } = useWindowDimensions();
   const ready = dashboard.activity?.kind === 'ready' ? dashboard.activity : null;
   const stats = ready ?? (layout ? sampleStats : null);

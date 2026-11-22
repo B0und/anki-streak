@@ -21,6 +21,8 @@ jobs:
       RELEASE_BRANCH: ${{ github.ref_name }}
       STAGING_COMMIT: ${{ github.sha }}
     steps:
+      - uses: oven-sh/setup-bun@v2
+
       - name: Verify staged APK and publish
         shell: bash
         run: |
@@ -53,8 +55,8 @@ jobs:
 
           mkdir source
           gh api "repos/$GH_REPO/tarball/$tag" |
-            tar -xz -C source --strip-components=1 --wildcards '*/scripts/check-apk-size.py' '*/modules/anki-activity/android/src/main/res/drawable-nodpi'
-          python3 source/scripts/check-apk-size.py Anki-Streak.apk
+            tar -xz -C source --strip-components=1 --wildcards '*/scripts/check-apk-size.ts' '*/modules/anki-activity/android/src/main/res/drawable-nodpi'
+          bun source/scripts/check-apk-size.ts Anki-Streak.apk
 
           apk_version_code() {
             local metadata

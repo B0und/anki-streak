@@ -2,7 +2,8 @@ import { useActor, useActorRef } from '@xstate/react';
 import { usePathname } from 'expo-router';
 
 import { celebrationMachine, celebrationVisit } from '../../celebrationMachine';
-import { useDashboardContext } from '../../dashboardContext';
+import { useDashboard } from '../../dashboardMachine';
+import { useAppAppearance } from '../../useAppAppearance';
 import { Screen } from '../../Screen';
 import { TodayScreen } from '../../TodayScreen';
 
@@ -12,7 +13,8 @@ function CheckCelebration({ visit }: { visit(): void }) {
 }
 
 export default function TodayRoute() {
-  const { dashboard, palette, language, mode } = useDashboardContext();
+  const dashboard = useDashboard();
+  const { palette, mode } = useAppAppearance();
   const pathname = usePathname();
   const [celebration, send] = useActor(celebrationMachine);
   const ready = dashboard.activity?.kind === 'ready' ? dashboard.activity : null;
@@ -20,7 +22,7 @@ export default function TodayRoute() {
   return <Screen title="Anki Streak">
     {pathname === '/' && !!dashboard.lastCheckedAt && !!ready?.today &&
       <CheckCelebration key={dashboard.lastCheckedAt} visit={() => send({ type: 'visit' })} />}
-    <TodayScreen dashboard={dashboard} palette={palette} language={language}
+    <TodayScreen dashboard={dashboard} palette={palette}
       stampInk={mode === 'dark' ? '#FF927D' : '#9F2D26'} celebration={Number(celebration.matches('celebrating'))} />
   </Screen>;
 }

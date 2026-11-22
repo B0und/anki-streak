@@ -41,14 +41,13 @@ export default defineConfig({
   overrides: [
     ...cloudflare.overrides ?? [],
     {
-      files: ['scripts/check-*.mjs'],
+      files: ['scripts/check-*.ts'],
       globals: { Bun: 'readonly' },
       rules: { 'no-console': 'off' }, // Local check scripts report results on stdout.
     },
     {
-      files: ['plugins/withLauncherThemes.js'],
+      files: ['plugins/withLauncherThemes.ts'],
       rules: {
-        'typescript/no-require-imports': 'off', // Expo loads this CommonJS config plugin.
         'unicorn/consistent-function-scoping': 'off', // Keep the launcher filter beside its manifest update.
       },
     },
@@ -68,7 +67,7 @@ export default defineConfig({
       },
     },
     {
-      files: ['src/useDashboard.ts'],
+      files: ['src/dashboardMachine.ts'],
       rules: {
         'no-console': ['error', { allow: ['warn'] }], // Preserve diagnostics from the foreground refresh callback.
         'typescript/use-unknown-in-catch-callback-variable': 'off', // Existing rejection logging passes the value through.
@@ -99,6 +98,7 @@ export default defineConfig({
     '.agents/skills/gridlines/probe.js',
     '.agent_sources/**',
     'scripts/.widget-check-*/**',
+    'src/locales/*/messages.ts',
     'android/**',
     'ios/**',
   ],

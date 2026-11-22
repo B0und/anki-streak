@@ -1,3 +1,4 @@
+import { I18nProvider, useLingui } from '@lingui/react';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { View } from 'react-native';
@@ -8,13 +9,18 @@ import { AchievementCelebration } from '../AchievementCelebration';
 import { Onboarding, useOnboarding } from '../Onboarding';
 import { ProgressProvider } from '../progressContext';
 import { config } from '../../tamagui.config';
-import { DashboardProvider, useDashboardContext } from '../dashboardContext';
-import { copy } from '../messages';
+import { DashboardActorContext, useDashboard } from '../dashboardMachine';
+import { getI18n } from '../i18n';
+import { useAppAppearance } from '../useAppAppearance';
+import { messages } from '../messages';
+import { UpdatesActorContext } from '../updateMachine';
 
 export const unstable_settings = { initialRouteName: '(tabs)' };
 
 function Navigation() {
-  const { palette, mode, language, dashboard } = useDashboardContext();
+  const { _ } = useLingui();
+  const dashboard = useDashboard();
+  const { palette, mode } = useAppAppearance();
   const onboarding = useOnboarding();
   const base = mode === 'dark' ? DarkTheme : DefaultTheme;
 
@@ -33,14 +39,23 @@ function Navigation() {
       {onboarding.done ? <AchievementCelebration /> : <Onboarding flow={onboarding} />}
       {dashboard.notice && <Text pointerEvents="none" accessibilityLiveRegion="polite" p={10} text="center"
         position="absolute" b={82} l={16} r={16} rounded={10} color="color" bg="subtle">
-        {copy(language, dashboard.notice)}
+        {_(messages[dashboard.notice])}
       </Text>}
     </SafeAreaView>
   </Theme>;
 }
 
+function LocalizedApp() {
+  const language = DashboardActorContext.useSelector(({ context }) => context.language);
+  return <I18nProvider i18n={getI18n(language)}>
+    <ProgressProvider><Navigation /></ProgressProvider>
+  </I18nProvider>;
+}
+
 export default function RootLayout() {
   return <TamaguiProvider config={config} defaultTheme="light">
-    <DashboardProvider><ProgressProvider><Navigation /></ProgressProvider></DashboardProvider>
+    <DashboardActorContext.Provider>
+      <UpdatesActorContext.Provider><LocalizedApp /></UpdatesActorContext.Provider>
+    </DashboardActorContext.Provider>
   </TamaguiProvider>;
 }

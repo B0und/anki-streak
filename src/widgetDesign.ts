@@ -22,8 +22,11 @@ function widgetCard(
       secondary: '',
       accent,
       pulse: {
-        shade: widgetBackdrop(theme.widgetShade, transparency),
-        muted: theme.widgetMuted,
+        surface: widgetBackdrop(theme.pulse.surface, transparency),
+        shade: widgetBackdrop(theme.pulse.footer, transparency),
+        hero: theme.pulse.hero,
+        muted: theme.pulse.label,
+        detail: theme.pulse.value,
         metrics: [
           { label: copy(language, 'pulseStreak'), value: String(stats.streak), icon: 'widget_pulse_streak' },
           { label: copy(language, 'pulseReviews'), value: String(stats.dailyReviewed), icon: 'widget_pulse_reviews' },

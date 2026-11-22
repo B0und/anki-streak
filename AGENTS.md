@@ -20,6 +20,8 @@ Use XState actors for app state and lifecycle. Use actor delays for state transi
 
 Use the project-local [Impeccable skill](.agents/skills/impeccable/SKILL.md) for UI changes. Follow the [launcher parity check](.agents/skills/verify-widget-refresh/SKILL.md#verify-launcher-parity) for widget design changes.
 
+When implementing from a screenshot, follow the [Android screenshot workflow](docs/widget-screenshots.md) to measure the reference and compare it with a device capture.
+
 # Effect and TypeScript
 
 Before writing Effect code, read `node_modules/effect/AGENTS.md` completely and follow the relevant examples. Check `node_modules/effect/src` for the installed API. For schemas, services, actor lifecycles, or lint changes, read the [engineering guide](docs/engineering.md). It maps local examples and pinned upstream sources.

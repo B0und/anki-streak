@@ -9,8 +9,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Resources
-import android.os.Build
+import android.graphics.drawable.Icon
 import android.net.Uri
+import android.os.Build
 import android.provider.Settings
 import expo.modules.interfaces.permissions.Permissions
 import expo.modules.kotlin.Promise
@@ -118,7 +119,9 @@ class StudyPreferencesModule : Module() {
     }
     notifications.notify(
       CELEBRATION_NOTIFICATION,
-      builder.setSmallIcon(android.R.drawable.star_on).setContentTitle(title).setContentText(body)
+      builder.setSmallIcon(android.R.drawable.star_on)
+        .setLargeIcon(Icon.createWithResource(context, WidgetTheme.selected(context).happyPortrait))
+        .setContentTitle(title).setContentText(body)
         .setContentIntent(tap).setAutoCancel(true).build()
     )
     return true

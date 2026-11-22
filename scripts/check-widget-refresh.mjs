@@ -129,7 +129,7 @@ try {
     await waitFor(app.widgetRefreshActor, (snapshot) => snapshot.matches({ appearance: 'quiet' }), waitOptions);
     const activeCards = host.publications.at(-1).props.cards;
     assert.deepEqual(activeCards.compact.pulse.metrics.map(({ value }) => value), ['20', '3', '1']);
-    assert.equal(activeCards.compact.pulse.shade, '#1E1A2C80');
+    assert.equal(activeCards.compact.pulse.shade, '#25213680');
     assert.equal(activeCards.tall.pulse, undefined);
     assert.equal(activeCards.tall.days.length, 7);
   } finally {

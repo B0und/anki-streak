@@ -100,7 +100,7 @@ class AnkiActivityModule : Module() {
   }
 
   private fun storedWidgetTheme(): WidgetTheme =
-    WidgetTheme.fromId(widgetPreferences.getString("theme", null))
+    WidgetTheme.selected(context)
 
   private fun reconcileWidgetIcon(theme: WidgetTheme) {
     runCatching { reconcileLauncherIcon(context, theme) }
@@ -108,7 +108,7 @@ class AnkiActivityModule : Module() {
   }
 
   private val widgetPreferences
-    get() = context.getSharedPreferences("anki-streak-widget", Context.MODE_PRIVATE)
+    get() = WidgetTheme.preferences(context)
 
   private val context: Context
     get() = requireNotNull(appContext.reactContext)

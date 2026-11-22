@@ -5,13 +5,17 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 
-internal enum class WidgetTheme(val id: String) {
-  MIKU("miku"),
-  TWO_B("2b"),
-  EMILIA("emilia");
+internal enum class WidgetTheme(val id: String, val happyPortrait: Int) {
+  MIKU("miku", R.drawable.miku_happy),
+  TWO_B("2b", R.drawable.twob_happy),
+  EMILIA("emilia", R.drawable.emilia_happy);
 
   companion object {
     fun fromId(id: String?): WidgetTheme = entries.firstOrNull { it.id == id } ?: MIKU
+
+    fun selected(context: Context): WidgetTheme = fromId(preferences(context).getString("theme", null))
+
+    fun preferences(context: Context) = context.getSharedPreferences("anki-streak-widget", Context.MODE_PRIVATE)
   }
 }
 

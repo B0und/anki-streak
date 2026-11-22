@@ -30,6 +30,8 @@ Then run the normal local gate.
 
 ## Verify launcher parity
 
+For changes based on a screenshot, record the reference measurements before editing. After rendering, use the [screenshot comparison workflow](../../../docs/widget-screenshots.md) on the supplied reference and the Android capture. For each requested correction, report a measured result or point to the matching region in the comparison image. When a change depends on a glyph, capture every affected glyph variant.
+
 1. Pin one Compact and one Tall widget. At 0% transparency, reopen the Widget screen to reset the face to today's mood. Capture each size on the launcher and in the app.
 2. Compare the widget crops at the same scale. Confirm the stats, palette, and spacing match for each size. Check the full head and visible headroom for every character in both Waiting and Happy.
 3. Resize a pinned widget and reopen the app. Compare the new bounds and layout. With different pinned dimensions in the same size class, use the dimension selector to check each.

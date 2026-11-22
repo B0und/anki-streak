@@ -11,8 +11,11 @@ export type WidgetCard = {
   shortSecondary?: string;
   averages?: string;
   pulse?: {
+    surface: string;
     shade: string;
+    hero: string;
     muted: string;
+    detail: string;
     metrics: ReadonlyArray<{ label: string; value: string; icon: string }>;
   };
   quests?: {
@@ -91,38 +94,44 @@ function AnkiStreak(
   const pulse = card?.pulse;
   if (card && pulse) {
     const inset = narrow ? 8 : 12;
-    const rail = Math.floor(Math.min(widgetWidth * .30, height * 1.15));
+    const rail = Math.floor(Math.min(widgetWidth * .285, height * 1.15));
     const contentWidth = widgetWidth - rail - inset;
     const footerHeight = Math.round(height * .35);
     const metricWidth = contentWidth / pulse.metrics.length;
     const longestLabel = Math.max(...pulse.metrics.map(({ label }) => label.length));
     const longestValue = Math.max(...pulse.metrics.map(({ value }) => value.length));
-    const detailLabelSize = Math.min(10, height * .12, (metricWidth - 3) / (longestLabel * .72));
-    const detailValueSize = Math.min(15, height * .17, (metricWidth - (narrow ? 2 : 13)) / (longestValue * .62));
-    const portraitHeight = Math.min(height - inset, (rail - inset) / aspect);
-    const numberSize = Math.min(height * .43, contentWidth * .45 / (card.value.length * .62));
+    const iconSize = Math.min(9, height * .14, metricWidth * .32);
+    const iconGap = 2;
+    const detailLabelSize = Math.min(7.5, height * .12, (metricWidth - 3) / (longestLabel * .72));
+    const detailValueSize = Math.min(10.5, height * .17, (metricWidth - iconSize - iconGap - 2) / (longestValue * .74));
+    const portraitHeight = Math.min(height - inset, (rail - inset * .8) / aspect);
+    const numberSize = Math.min(height * .37, contentWidth * .45 / (card.value.length * .62));
     const captionWidth = contentWidth - Math.ceil(numberSize * card.value.length * .65) - 6;
     return <Box modifiers={[fillMaxSize(), cornerRadius(20), ...actions]} contentAlignment="bottomStart">
       <Column>
-        <Box contentAlignment="centerStart" modifiers={[size(widgetWidth, height - footerHeight), background(surface),
-          padding(rail, 0, inset, 0)]}>
+        <Box contentAlignment="centerStart" modifiers={[size(widgetWidth, height - footerHeight), background(pulse.surface),
+          padding(0, 2, inset, 0)]}>
           <Row verticalAlignment="bottom">
-            <Text color="#FFFDF8" style={{ fontSize: numberSize, fontWeight: 'bold' }} maxLines={1}>{card.value}</Text>
-            <Text color={pulse.muted} modifiers={[width(captionWidth), padding(6, 0, 0, Math.floor(numberSize * .16))]}
-              style={{ fontSize: Math.min(12, height * .16, (captionWidth - 6) / (card.label.length * .54)) }}
+            <Text color={pulse.hero} style={{ fontSize: numberSize, fontWeight: 'bold' }} maxLines={1}
+              modifiers={[{ $type: 'alignTextInkStart', rail }]}>{card.value}</Text>
+            <Text color={pulse.muted} modifiers={[width(captionWidth), padding(5, 0, 0, Math.floor(numberSize * .16))]}
+              style={{ fontSize: Math.min(7.5, height * .16, (captionWidth - 5) / (card.label.length * .65)) }}
               maxLines={1}>{card.label}</Text>
           </Row>
         </Box>
         <Row verticalAlignment="center" modifiers={[size(widgetWidth, footerHeight), background(pulse.shade), padding(rail, 0, inset, 0)]}>
-          {pulse.metrics.map(({ label, value, icon }) => (
-            <Column key={icon} modifiers={[width(metricWidth)]}>
-              <Text color={pulse.muted} modifiers={[width(metricWidth - 3)]}
-                style={{ fontSize: detailLabelSize }} maxLines={1}>{label}</Text>
-              <Row verticalAlignment="center">
-                {!narrow && <Image source={{ uri: icon }} tint={pulse.muted} modifiers={[size(11, 11), padding(0, 0, 2, 0)]} />}
-                <Text color={card.accent} style={{ fontSize: detailValueSize, fontWeight: '500' }} maxLines={1}>{value}</Text>
-              </Row>
-            </Column>
+          {pulse.metrics.map(({ label, value, icon }, index) => (
+            <Box key={icon} modifiers={[size(metricWidth, footerHeight)]}
+              contentAlignment={index === 0 ? 'centerStart' : index === 1 ? 'center' : 'centerEnd'}>
+              <Column>
+                <Text color={pulse.muted} style={{ fontSize: detailLabelSize }} maxLines={1}>{label}</Text>
+                <Row verticalAlignment="center">
+                  <Image source={{ uri: icon }} tint={pulse.detail} modifiers={[size(iconSize, iconSize)]} />
+                  <Text color={pulse.detail} style={{ fontSize: detailValueSize }}
+                    modifiers={[padding(iconGap, 0, 0, 0)]} maxLines={1}>{value}</Text>
+                </Row>
+              </Column>
+            </Box>
           ))}
         </Row>
       </Column>
@@ -141,18 +150,19 @@ function AnkiStreak(
               <Image source={{ uri: portrait }} contentScale="fit" modifiers={[size(imageWidth, imageHeight)]} />
             </Box>
             {weekFooter > 0 ? <Box modifiers={[fillMaxSize()]} contentAlignment="topStart">
-              <Box modifiers={[size(widgetWidth, weekMetricArea), padding(margin, 0, 0, 0)]} contentAlignment="centerStart">
-                <Box modifiers={[size(weekTextWidth, weekLabelTop + Math.ceil(weekLabelSize * 1.3))]} contentAlignment="topStart">
-                  <Text color="#FFFDF8" style={{ fontSize: weekValueSize, fontWeight: 'bold' }} maxLines={1}>{card.value}</Text>
+              <Box modifiers={[size(widgetWidth, weekMetricArea)]} contentAlignment="centerStart">
+                <Box modifiers={[size(weekTextWidth + margin, weekLabelTop + Math.ceil(weekLabelSize * 1.3))]} contentAlignment="topStart">
+                  <Text color="#FFFDF8" style={{ fontSize: weekValueSize, fontWeight: 'bold' }} maxLines={1}
+                    modifiers={[{ $type: 'alignTextInkStart', rail: margin }]}>{card.value}</Text>
                   <Text color="#BDB5AB" style={{ fontSize: weekLabelSize }}
-                    modifiers={[padding(0, weekLabelTop, 0, 0)]} maxLines={1}>
+                    modifiers={[padding(0, weekLabelTop, 0, 0), { $type: 'alignTextInkStart', rail: margin }]} maxLines={1}>
                     {card.label.toLowerCase()}
                   </Text>
                 </Box>
               </Box>
-              <Box modifiers={[fillMaxSize(), padding(margin, 0, 0, weekGap)]} contentAlignment="bottomStart">
+              <Box modifiers={[fillMaxSize(), padding(0, 0, 0, weekGap)]} contentAlignment="bottomStart">
                 <Text color={card.accent} style={{ fontSize: streakSize, fontWeight: 'bold' }}
-                  modifiers={[width(weekTextWidth)]} maxLines={1}>{card.secondary}</Text>
+                  modifiers={[width(weekTextWidth + margin), { $type: 'alignTextInkStart', rail: margin }]} maxLines={1}>{card.secondary}</Text>
               </Box>
             </Box> : <Box modifiers={[size(widgetWidth, textHeight), padding(margin, 0, 0, 0)]} contentAlignment="centerStart">
               <Column modifiers={[width(textWidth)]}>

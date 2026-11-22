@@ -34,14 +34,46 @@ index df3bdb4..e527407 100644
 +  }
    outputs.file(expoWidgetsLayoutRegistryOutput)
 diff --git a/android/src/main/java/expo/modules/widgets/ExpoWidgetEmittableTree.kt b/android/src/main/java/expo/modules/widgets/ExpoWidgetEmittableTree.kt
-index 3df9e4a..3a5e246 100644
 --- a/android/src/main/java/expo/modules/widgets/ExpoWidgetEmittableTree.kt
 +++ b/android/src/main/java/expo/modules/widgets/ExpoWidgetEmittableTree.kt
-@@ -68,2 +68,3 @@ import androidx.glance.GlanceModifier
+@@ -6,4 +6,8 @@
+ import android.content.Context
+ import android.graphics.Color as AndroidColor
++import android.graphics.Paint
++import android.graphics.Rect
++import android.graphics.Typeface
++import android.util.TypedValue
+ import androidx.compose.ui.unit.DpSize
+ import androidx.compose.ui.unit.TextUnit
+@@ -13,4 +17,5 @@
+ import com.facebook.react.bridge.ReadableMap
+ import com.facebook.react.bridge.ReadableType
++import expo.modules.kotlin.records.Field
+ import expo.modules.kotlin.records.Record
+ import expo.modules.kotlin.records.recordFromMap
+@@ -67,4 +72,5 @@
+ import androidx.glance.GlanceModifier
  import androidx.glance.action.clickable
 +import androidx.glance.appwidget.action.actionStartActivity
  import androidx.glance.appwidget.CheckboxDefaults
-@@ -421,2 +422,11 @@ private fun ModifierType.toPeekModifier(converterContext: ConverterContext): Gla
+ import androidx.glance.appwidget.cornerRadius
+@@ -219,6 +225,5 @@
+   return EmittableText().also {
+     it.text = props.textContent()
+-    it.modifier = props.textModifier(converterContext)
+-    it.style = TextStyle(
++    val style = TextStyle(
+       color = props.color.toGlanceColorProvider() ?: typography?.color ?: TextDefaults.defaultTextColor,
+       fontSize = props.fontSize?.sp ?: typography?.fontSize,
+@@ -228,4 +233,6 @@
+       textDecoration = props.textDecoration?.toGlanceTextDecoration()
+     )
++    it.modifier = props.textModifier(converterContext, style)
++    it.style = style
+     it.maxLines = props.maxLines ?: Int.MAX_VALUE
+   }
+@@ -420,4 +427,13 @@
+       ?.let { GlanceModifier.background(it) }
      "cornerRadius" -> asRecord<CornerRadiusParams>(converterContext)?.let { GlanceModifier.cornerRadius(it.radius.dp) }
 +    "openAppOnTap" -> converterContext.applicationContext.let { context ->
 +      context.packageManager.getLaunchIntentForPackage(context.packageName)?.let { intent ->
@@ -53,6 +85,29 @@ index 3df9e4a..3a5e246 100644
 +      }
 +    }
      // Unsupported Expo UI modifiers are ignored until they have exact Glance semantics.
+     else -> null
+@@ -431,4 +447,20 @@
+-private fun TextProps.textModifier(converterContext: ConverterContext): GlanceModifier {
++private data class TextInkStart(@Field val rail: Float = 0f) : Record
++
++private fun TextProps.textModifier(converterContext: ConverterContext, style: TextStyle): GlanceModifier {
+   var modifier = modifiers.toPeekModifier(converterContext)
++  val inkStart = modifiers.firstOrNull { it["\$type"]?.asString() == "alignTextInkStart" }
++    ?.asRecord<TextInkStart>(converterContext)
++  val fontSize = style.fontSize?.value
++  if (inkStart != null && fontSize != null) {
++    val metrics = converterContext.applicationContext.resources.displayMetrics
++    val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
++      typeface = if (style.fontWeight == FontWeight.Bold) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
++      textSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, fontSize, metrics)
++    }
++    val bounds = Rect()
++    val text = textContent()
++    paint.getTextBounds(text, 0, text.length, bounds)
++    modifier = modifier.padding(start = (inkStart.rail - bounds.left / metrics.density).coerceAtLeast(0f).dp)
++  }
+   background.toGlanceColorProvider()?.let {
+     modifier = modifier.background(it)
 diff --git a/android/src/main/java/expo/modules/widgets/ExpoWidgetsPeekWidget.kt b/android/src/main/java/expo/modules/widgets/ExpoWidgetsPeekWidget.kt
 index edabde8..586ca7a 100644
 --- a/android/src/main/java/expo/modules/widgets/ExpoWidgetsPeekWidget.kt

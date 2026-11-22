@@ -107,7 +107,8 @@ function AnkiStreak(
     const portraitHeight = Math.min(height - inset, (rail - inset * .8) / aspect);
     const numberSize = Math.min(height * .37, contentWidth * .45 / (card.value.length * .62));
     const captionWidth = contentWidth - Math.ceil(numberSize * card.value.length * .65) - 6;
-    return <Box modifiers={[fillMaxSize(), cornerRadius(20), ...actions]} contentAlignment="bottomStart">
+    return <Box modifiers={[fillMaxSize(), { $type: 'appWidgetBackground' }, cornerRadius(11), ...actions]}
+      contentAlignment="bottomStart">
       <Column>
         <Box contentAlignment="centerStart" modifiers={[size(widgetWidth, height - footerHeight), background(pulse.surface),
           padding(0, 2, inset, 0)]}>
@@ -128,7 +129,7 @@ function AnkiStreak(
                 <Row verticalAlignment="center">
                   <Image source={{ uri: icon }} tint={pulse.detail} modifiers={[size(iconSize, iconSize)]} />
                   <Text color={pulse.detail} style={{ fontSize: detailValueSize }}
-                    modifiers={[padding(iconGap, 0, 0, 0)]} maxLines={1}>{value}</Text>
+                    modifiers={[{ $type: 'alignTextInkStart', rail: iconGap }]} maxLines={1}>{value}</Text>
                 </Row>
               </Column>
             </Box>

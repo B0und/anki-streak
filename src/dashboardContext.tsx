@@ -1,8 +1,8 @@
 import { createContext, use, type ReactNode } from 'react';
 import { useColorScheme } from 'react-native';
 
+import { characterPalettes } from './character-palettes';
 import { useAppUpdates } from './updateMachine';
-import { palettes } from './appearance';
 import { useDashboard } from './useDashboard';
 
 function useDashboardPreferences() {
@@ -11,7 +11,7 @@ function useDashboardPreferences() {
   const systemAppearance = useColorScheme();
   const { appearance, language, languagePreference, layouts, setLayout, setAppearance, setLanguage } = dashboard;
   const mode = appearance === 'system' ? systemAppearance ?? 'light' : appearance;
-  const palette = palettes[dashboard.themeId][mode];
+  const palette = characterPalettes[dashboard.themeId].app[mode];
 
   return { dashboard, updates, language, palette, mode, layouts, appearance, languagePreference, setLayout, setAppearance, setLanguage };
 }

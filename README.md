@@ -49,6 +49,8 @@ The release script checks the signed APK before staging it, and the publisher re
 
 Place new character art in the Android module’s `drawable-nodpi` directory as `<character>_waiting.webp` and `<character>_happy.webp`. Encode each with `cwebp -lossless -exact -m 6 -q 100 input.png -o output.webp`. In lossless mode, `-q 100` sets the encoder’s compression effort. Use the Android drawable name in the theme so the app and launcher share one copy. Compare the decoded RGBA pixels and dimensions to the original before replacing it. Review any budget change along with the files that need the extra space.
 
+Generate the character's app and widget colors from one seed using the [character palette workflow](docs/character-palettes.md).
+
 ## State transitions
 
 The dashboard and its screens observe XState 6 actors. Effect 4 handles provider validation, cancellable release checks, and Android requests. Android owns launcher dimensions, OS permissions, and background scheduling. See the [glossary](GLOSSARY.md) for app terms.

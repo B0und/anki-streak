@@ -3,6 +3,7 @@ import { mkdtempSync, rmdirSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { waitFor } from 'xstate';
+import { characterPalettes } from '../src/character-palettes.ts';
 
 const source = fileURLToPath(new URL('../src/widgetRefresh.ts', import.meta.url));
 const mutate = process.argv.includes('--mutate-freshness');
@@ -115,7 +116,7 @@ try {
     host.first.finish();
     await initial;
     await app.refreshWidget();
-    app.changeWidgetBackgroundTransparency(50);
+    app.changeWidgetBackgroundTransparency(25);
     app.republishWidgetAppearance();
     await waitFor(app.widgetRefreshActor, (snapshot) => snapshot.matches({ appearance: 'quiet' }), waitOptions);
     const { props } = host.publications.at(-1);
@@ -123,13 +124,16 @@ try {
     assert.equal(props.cards.tall.value, '3');
     assert.equal(props.cards.tall.days[2].label, 'Ср');
     assert.equal(props.cards.compact.averages, '3 повторов · 1 новых в день');
-    assert.equal(props.backdrop, '#25203880');
+    const { card, pulse } = characterPalettes.emilia.widget;
+    const expectedOpacity = 'bf';
+    assert.equal(props.backdrop, card + expectedOpacity);
     host.state.layout = 'studyPulse';
     app.republishWidgetAppearance();
     await waitFor(app.widgetRefreshActor, (snapshot) => snapshot.matches({ appearance: 'quiet' }), waitOptions);
     const activeCards = host.publications.at(-1).props.cards;
     assert.deepEqual(activeCards.compact.pulse.metrics.map(({ value }) => value), ['20', '3', '1']);
-    assert.equal(activeCards.compact.pulse.shade, '#25213680');
+    assert.equal(activeCards.compact.pulse.surface, pulse.surface + expectedOpacity);
+    assert.equal(activeCards.compact.pulse.shade, pulse.footer + expectedOpacity);
     assert.equal(activeCards.tall.pulse, undefined);
     assert.equal(activeCards.tall.days.length, 7);
   } finally {

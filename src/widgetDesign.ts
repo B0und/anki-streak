@@ -1,5 +1,6 @@
 import type { ReviewHistory } from './activity';
 import type { WidgetCard, WidgetProps } from './AnkiWidget';
+import { characterPalettes } from './character-palettes';
 import { copy, weekdays, type Language } from './messages';
 import type { getQuestTargets, WidgetLayout, WidgetSize } from './preferences';
 import { dailyQuests, type StudyActivity } from './studyProgress';
@@ -11,10 +12,10 @@ function widgetBackdrop(color: `#${string}`, transparency: number): `#${string}`
 }
 
 function widgetCard(
-  layout: WidgetLayout, language: Language, stats: WidgetStats, theme: (typeof themes)[WidgetTheme],
+  layout: WidgetLayout, language: Language, stats: WidgetStats, palette: (typeof characterPalettes)[WidgetTheme]['widget'],
   targets: ReturnType<typeof getQuestTargets>, transparency: number,
 ): WidgetCard {
-  const { accent } = theme;
+  const { accent, pulse } = palette;
   if (layout === 'studyPulse') {
     return {
       value: String(stats.today),
@@ -22,11 +23,11 @@ function widgetCard(
       secondary: '',
       accent,
       pulse: {
-        surface: widgetBackdrop(theme.pulse.surface, transparency),
-        shade: widgetBackdrop(theme.pulse.footer, transparency),
-        hero: theme.pulse.hero,
-        muted: theme.pulse.label,
-        detail: theme.pulse.value,
+        surface: widgetBackdrop(pulse.surface, transparency),
+        shade: widgetBackdrop(pulse.footer, transparency),
+        hero: pulse.hero,
+        muted: pulse.label,
+        detail: pulse.value,
         metrics: [
           { label: copy(language, 'pulseStreak'), value: String(stats.streak), icon: 'widget_pulse_streak' },
           { label: copy(language, 'pulseReviews'), value: String(stats.dailyReviewed), icon: 'widget_pulse_reviews' },
@@ -92,7 +93,8 @@ export function widgetProps({ stats, language, themeId, layouts, transparency, t
   targets: ReturnType<typeof getQuestTargets>;
 }): WidgetProps {
   const theme = themes[themeId];
-  const backdrop = widgetBackdrop(stats ? theme.card : theme.widgetShade, transparency);
+  const palette = characterPalettes[themeId].widget;
+  const backdrop = widgetBackdrop(stats ? palette.card : palette.shade, transparency);
   return {
     happy: !!stats && stats.today > 0,
     portraitAspect: theme.portraitAspect,
@@ -106,8 +108,8 @@ export function widgetProps({ stats, language, themeId, layouts, transparency, t
     cardBackdrop: backdrop,
     connectLabel: copy(language, 'connectWidget'),
     cards: stats ? {
-      compact: widgetCard(layouts.compact, language, stats, theme, targets, transparency),
-      tall: { ...widgetCard(layouts.tall, language, stats, theme, targets, transparency),
+      compact: widgetCard(layouts.compact, language, stats, palette, targets, transparency),
+      tall: { ...widgetCard(layouts.tall, language, stats, palette, targets, transparency),
         days: layouts.tall === 'current' ? widgetWeek(language, stats) : undefined },
     } : undefined,
   };

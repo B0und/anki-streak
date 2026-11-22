@@ -51,13 +51,15 @@ diff --git a/android/src/main/java/expo/modules/widgets/ExpoWidgetEmittableTree.
 +import expo.modules.kotlin.records.Field
  import expo.modules.kotlin.records.Record
  import expo.modules.kotlin.records.recordFromMap
-@@ -67,4 +72,5 @@
+@@ -67,5 +72,7 @@
  import androidx.glance.GlanceModifier
  import androidx.glance.action.clickable
 +import androidx.glance.appwidget.action.actionStartActivity
  import androidx.glance.appwidget.CheckboxDefaults
++import androidx.glance.appwidget.appWidgetBackground
  import androidx.glance.appwidget.cornerRadius
-@@ -219,6 +225,5 @@
+ import androidx.glance.appwidget.EmittableCheckBox
+@@ -219,6 +226,5 @@
    return EmittableText().also {
      it.text = props.textContent()
 -    it.modifier = props.textModifier(converterContext)
@@ -65,15 +67,17 @@ diff --git a/android/src/main/java/expo/modules/widgets/ExpoWidgetEmittableTree.
 +    val style = TextStyle(
        color = props.color.toGlanceColorProvider() ?: typography?.color ?: TextDefaults.defaultTextColor,
        fontSize = props.fontSize?.sp ?: typography?.fontSize,
-@@ -228,4 +233,6 @@
+@@ -228,4 +234,6 @@
        textDecoration = props.textDecoration?.toGlanceTextDecoration()
      )
 +    it.modifier = props.textModifier(converterContext, style)
 +    it.style = style
      it.maxLines = props.maxLines ?: Int.MAX_VALUE
    }
-@@ -420,4 +427,13 @@
+@@ -419,5 +427,15 @@
+     "background" -> asRecord<BackgroundParams>(converterContext)?.color?.toGlanceColorProvider()
        ?.let { GlanceModifier.background(it) }
++    "appWidgetBackground" -> GlanceModifier.appWidgetBackground()
      "cornerRadius" -> asRecord<CornerRadiusParams>(converterContext)?.let { GlanceModifier.cornerRadius(it.radius.dp) }
 +    "openAppOnTap" -> converterContext.applicationContext.let { context ->
 +      context.packageManager.getLaunchIntentForPackage(context.packageName)?.let { intent ->
@@ -86,7 +90,7 @@ diff --git a/android/src/main/java/expo/modules/widgets/ExpoWidgetEmittableTree.
 +    }
      // Unsupported Expo UI modifiers are ignored until they have exact Glance semantics.
      else -> null
-@@ -431,4 +447,20 @@
+@@ -431,4 +449,20 @@
 -private fun TextProps.textModifier(converterContext: ConverterContext): GlanceModifier {
 +private data class TextInkStart(@Field val rail: Float = 0f) : Record
 +
@@ -197,20 +201,23 @@ index 0000000..b6ddf7b
 +}
 diff --git a/android/src/main/java/expo/modules/widgets/WidgetPreviewView.kt b/android/src/main/java/expo/modules/widgets/WidgetPreviewView.kt
 new file mode 100644
-index 0000000..5061a4d
 --- /dev/null
 +++ b/android/src/main/java/expo/modules/widgets/WidgetPreviewView.kt
-@@ -0,0 +1,101 @@
+@@ -0,0 +1,123 @@
 +package expo.modules.widgets
 +
 +import android.annotation.SuppressLint
 +import android.content.Context
 +import android.graphics.Bitmap
 +import android.graphics.Canvas
++import android.graphics.Outline
 +import android.graphics.Paint
++import android.graphics.Path
++import android.graphics.Rect
 +import android.graphics.RectF
 +import android.util.Log
 +import android.view.View
++import android.view.ViewGroup
 +import androidx.compose.ui.unit.DpSize
 +import androidx.compose.ui.unit.dp
 +import androidx.glance.appwidget.ExperimentalGlanceRemoteViewsApi
@@ -291,7 +298,25 @@ index 0000000..5061a4d
 +        )
 +        preview.layout(0, 0, pixelWidth, pixelHeight)
 +        bitmap = Bitmap.createBitmap(pixelWidth, pixelHeight, Bitmap.Config.ARGB_8888).also {
-+          preview.draw(Canvas(it))
++          val canvas = Canvas(it)
++          // The software bitmap canvas needs the widget's outline applied explicitly.
++          val background = preview.findViewById<View>(android.R.id.background)
++          if (background?.clipToOutline == true) {
++            val outline = Outline()
++            background.outlineProvider?.getOutline(background, outline)
++            val bounds = Rect()
++            if (outline.getRect(bounds)) {
++              if (preview is ViewGroup && background !== preview) {
++                preview.offsetDescendantRectToMyCoords(background, bounds)
++              }
++              val radius = outline.radius
++              val mask = Path().apply {
++                addRoundRect(RectF(bounds), radius, radius, Path.Direction.CW)
++              }
++              canvas.clipPath(mask)
++            }
++          }
++          preview.draw(canvas)
 +        }
 +        invalidate()
 +      } catch (error: CancellationException) {

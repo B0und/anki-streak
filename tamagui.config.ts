@@ -1,7 +1,8 @@
 import { defaultConfig } from '@tamagui/config/v6';
 import { createFont, createTamagui } from 'tamagui';
 
-import { palettes, type Palette } from './src/appearance';
+import type { Palette } from './src/appearance';
+import { characterPalettes, mapCharacterThemes } from './src/character-palettes';
 import { animations } from './src/tamaguiAnimations';
 
 function companionTheme(palette: Palette) {
@@ -26,14 +27,9 @@ export const config = createTamagui({
     display: createFont({ ...defaultConfig.fonts.heading, family: 'serif' }),
   },
   themes: {
-    light: { ...defaultConfig.themes.light, ...companionTheme(palettes.miku.light) },
-    dark: { ...defaultConfig.themes.dark, ...companionTheme(palettes.miku.dark) },
-    light_miku: companionTheme(palettes.miku.light),
-    dark_miku: companionTheme(palettes.miku.dark),
-    light_2b: companionTheme(palettes['2b'].light),
-    dark_2b: companionTheme(palettes['2b'].dark),
-    light_emilia: companionTheme(palettes.emilia.light),
-    dark_emilia: companionTheme(palettes.emilia.dark),
+    light: { ...defaultConfig.themes.light, ...companionTheme(characterPalettes.miku.app.light) },
+    dark: { ...defaultConfig.themes.dark, ...companionTheme(characterPalettes.miku.app.dark) },
+    ...mapCharacterThemes(companionTheme),
   },
 });
 

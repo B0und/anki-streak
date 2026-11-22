@@ -9,6 +9,7 @@
     "lint": "effect-tsgo --tsrs-lint oxlint",
     "typecheck": "effect-tsgo tsrs --noEmit",
     "check": "bun scripts/check-local.mjs",
+    "palettes:generate": "bun scripts/generate-character-palettes.mjs",
     "lsp:effect": "effect-tsgo tsrs --lsp --stdio",
     "lsp:lint": "effect-tsgo --tsrs-lint oxlint --lsp",
     "refs:sync": "bash scripts/sync-agent-sources.sh"
@@ -47,6 +48,7 @@
     "@oxlint/plugins": "1.94.0",
     "@tamagui/cli": "3.3.3",
     "@types/react": "^19.3.0",
+    "colorjs.io": "0.7.1",
     "oxlint": "1.94.0",
     "tla-ts": "0.0.10",
     "tsrs": "7.1.0-beta.tsrs3",

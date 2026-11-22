@@ -41,7 +41,7 @@ export function WidgetPreview({ bounds, layout, horizontalInset, maxHeight, mood
     bounds.width, maxHeight * bounds.width / bounds.height);
 
   return <YStack w={displayWidth} h={displayWidth * bounds.height / bounds.width} self="center"
-    rounded={16} overflow="hidden">
+    rounded={props.cards?.[bounds.size]?.pulse ? 0 : 16} overflow="hidden">
     <NativePreview pointerEvents="none" style={StyleSheet.absoluteFill} widgetName="AnkiStreak"
       sampleProps={JSON.stringify(props)} previewMood={mood ?? 'live'}
       widthDp={bounds.width} heightDp={bounds.height} />

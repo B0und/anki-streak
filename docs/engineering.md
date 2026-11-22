@@ -12,7 +12,7 @@ The project vendors [Impeccable](../.agents/skills/impeccable/SKILL.md) 4.10.0 f
 
 ## App screen alignment
 
-The app uses a centered 640 dp frame for screen content and tab buttons, with a 20 dp screen inset and 16 dp card content inset. In Settings, reserve 20 dp for the icon column and 10 dp between the icon and label. On Progress, quest and achievement rows share the same icon center, label start, and trailing edge. Use the project-local [Gridlines skill](../.agents/skills/gridlines/SKILL.md) to check new rows and screens against those positions.
+The app uses a centered 640 dp frame for screen content and tab buttons, with a 20 dp screen inset and 16 dp card content inset. In Settings, reserve 20 dp for the icon column and 10 dp between the icon and label. On Progress, quest and achievement rows share the same icon center, label start, and trailing edge. The Widget screen and picker use the card inset for headings, controls, and previews that fill the card. Study Pulse uses the same leading edge for the review count and the first footer metric. Check new rows and screens with the project-local [Gridlines skill](../.agents/skills/gridlines/SKILL.md).
 
 ## Read the installed API first
 

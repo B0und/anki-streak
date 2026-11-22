@@ -42,6 +42,7 @@ type SizeSelection = {
   sizes: readonly WidgetPreviewSize[];
   selectedWidgetId: number | null;
   preferPinned: boolean;
+  flipMood: boolean;
 };
 
 const sizeSetup = setup({
@@ -52,6 +53,8 @@ const sizeSetup = setup({
       resume: types<void>(),
       select: types<{ size: WidgetSize }>(),
       bounds: types<{ widgetId: number }>(),
+      'mood.flip': types<void>(),
+      'mood.reset': types<void>(),
     },
   },
 });
@@ -61,19 +64,19 @@ export const widgetSizeActor = sizeSetup.createMachine({
     const sizes = Effect.runSync(readSizes);
     const pinned = sizes.filter((bounds) => bounds.widgetId !== undefined);
     const initialSize = pinned.some((bounds) => bounds.size === 'compact') ? 'compact' : pinned[0]?.size ?? 'compact';
-    return { size: input.size ?? initialSize, sizes, selectedWidgetId: null, preferPinned: input.size === undefined };
+    return { size: input.size ?? initialSize, sizes, selectedWidgetId: null, preferPinned: input.size === undefined, flipMood: false };
   },
   invoke: { src: observeLauncher },
   on: {
     resume: ({ context }) => {
       const sizes = Effect.runSync(readSizes);
-      if (sizes.length === 0) return;
+      if (sizes.length === 0) return { context: { ...context, flipMood: false } };
       const previous = previewBounds(context.sizes.filter((bounds) => bounds.size === context.size), context.selectedWidgetId);
       const pinned = sizes.filter((bounds) => bounds.widgetId !== undefined);
       const sameWidget = pinned.find((bounds) => bounds.widgetId === previous?.widgetId);
       const chooseDefault = context.preferPinned && !pinned.some((bounds) => bounds.size === context.size);
       const size = sameWidget?.size ?? (chooseDefault ? pinned[0]?.size : undefined) ?? context.size;
-      return { context: { ...context, sizes, size, selectedWidgetId: sameWidget?.widgetId ?? null } };
+      return { context: { ...context, sizes, size, selectedWidgetId: sameWidget?.widgetId ?? null, flipMood: false } };
     },
     select: ({ context, event }) => ({
       context: { ...context, size: event.size, selectedWidgetId: null, preferPinned: false },
@@ -81,5 +84,7 @@ export const widgetSizeActor = sizeSetup.createMachine({
     bounds: ({ context, event }) => ({
       context: { ...context, selectedWidgetId: event.widgetId },
     }),
+    'mood.flip': ({ context }) => ({ context: { ...context, flipMood: !context.flipMood } }),
+    'mood.reset': ({ context }) => ({ context: { ...context, flipMood: false } }),
   },
 });

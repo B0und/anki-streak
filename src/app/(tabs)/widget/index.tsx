@@ -10,6 +10,7 @@ export default function WidgetRoute() {
   const router = useRouter();
   return <Screen title={copy(language, 'widget')}>
     <WidgetScreen openThemes={() => router.push('/widget/themes')}
-      openLayouts={(size) => router.push({ pathname: '/widget/layouts', params: { size } })} />
+      openLayouts={(size, widgetId) => router.push({ pathname: '/widget/layouts',
+        params: { size, widgetId: widgetId?.toString() } })} />
   </Screen>;
 }

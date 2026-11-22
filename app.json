@@ -2,7 +2,7 @@
   "expo": {
     "name": "Anki Streak",
     "slug": "anki-streak",
-    "version": "1.2.24",
+    "version": "1.2.25",
     "platforms": [
       "android"
     ],
@@ -12,7 +12,7 @@
     "icon": "./assets/app-icon.png",
     "android": {
       "package": "com.ankistreak.anime",
-      "versionCode": 28,
+      "versionCode": 29,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0D1E24"
@@ -33,7 +33,7 @@
               "description": "Your review streak and study activity, with the character you choose.",
               "android": {
                 "minWidth": 175,
-                "minHeight": 63,
+                "minHeight": 48,
                 "targetCellWidth": 4,
                 "targetCellHeight": 1,
                 "resizeMode": "both",

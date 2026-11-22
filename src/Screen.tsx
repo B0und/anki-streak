@@ -6,7 +6,9 @@ import { useDashboardContext } from './dashboardContext';
 import { copy } from './messages';
 import { screenInset, screenMaxWidth } from './screenLayout';
 
-export function Screen({ title, children, onBack }: { title: string; children: ReactNode; onBack?: () => void }) {
+export function Screen({ title, children, onBack, toolbar, scrollKey }: {
+  title: string; children: ReactNode; onBack?: () => void; toolbar?: ReactNode; scrollKey?: string;
+}) {
   const { palette, language } = useDashboardContext();
   return <>
     <XStack w="100%" maxW={screenMaxWidth} self="center" px={screenInset} py={10} minH={62} items="center" gap={8}>
@@ -16,7 +18,8 @@ export function Screen({ title, children, onBack }: { title: string; children: R
       </View>}
       <Text accessibilityRole="header" flex={1} color="color" fontFamily="display" fontWeight="700" fontSize={28}>{title}</Text>
     </XStack>
-    <ScrollView flex={1} w="100%" maxW={screenMaxWidth} self="center"
+    {toolbar && <View w="100%" maxW={screenMaxWidth} self="center" px={screenInset} pb={12}>{toolbar}</View>}
+    <ScrollView key={scrollKey} flex={1} w="100%" maxW={screenMaxWidth} self="center"
       contentContainerStyle={{ paddingHorizontal: screenInset, paddingBottom: 22, gap: 14 }} keyboardShouldPersistTaps="handled">
       {children}
     </ScrollView>

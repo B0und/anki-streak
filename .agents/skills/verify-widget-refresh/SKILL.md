@@ -30,8 +30,8 @@ Then run the normal local gate.
 
 ## Verify launcher parity
 
-1. Pin one Compact and one Tall widget. At 0% transparency, capture each on the launcher and in the app with **Mood preview → Live**.
+1. Pin one Compact and one Tall widget. At 0% transparency, reopen the Widget screen to reset the face to today's mood. Capture each size on the launcher and in the app.
 2. Compare the widget crops at the same scale. Confirm the stats, palette, and spacing match for each size. Check the full head and visible headroom for every character in both Waiting and Happy.
 3. Resize a pinned widget and reopen the app. Compare the new bounds and layout. With different pinned dimensions in the same size class, use the dimension selector to check each.
-4. Change layout and transparency, then return to the launcher. Compare the updated layout and opacity. The app surface and launcher wallpaper show through transparent pixels.
-5. Cold-open the Widget screen and record through the first preview render. The Add widget button and appearance controls must keep their positions. Repeat while refreshing the preview data.
+4. Select **Study Pulse** under Compact and switch to Tall in the same picker. Confirm that both choices persist independently and the captions sit outside the artwork. Change transparency and return to the launcher. Compare the layouts and opacity, including both Study Pulse background tones.
+5. Cold-open the Widget screen and record through the first preview render. The Add button and appearance controls must keep their positions. Repeat while refreshing the preview data. Flip the face twice and confirm that returning to the screen restores today's mood.

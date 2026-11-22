@@ -10,6 +10,11 @@ export type WidgetCard = {
   shortLabel?: string;
   shortSecondary?: string;
   averages?: string;
+  pulse?: {
+    shade: string;
+    muted: string;
+    metrics: ReadonlyArray<{ label: string; value: string; icon: string }>;
+  };
   quests?: {
     completed: number;
     total: number;
@@ -80,8 +85,52 @@ function AnkiStreak(
   // The caption overlaps the empty space at the bottom of the native number's line box.
   const weekLabelTop = Math.ceil(weekValueSize);
   const weekPitch = (Math.round(widgetWidth) - 2 * margin + weekBarGap) / 7;
-  const surface = cardBackdrop ?? backdrop ?? '#000000';
+  const surface = cardBackdrop ?? backdrop;
   const actions = previewMood ? [] : [{ $type: 'openAppOnTap' }];
+
+  const pulse = card?.pulse;
+  if (card && pulse) {
+    const inset = narrow ? 8 : 12;
+    const rail = Math.floor(Math.min(widgetWidth * .30, height * 1.15));
+    const contentWidth = widgetWidth - rail - inset;
+    const footerHeight = Math.round(height * .35);
+    const metricWidth = contentWidth / pulse.metrics.length;
+    const longestLabel = Math.max(...pulse.metrics.map(({ label }) => label.length));
+    const longestValue = Math.max(...pulse.metrics.map(({ value }) => value.length));
+    const detailLabelSize = Math.min(10, height * .12, (metricWidth - 3) / (longestLabel * .72));
+    const detailValueSize = Math.min(15, height * .17, (metricWidth - (narrow ? 2 : 13)) / (longestValue * .62));
+    const portraitHeight = Math.min(height - inset, (rail - inset) / aspect);
+    const numberSize = Math.min(height * .43, contentWidth * .45 / (card.value.length * .62));
+    const captionWidth = contentWidth - Math.ceil(numberSize * card.value.length * .65) - 6;
+    return <Box modifiers={[fillMaxSize(), cornerRadius(20), ...actions]} contentAlignment="bottomStart">
+      <Column>
+        <Box contentAlignment="centerStart" modifiers={[size(widgetWidth, height - footerHeight), background(surface),
+          padding(rail, 0, inset, 0)]}>
+          <Row verticalAlignment="bottom">
+            <Text color="#FFFDF8" style={{ fontSize: numberSize, fontWeight: 'bold' }} maxLines={1}>{card.value}</Text>
+            <Text color={pulse.muted} modifiers={[width(captionWidth), padding(6, 0, 0, Math.floor(numberSize * .16))]}
+              style={{ fontSize: Math.min(12, height * .16, (captionWidth - 6) / (card.label.length * .54)) }}
+              maxLines={1}>{card.label}</Text>
+          </Row>
+        </Box>
+        <Row verticalAlignment="center" modifiers={[size(widgetWidth, footerHeight), background(pulse.shade), padding(rail, 0, inset, 0)]}>
+          {pulse.metrics.map(({ label, value, icon }) => (
+            <Column key={icon} modifiers={[width(metricWidth)]}>
+              <Text color={pulse.muted} modifiers={[width(metricWidth - 3)]}
+                style={{ fontSize: detailLabelSize }} maxLines={1}>{label}</Text>
+              <Row verticalAlignment="center">
+                {!narrow && <Image source={{ uri: icon }} tint={pulse.muted} modifiers={[size(11, 11), padding(0, 0, 2, 0)]} />}
+                <Text color={card.accent} style={{ fontSize: detailValueSize, fontWeight: '500' }} maxLines={1}>{value}</Text>
+              </Row>
+            </Column>
+          ))}
+        </Row>
+      </Column>
+      <Box contentAlignment="bottomCenter" modifiers={[size(rail, portraitHeight)]}>
+        <Image source={{ uri: portrait }} contentScale="fit" modifiers={[size(rail - inset, portraitHeight)]} />
+      </Box>
+    </Box>;
+  }
 
   return (
     <Box contentAlignment="center" modifiers={[fillMaxSize(), background(surface), cornerRadius(20), ...actions]}>
@@ -188,5 +237,5 @@ function AnkiStreak(
 }
 
 export default createWidget<WidgetProps>('AnkiStreak', AnkiStreak, {
-  description: '', backdrop: '#000000', waitingDrawable: 'miku_waiting',
+  description: '', backdrop: '#0D2025', waitingDrawable: 'miku_waiting',
 });

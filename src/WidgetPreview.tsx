@@ -2,7 +2,7 @@ import { requireNativeView } from 'expo';
 import { StyleSheet, useWindowDimensions, type ViewProps } from 'react-native';
 import { YStack } from 'tamagui';
 
-import { historyDays } from './activity';
+import { historyDays, type ReviewMood } from './activity';
 import { useDashboardContext } from './dashboardContext';
 import { getQuestTargets, type WidgetLayout } from './preferences';
 import { screenInset, screenMaxWidth } from './screenLayout';
@@ -22,16 +22,13 @@ const sampleStats = {
   history: { counts: Array.from({ length: historyDays }, () => 1), todayRow: 4 },
 };
 
-export const galleryPadding = 7;
-export const galleryBorderWidth = 2;
-
-export function WidgetPreview({ bounds, layout, gallery = false }: {
-  bounds: WidgetPreviewSize; layout?: WidgetLayout; gallery?: boolean;
+export function WidgetPreview({ bounds, layout, horizontalInset, maxHeight, mood }: {
+  bounds: WidgetPreviewSize; layout?: WidgetLayout; horizontalInset: number; maxHeight: number; mood?: ReviewMood;
 }) {
   const { dashboard, language, layouts } = useDashboardContext();
   const { width } = useWindowDimensions();
   const ready = dashboard.activity?.kind === 'ready' ? dashboard.activity : null;
-  const stats = ready ?? (gallery || bounds.widgetId === undefined ? sampleStats : null);
+  const stats = ready ?? (layout ? sampleStats : null);
   const props = widgetProps({
     stats,
     themeId: dashboard.themeId,
@@ -40,15 +37,13 @@ export function WidgetPreview({ bounds, layout, gallery = false }: {
     transparency: dashboard.transparency,
     targets: getQuestTargets(),
   });
-  const maxHeight = gallery && bounds.size === 'compact' ? 118 : 188;
-  const displayInset = gallery ? screenInset + galleryPadding + galleryBorderWidth : screenInset + 4;
-  const displayWidth = Math.min(Math.min(width, screenMaxWidth) - displayInset * 2,
+  const displayWidth = Math.min(Math.min(width, screenMaxWidth) - (screenInset + horizontalInset) * 2,
     bounds.width, maxHeight * bounds.width / bounds.height);
 
   return <YStack w={displayWidth} h={displayWidth * bounds.height / bounds.width} self="center"
     rounded={16} overflow="hidden">
     <NativePreview pointerEvents="none" style={StyleSheet.absoluteFill} widgetName="AnkiStreak"
-      sampleProps={stats || dashboard.activity ? JSON.stringify(props) : ''} previewMood={dashboard.previewMood ?? 'live'}
+      sampleProps={JSON.stringify(props)} previewMood={mood ?? 'live'}
       widthDp={bounds.width} heightDp={bounds.height} />
   </YStack>;
 }

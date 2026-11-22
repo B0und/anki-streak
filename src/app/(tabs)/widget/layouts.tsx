@@ -1,15 +1,11 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
-import { useDashboardContext } from '../../../dashboardContext';
-import { copy } from '../../../messages';
-import { Screen } from '../../../Screen';
 import { WidgetLayouts } from '../../../WidgetLayouts';
 
 export default function LayoutsRoute() {
-  const { language } = useDashboardContext();
-  const { size } = useLocalSearchParams();
+  const { size, widgetId } = useLocalSearchParams();
   const router = useRouter();
-  return <Screen title={copy(language, 'widgetLayouts')} onBack={() => router.canGoBack() ? router.back() : router.replace('/widget')}>
-    <WidgetLayouts initialSize={size === 'tall' ? 'tall' : 'compact'} />
-  </Screen>;
+  return <WidgetLayouts initialSize={size === 'tall' ? 'tall' : 'compact'}
+    widgetId={typeof widgetId === 'string' ? Number(widgetId) : null}
+    onBack={() => router.canGoBack() ? router.back() : router.replace('/widget')} />;
 }

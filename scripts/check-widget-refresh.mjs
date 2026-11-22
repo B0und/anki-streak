@@ -123,7 +123,15 @@ try {
     assert.equal(props.cards.tall.value, '3');
     assert.equal(props.cards.tall.days[2].label, 'Ср');
     assert.equal(props.cards.compact.averages, '3 повторов · 1 новых в день');
-    assert.equal(props.backdrop, '#00000080');
+    assert.equal(props.backdrop, '#25203880');
+    host.state.layout = 'studyPulse';
+    app.republishWidgetAppearance();
+    await waitFor(app.widgetRefreshActor, (snapshot) => snapshot.matches({ appearance: 'quiet' }), waitOptions);
+    const activeCards = host.publications.at(-1).props.cards;
+    assert.deepEqual(activeCards.compact.pulse.metrics.map(({ value }) => value), ['20', '3', '1']);
+    assert.equal(activeCards.compact.pulse.shade, '#1E1A2C80');
+    assert.equal(activeCards.tall.pulse, undefined);
+    assert.equal(activeCards.tall.days.length, 7);
   } finally {
     host.first.finish();
     app.widgetRefreshActor.stop();

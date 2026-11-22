@@ -1,71 +1,88 @@
 import { useActor } from '@xstate/react';
-import { ChevronRight, Frown, Smile, ScanFace } from 'lucide-react-native';
+import { useFocusEffect } from 'expo-router';
+import { ChevronRight, Frown, Plus, Smile } from 'lucide-react-native';
+import { useCallback } from 'react';
 import { Image, Slider, Text, View, XStack, YStack } from 'tamagui';
 
 import { useDashboardContext } from './dashboardContext';
 import { copy } from './messages';
 import { widgetSizes, type WidgetSize } from './preferences';
-import { Action, Choices, Section } from './studyComponents';
+import { cardContentInset } from './screenLayout';
+import { Choices } from './studyComponents';
 import { themes } from './themes';
 import { WidgetPreview } from './WidgetPreview';
 import { previewBounds, widgetSizeActor } from './widgetSizeActor';
 
+const previewHeight = 168;
+
 export function WidgetScreen({ openLayouts, openThemes }: {
-  openLayouts(size: WidgetSize): void; openThemes(): void;
+  openLayouts(size: WidgetSize, widgetId?: number): void; openThemes(): void;
 }) {
   const { dashboard, palette, language, layouts } = useDashboardContext();
   const [selection, select] = useActor(widgetSizeActor, { input: {} });
-  const { size, sizes, selectedWidgetId } = selection.context;
+  const { size, sizes, selectedWidgetId, flipMood } = selection.context;
   const candidates = sizes.filter((bounds) => bounds.size === size);
-  const showDimensions = widgetSizes.some((key) => sizes.filter((item) => item.size === key).length > 1);
   const bounds = previewBounds(candidates, selectedWidgetId);
   const theme = themes[dashboard.themeId];
-  const mood = dashboard.previewMood ?? 'live';
-  const MoodIcon = mood === 'waiting' ? Frown : mood === 'happy' ? Smile : ScanFace;
+  const oppositeMood = dashboard.mood === 'happy' ? 'waiting' : 'happy';
+  const mood = flipMood ? oppositeMood : dashboard.mood;
+  const MoodIcon = mood === 'happy' ? Smile : Frown;
+
+  useFocusEffect(useCallback(() => {
+    select({ type: 'mood.reset' });
+  }, [select]));
 
   return <>
-    <YStack gap={10}>
-      <Choices<WidgetSize> choices={widgetSizes} value={size} onChange={(size) => select({ type: 'select', size })} label={(key) => copy(language, key)} />
-      <XStack items="center" justify="space-between" minH={48}>
-        <Text color="muted" flex={1} numberOfLines={1}>
-          {bounds?.widgetId === undefined ? copy(language, 'exampleWidgetSize') : ''}
+    <XStack accessibilityRole="button" onPress={openThemes} minH={64} px={cardContentInset - 1} py={8}
+      items="center" gap={12} bg="surface" borderWidth={1} borderColor="border-color" rounded={16}
+      opacity="press:0.75">
+      <View w={42} h={42} rounded={10} bg="hero" items="center" justify="center" overflow="hidden">
+        <Image source={{ uri: theme[dashboard.mood] }} objectFit="contain" style={{ width: 36, height: 36 }} />
+      </View>
+      <YStack flex={1}>
+        <Text color="muted" fontSize={12}>{copy(language, 'character')}</Text>
+        <Text color="color" fontWeight="700" fontSize={17}>{theme.name}</Text>
+      </YStack>
+      <ChevronRight size={20} color={palette.muted} />
+    </XStack>
+    <YStack gap={12} p={cardContentInset - 1} bg="surface" borderWidth={1} borderColor="border-color" rounded={16}>
+      <XStack items="center" justify="space-between" gap={10}>
+        <Text flex={1} accessibilityRole="header" color="color" fontWeight="700" fontSize={18}>
+          {copy(language, 'homeWidgetPreview')}
         </Text>
+        <XStack accessibilityRole="button" accessibilityLabel={copy(language, 'addWidget')}
+          accessibilityState={{ disabled: dashboard.requesting }} minH={48} minW={48} px={11} gap={5}
+          items="center" justify="center" rounded={12} bg="accent"
+          opacity={dashboard.requesting ? 0.55 : 'press:0.75'}
+          onPress={dashboard.requesting ? undefined : () => void dashboard.runAndroidRequest('pin')}>
+          <Plus size={18} color={palette.onAccent} />
+          <Text color="on-accent" fontWeight="700">{copy(language, 'addWidgetShort')}</Text>
+        </XStack>
+      </XStack>
+      <XStack items="center" gap={8}>
+        <YStack flex={1}>
+          <Choices choices={widgetSizes} value={size} onChange={(size) => select({ type: 'select', size })}
+            label={(key) => copy(language, key)} />
+        </YStack>
         <View accessibilityRole="button" accessibilityLabel={copy(language, 'themePreview')}
-          accessibilityValue={{ text: copy(language, mood === 'live' ? 'live' : mood === 'happy' ? 'happyMood' : 'waitingMood') }}
-          w={48} h={48} items="center" justify="center" rounded={12} bg="subtle"
-          onPress={() => mood === 'happy' ? dashboard.clearPreview() : dashboard.setPreviewMood(mood === 'live' ? 'waiting' : 'happy')}>
+          accessibilityValue={{ text: copy(language, mood === 'happy' ? 'happyMood' : 'waitingMood') }}
+          w={48} h={48} items="center" justify="center" rounded={12} bg="subtle" opacity="press:0.75"
+          onPress={() => select({ type: 'mood.flip' })}>
           <MoodIcon color={palette.accent} size={22} />
         </View>
       </XStack>
-      <YStack h={188} justify="center">
-        {bounds && <WidgetPreview bounds={bounds} />}
+      {candidates.length > 1 && <Choices choices={candidates.map((item) => String(item.widgetId))}
+        value={String(bounds?.widgetId)} onChange={(id) => select({ type: 'bounds', widgetId: Number(id) })}
+        label={(id) => {
+          const item = candidates.find((entry) => String(entry.widgetId) === id);
+          return item ? `${Math.round(item.width)} × ${Math.round(item.height)}` : '';
+        }} />}
+      <YStack h={previewHeight} justify="center" rounded={12} bg="background">
+        {bounds ? <WidgetPreview bounds={bounds} horizontalInset={cardContentInset} maxHeight={previewHeight} mood={mood} />
+          : <Text text="center" color="muted">{copy(language, 'previewUnavailable')}</Text>}
       </YStack>
-      {showDimensions && <YStack h={56} overflow="hidden">
-        {candidates.length > 1 && <Choices choices={candidates.map((item) => String(item.widgetId))}
-          value={String(bounds?.widgetId)} onChange={(id) => select({ type: 'bounds', widgetId: Number(id) })}
-          label={(id) => {
-            const item = candidates.find((entry) => String(entry.widgetId) === id);
-            return item ? `${Math.round(item.width)} × ${Math.round(item.height)}` : '';
-          }} />}
-      </YStack>}
-      <Action primary disabled={dashboard.requesting}
-        onPress={() => void dashboard.runAndroidRequest('pin')}>{copy(language, 'addWidget')}</Action>
-
-    </YStack>
-    <Section title={copy(language, 'appearance')}>
-      <XStack accessibilityRole="button" onPress={openThemes} minH={54} py={5}
-        items="center" gap={10} opacity="press:0.75">
-        <YStack flex={1} gap={2}>
-          <Text color="color" fontWeight="700">{copy(language, 'theme')}</Text>
-          <Text color="muted" fontSize={13}>{theme.name}</Text>
-        </YStack>
-        <XStack w={42} h={42} rounded={9} bg="hero" items="center" justify="center" overflow="hidden">
-          <Image source={{ uri: theme[dashboard.mood] }} objectFit="contain" style={{ width: 36, height: 36 }} />
-        </XStack>
-        <ChevronRight size={20} color={palette.muted} />
-      </XStack>
-      <XStack accessibilityRole="button" onPress={() => openLayouts(size)} minH={48} gap={10}
-        items="center" borderTopColor="border-color" borderTopWidth={1} pt={9} opacity="press:0.75">
+      <XStack accessibilityRole="button" onPress={() => openLayouts(size, bounds?.widgetId)} minH={48} gap={8}
+        items="center" borderTopColor="border-color" borderTopWidth={1} opacity="press:0.75">
         <Text flex={1} color="color" fontWeight="700">{copy(language, 'layout')}</Text>
         <Text color="muted" shrink={1} maxW="60%">{copy(language, layouts[size])}</Text>
         <ChevronRight size={20} color={palette.muted} />
@@ -89,6 +106,6 @@ export function WidgetScreen({ openLayouts, openThemes }: {
           }}
           bg="accent" borderColor="accent" />
       </Slider>
-    </Section>
+    </YStack>
   </>;
 }

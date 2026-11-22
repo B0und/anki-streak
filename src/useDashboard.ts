@@ -4,10 +4,10 @@ import { AppState, Linking, ToastAndroid } from 'react-native';
 import { createAsyncLogic, createCallbackLogic, setup, types } from 'xstate';
 
 import {
-  getWidgetBackgroundTransparency, getWidgetTheme, openAnki, pinWidget, requestAnkiPermission, setWidgetTheme, type ReviewMood,
+  getWidgetBackgroundTransparency, getWidgetTheme, openAnki, pinWidget, requestAnkiPermission, setWidgetTheme,
 } from './activity';
 import { copy, type Message } from './messages';
-import { appearanceOptions, getLanguage, getWidgetLayouts, languageOptions, preference, settings, type Appearance,
+import { appearanceOptions, getLanguage, getWidgetLayouts, languageOptions, preference, settings, widgetLayouts, type Appearance,
   type LanguagePreference, type WidgetLayout, type WidgetSize } from './preferences';
 import type { WidgetTheme } from './themes';
 import { changeWidgetBackgroundTransparency, refreshAfterPermissionRequest, refreshWidget,
@@ -55,7 +55,6 @@ type DashboardContext = {
   layouts: ReturnType<typeof getWidgetLayouts>;
   themeId: WidgetTheme;
   transparency: number;
-  previewMood: ReviewMood | null;
   notice: Message | null;
   request: AndroidRequest;
 };
@@ -68,7 +67,6 @@ function readPreferences(): DashboardContext {
     layouts: getWidgetLayouts(),
     themeId: getWidgetTheme(),
     transparency: getWidgetBackgroundTransparency(),
-    previewMood: null,
     notice: null,
     request: 'open',
   };
@@ -107,7 +105,6 @@ const dashboardSetup = setup({
       'widget.layout': types<{ size: WidgetSize; value: WidgetLayout }>(),
       'widget.theme': types<{ value: WidgetTheme }>(),
       'widget.transparency': types<{ value: number }>(),
-      'widget.preview': types<{ value: ReviewMood | null }>(),
       'anki.refresh': types<void>(),
       'android.request': types<{ request: AndroidRequest }>(),
       'storage.failed': types<{ notice: Message }>(),
@@ -136,6 +133,8 @@ const dashboardMachine = dashboardSetup.createMachine({
         language: event.value === 'system' ? (settings.getSystemLanguage() === 'ru' ? 'ru' : 'en') : event.value } };
     },
     'widget.layout': ({ context, event }, enq) => {
+      const options: readonly WidgetLayout[] = widgetLayouts[event.size];
+      if (!options.includes(event.value)) return;
       enq(settings.setPreference, `layout-${event.size}`, event.value);
       enq(republishWidgetAppearance);
       return { context: { ...context, layouts: { ...context.layouts, [event.size]: event.value } } };
@@ -162,7 +161,6 @@ const dashboardMachine = dashboardSetup.createMachine({
       });
       return { context: { ...context, transparency: event.value } };
     },
-    'widget.preview': ({ context, event }) => ({ context: { ...context, previewMood: event.value } }),
     'storage.failed': ({ context, event }) => ({
       context: { ...context, notice: event.notice, themeId: getWidgetTheme(), transparency: getWidgetBackgroundTransparency() },
     }),
@@ -208,8 +206,6 @@ export function useDashboard() {
       : check?.activity.kind === 'unavailable' && activity?.kind === 'ready' ? 'unavailable' as const : null),
     refreshing: widget.matches({ data: 'reading' }) || widget.matches({ data: 'publishing' }),
     requesting: snapshot.matches('requesting'),
-    clearPreview() { send({ type: 'widget.preview', value: null }); },
-    setPreviewMood(value: ReviewMood) { send({ type: 'widget.preview', value }); },
     runAndroidRequest(request: AndroidRequest) { send({ type: 'android.request', request }); },
     selectTheme(value: WidgetTheme) { send({ type: 'widget.theme', value }); },
     changeTransparency(value: number) { send({ type: 'widget.transparency', value }); },

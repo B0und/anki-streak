@@ -11,9 +11,27 @@ function widgetBackdrop(color: `#${string}`, transparency: number): `#${string}`
 }
 
 function widgetCard(
-  layout: WidgetLayout, language: Language, stats: WidgetStats, accent: `#${string}`,
-  targets: ReturnType<typeof getQuestTargets>,
+  layout: WidgetLayout, language: Language, stats: WidgetStats, theme: (typeof themes)[WidgetTheme],
+  targets: ReturnType<typeof getQuestTargets>, transparency: number,
 ): WidgetCard {
+  const { accent } = theme;
+  if (layout === 'studyPulse') {
+    return {
+      value: String(stats.today),
+      label: copy(language, 'pulseToday'),
+      secondary: '',
+      accent,
+      pulse: {
+        shade: widgetBackdrop(theme.widgetShade, transparency),
+        muted: theme.widgetMuted,
+        metrics: [
+          { label: copy(language, 'pulseStreak'), value: String(stats.streak), icon: 'widget_pulse_streak' },
+          { label: copy(language, 'pulseReviews'), value: String(stats.dailyReviewed), icon: 'widget_pulse_reviews' },
+          { label: copy(language, 'pulseNew'), value: String(stats.dailyLearned), icon: 'widget_pulse_new' },
+        ],
+      },
+    };
+  }
   if (layout === 'dailyQuests') {
     const quests = dailyQuests(stats, targets);
     const completed = quests.filter(({ value, target }) => value >= target).length;
@@ -71,6 +89,7 @@ export function widgetProps({ stats, language, themeId, layouts, transparency, t
   targets: ReturnType<typeof getQuestTargets>;
 }): WidgetProps {
   const theme = themes[themeId];
+  const backdrop = widgetBackdrop(stats ? theme.card : theme.widgetShade, transparency);
   return {
     happy: !!stats && stats.today > 0,
     portraitAspect: theme.portraitAspect,
@@ -80,12 +99,12 @@ export function widgetProps({ stats, language, themeId, layouts, transparency, t
     }) : '',
     waitingDrawable: theme.waiting,
     happyDrawable: theme.happy,
-    backdrop: widgetBackdrop('#000000', transparency),
-    cardBackdrop: widgetBackdrop(stats ? theme.card : '#000000', transparency),
+    backdrop,
+    cardBackdrop: backdrop,
     connectLabel: copy(language, 'connectWidget'),
     cards: stats ? {
-      compact: widgetCard(layouts.compact, language, stats, theme.accent, targets),
-      tall: { ...widgetCard(layouts.tall, language, stats, theme.accent, targets),
+      compact: widgetCard(layouts.compact, language, stats, theme, targets, transparency),
+      tall: { ...widgetCard(layouts.tall, language, stats, theme, targets, transparency),
         days: layouts.tall === 'current' ? widgetWeek(language, stats) : undefined },
     } : undefined,
   };

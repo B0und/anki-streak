@@ -5,12 +5,13 @@ export const languageOptions = ['system', 'en', 'ru'] as const;
 export const widgetSizes = ['compact', 'tall'] as const;
 export type WidgetSize = (typeof widgetSizes)[number];
 
-export const widgetLayouts = ['current', 'focus', 'first', 'dailyQuests'] as const;
+const tallLayouts = ['current', 'focus', 'first', 'dailyQuests'] as const;
+export const widgetLayouts = { compact: ['studyPulse', ...tallLayouts], tall: tallLayouts } as const;
 export const milestones = ['firstReview', 'finishDue', 'reviewTarget', 'newTarget', 'streakTarget'] as const;
 
 export type Appearance = (typeof appearanceOptions)[number];
 export type LanguagePreference = (typeof languageOptions)[number];
-export type WidgetLayout = (typeof widgetLayouts)[number];
+export type WidgetLayout = (typeof widgetLayouts)[WidgetSize][number];
 export type Milestone = (typeof milestones)[number];
 
 export const defaultTargets = { reviewTarget: 20, newTarget: 5, streakTarget: 7 };
@@ -38,7 +39,8 @@ export function getLanguage() {
 }
 
 export function getWidgetLayout(size: WidgetSize) {
-  return preference(`layout-${size}`, widgetLayouts, preference('layout', widgetLayouts, 'current'));
+  const options: readonly WidgetLayout[] = widgetLayouts[size];
+  return preference(`layout-${size}`, options, preference('layout', options, 'current'));
 }
 
 export function getWidgetLayouts(): Record<WidgetSize, WidgetLayout> {

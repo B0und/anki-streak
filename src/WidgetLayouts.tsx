@@ -1,24 +1,42 @@
-import { Text, YStack } from 'tamagui';
+import { useActor } from '@xstate/react';
+import { Check, Circle } from 'lucide-react-native';
+import { Text, XStack, YStack } from 'tamagui';
 
 import { useDashboardContext } from './dashboardContext';
 import { copy } from './messages';
-import { widgetLayouts, type WidgetSize } from './preferences';
-import { galleryBorderWidth, galleryPadding, WidgetPreview } from './WidgetPreview';
+import { widgetLayouts, widgetSizes, type WidgetSize } from './preferences';
+import { Screen } from './Screen';
+import { cardContentInset } from './screenLayout';
+import { Choices } from './studyComponents';
+import { WidgetPreview } from './WidgetPreview';
+import { previewBounds, widgetSizeActor } from './widgetSizeActor';
 
-export function WidgetLayouts({ initialSize }: { initialSize: WidgetSize }) {
-  const { language, layouts, setLayout } = useDashboardContext();
-  const bounds = { size: initialSize, width: 360, height: initialSize === 'compact' ? 102 : 204 };
+export function WidgetLayouts({ initialSize, widgetId, onBack }: {
+  initialSize: WidgetSize; widgetId: number | null; onBack(): void;
+}) {
+  const { language, layouts, palette, setLayout } = useDashboardContext();
+  const [selection, select] = useActor(widgetSizeActor, { input: { size: initialSize } });
+  const { size, sizes } = selection.context;
+  const bounds = previewBounds(sizes.filter((item) => item.size === size), size === initialSize ? widgetId : null);
 
-  return <YStack gap={14} accessibilityRole="radiogroup">
-    {widgetLayouts.map((layout) => {
-      const checked = layout === layouts[initialSize];
-      return <YStack key={layout} accessibilityRole="radio" accessibilityLabel={copy(language, layout)}
-        accessibilityState={{ checked }} onPress={() => setLayout(initialSize, layout)}
-        borderWidth={galleryBorderWidth} borderColor={checked ? 'accent' : 'border-color'}
-        p={galleryPadding} gap={7} rounded={20} opacity="press:0.8" items="center">
-        <WidgetPreview bounds={bounds} layout={layout} gallery />
-        <Text color={checked ? 'accent' : 'muted'} fontSize={13} fontWeight="700" pb={4}>{copy(language, layout)}</Text>
-      </YStack>;
-    })}
-  </YStack>;
+  return <Screen title={copy(language, 'widgetLayouts')} onBack={onBack} scrollKey={size}
+    toolbar={<Choices choices={widgetSizes} value={size} label={(key) => copy(language, key)}
+      onChange={(size) => select({ type: 'select', size })} />}>
+    <YStack gap={14} accessibilityRole="radiogroup">
+      {bounds ? widgetLayouts[size].map((layout) => {
+        const checked = layout === layouts[size];
+        const SelectionIcon = checked ? Check : Circle;
+        return <YStack key={layout} accessibilityRole="radio" accessibilityLabel={copy(language, layout)}
+          accessibilityState={{ checked }} onPress={() => setLayout(size, layout)}
+          borderWidth={2} borderColor={checked ? 'accent' : 'border-color'} bg="surface"
+          p={cardContentInset - 2} gap={8} rounded={16} opacity="press:0.8">
+          <XStack minH={24} items="center" gap={8}>
+            <Text flex={1} color={checked ? 'accent' : 'color'} fontSize={15} fontWeight="700">{copy(language, layout)}</Text>
+            <SelectionIcon size={18} color={checked ? palette.accent : palette.muted} />
+          </XStack>
+          <WidgetPreview bounds={bounds} layout={layout} horizontalInset={cardContentInset} maxHeight={188} />
+        </YStack>;
+      }) : <Text color="muted">{copy(language, 'previewUnavailable')}</Text>}
+    </YStack>
+  </Screen>;
 }

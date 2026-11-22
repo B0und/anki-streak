@@ -3,11 +3,48 @@ import { readFile, writeFile } from 'node:fs/promises';
 import Color from 'colorjs.io';
 
 import { themes } from '../src/themes';
-import approved from './character-palette-overrides.json' with { type: 'json' };
 
-const reference = approved['2b'];
-type PaletteSet = typeof reference;
-const overrides: Partial<Record<string, PaletteSet>> = approved;
+const roleColors = {
+  widget: {
+    accent: '#EFE0C5',
+    card: '#2B2926',
+    shade: '#231F1D',
+    pulse: {
+      surface: '#35312D',
+      footer: '#2C2926',
+      hero: '#F2EBDF',
+      label: '#A59986',
+      value: '#BFB29D',
+    },
+  },
+  app: {
+    light: {
+      background: '#F4EFE7',
+      surface: '#FFFAF2',
+      subtle: '#EDE3D4',
+      hero: '#E9DECB',
+      line: '#D5C7B4',
+      text: '#302820',
+      muted: '#695C4F',
+      accent: '#745330',
+      onAccent: '#FFFFFF',
+      heat: ['#E8DFD2', '#CDBDA8', '#AE967B', '#927453', '#745330'],
+    },
+    dark: {
+      background: '#211D1A',
+      surface: '#2D2823',
+      subtle: '#3B332A',
+      hero: '#473A2D',
+      line: '#584A3C',
+      text: '#FFF6E7',
+      muted: '#D2C4B0',
+      accent: '#F0D7AA',
+      onAccent: '#332614',
+      heat: ['#3B342F', '#5B4A38', '#7C6348', '#AA8964', '#E2C49C'],
+    },
+  },
+};
+type PaletteSet = typeof roleColors;
 const output = new URL('../src/character-palettes.ts', import.meta.url);
 const modes = ['light', 'dark'] as const;
 const readableContrast = 4.5;
@@ -33,10 +70,10 @@ function themeFromSeed(seed: string): PaletteSet {
     return result;
   }
   const tintApp = ({ heat, ...roles }: PaletteSet['app']['light']) => ({ ...tintRoles(roles), heat: heat.map(tint) });
-  const { pulse, ...widget } = reference.widget;
+  const { pulse, ...widget } = roleColors.widget;
   return {
     widget: { ...tintRoles(widget), pulse: tintRoles(pulse) },
-    app: { light: tintApp(reference.app.light), dark: tintApp(reference.app.dark) },
+    app: { light: tintApp(roleColors.app.light), dark: tintApp(roleColors.app.dark) },
   };
 }
 
@@ -79,7 +116,7 @@ function verifyPalette(name: string, { widget, app }: PaletteSet) {
 
 const palettes = Object.fromEntries(Object.entries(themes).map(([id, { seed }]) => {
   assert.match(seed, /^#[0-9a-f]{6}$/i, `${id} needs a six-digit sRGB seed`);
-  const palette = overrides[id] ?? themeFromSeed(seed);
+  const palette = themeFromSeed(seed);
   verifyPalette(id, palette);
   return [id, palette];
 }));

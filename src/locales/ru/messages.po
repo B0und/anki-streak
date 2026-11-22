@@ -215,6 +215,12 @@ msgstr "Проверяем обновления…"
 msgid "questDue"
 msgstr "Заверши повторы на сегодня"
 
+#. Hide the app update dialog while the download continues.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "closeUpdatePrompt"
+msgstr "Закрыть"
+
 #. js-lingui-explicit-id
 #: src/messages.ts
 msgid "compact"
@@ -358,6 +364,12 @@ msgstr "Готово"
 msgid "downloadInstall"
 msgstr "Скачать и установить"
 
+#. Size is the APK size in megabytes, already formatted for the locale.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "updatePromptSize"
+msgstr "Размер загрузки: {size} МБ"
+
 #. js-lingui-explicit-id
 #: src/messages.ts
 msgid "downloading"
@@ -451,6 +463,12 @@ msgstr "Язык"
 #: src/messages.ts
 msgid "lastCheck"
 msgstr "Последняя проверка: {time}"
+
+#. Dismiss the app update dialog without starting the download.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "updateLater"
+msgstr "Позже"
 
 #. js-lingui-explicit-id
 #: src/messages.ts
@@ -612,6 +630,12 @@ msgstr "Обновить список колод"
 #: src/messages.ts
 msgid "replayAward"
 msgstr "Повторить анимацию"
+
+#. Retry a failed app update download.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "retryUpdate"
+msgstr "Повторить"
 
 #. js-lingui-explicit-id
 #: src/messages.ts

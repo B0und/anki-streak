@@ -96,34 +96,34 @@ function AnkiStreak(
     const inset = narrow ? 8 : 12;
     const rail = Math.floor(Math.min(widgetWidth * .285, height * 1.15));
     const contentWidth = widgetWidth - rail - inset;
-    const footerHeight = Math.round(height * .35);
-    const metricWidth = contentWidth / pulse.metrics.length;
+    const footerHeight = Math.round(height * .42);
+    const headerHeight = height - footerHeight;
+    const metricWidth = Math.min(70, contentWidth / pulse.metrics.length);
     const longestLabel = Math.max(...pulse.metrics.map(({ label }) => label.length));
     const longestValue = Math.max(...pulse.metrics.map(({ value }) => value.length));
-    const iconSize = Math.min(9, height * .14, metricWidth * .32);
-    const iconGap = 2;
-    const detailLabelSize = Math.min(7.5, height * .12, (metricWidth - 3) / (longestLabel * .72));
-    const detailValueSize = Math.min(10.5, height * .17, (metricWidth - iconSize - iconGap - 2) / (longestValue * .74));
+    const iconSize = Math.min(10, footerHeight * .34, metricWidth * .29);
+    const iconGap = 3;
+    const detailLabelSize = Math.min(9, footerHeight * .30, (metricWidth - 5) / (longestLabel * .65));
+    const detailValueSize = Math.min(12.5, footerHeight * .42, (metricWidth - iconSize - iconGap - 4) / (longestValue * .74));
     const portraitHeight = Math.min(height - inset, (rail - inset * .8) / aspect);
-    const numberSize = Math.min(height * .37, contentWidth * .45 / (card.value.length * .62));
+    const numberSize = Math.min(headerHeight * .57, contentWidth * .45 / (card.value.length * .62));
     const captionWidth = contentWidth - Math.ceil(numberSize * card.value.length * .65) - 6;
     return <Box modifiers={[fillMaxSize(), { $type: 'appWidgetBackground' }, cornerRadius(11), ...actions]}
       contentAlignment="bottomStart">
       <Column>
-        <Box contentAlignment="centerStart" modifiers={[size(widgetWidth, height - footerHeight), background(pulse.surface),
+        <Box contentAlignment="centerStart" modifiers={[size(widgetWidth, headerHeight), background(pulse.surface),
           padding(0, 2, inset, 0)]}>
           <Row verticalAlignment="bottom">
             <Text color={pulse.hero} style={{ fontSize: numberSize, fontWeight: 'bold' }} maxLines={1}
               modifiers={[{ $type: 'alignTextInkStart', rail }]}>{card.value}</Text>
             <Text color={pulse.muted} modifiers={[width(captionWidth), padding(5, 0, 0, Math.floor(numberSize * .16))]}
-              style={{ fontSize: Math.min(7.5, height * .16, (captionWidth - 5) / (card.label.length * .65)) }}
+              style={{ fontSize: Math.min(7, headerHeight * .16, (captionWidth - 5) / (card.label.length * .65)) }}
               maxLines={1}>{card.label}</Text>
           </Row>
         </Box>
         <Row verticalAlignment="center" modifiers={[size(widgetWidth, footerHeight), background(pulse.shade), padding(rail, 0, inset, 0)]}>
-          {pulse.metrics.map(({ label, value, icon }, index) => (
-            <Box key={icon} modifiers={[size(metricWidth, footerHeight)]}
-              contentAlignment={index === 0 ? 'centerStart' : index === 1 ? 'center' : 'centerEnd'}>
+          {pulse.metrics.map(({ label, value, icon }) => (
+            <Box key={icon} modifiers={[size(metricWidth, footerHeight)]} contentAlignment="centerStart">
               <Column>
                 <Text color={pulse.muted} style={{ fontSize: detailLabelSize }} maxLines={1}>{label}</Text>
                 <Row verticalAlignment="center">

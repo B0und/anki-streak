@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { TamaguiProvider, Text, Theme } from 'tamagui';
 
 import { AchievementCelebration } from '../AchievementCelebration';
+import { UpdatePrompt } from '../AppUpdates';
 import { Onboarding, useOnboarding } from '../Onboarding';
 import { ProgressProvider } from '../progressContext';
 import { config } from '../../tamagui.config';
@@ -22,6 +23,7 @@ function Navigation() {
   const dashboard = useDashboard();
   const { palette, mode } = useAppAppearance();
   const onboarding = useOnboarding();
+  const showUpdatePrompt = UpdatesActorContext.useSelector(({ context }) => context.showPrompt);
   const base = mode === 'dark' ? DarkTheme : DefaultTheme;
 
   return <Theme name={`${mode}_${dashboard.themeId}`}>
@@ -36,7 +38,7 @@ function Navigation() {
           <Stack screenOptions={{ headerShown: false }} />
         </View>
       </ThemeProvider>
-      {onboarding.done ? <AchievementCelebration /> : <Onboarding flow={onboarding} />}
+      {!onboarding.done ? <Onboarding flow={onboarding} /> : showUpdatePrompt ? <UpdatePrompt /> : <AchievementCelebration />}
       {dashboard.notice && <Text pointerEvents="none" accessibilityLiveRegion="polite" p={10} text="center"
         position="absolute" b={82} l={16} r={16} rounded={10} color="color" bg="subtle">
         {_(messages[dashboard.notice])}

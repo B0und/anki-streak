@@ -14,6 +14,7 @@ type UpdateContext = {
   lastCheck: number;
   update: AppUpdate | null;
   progress: DownloadProgress | null;
+  showPrompt: boolean;
   resume: CheckPhase;
   manual: boolean;
 };
@@ -54,17 +55,26 @@ function startCheck(resume: CheckPhase) {
 const updatesSetup = setup({
   schemas: {
     context: types<UpdateContext>(),
-    events: { check: types<{ manual: boolean }>(), install: types<void>(), progress: types<{ sample: DownloadProgress }>() },
+    events: {
+      check: types<{ manual: boolean }>(),
+      install: types<void>(),
+      progress: types<{ sample: DownloadProgress }>(),
+      dismissPrompt: types<void>(),
+    },
   },
 });
 
 const updatesMachine = updatesSetup.createMachine({
   id: 'appUpdates',
   context: () => ({
-    ...appUpdater.getInstalledBuild(), lastCheck: -Infinity, update: null, progress: null, manual: false, resume: 'idle',
+    ...appUpdater.getInstalledBuild(), lastCheck: -Infinity, update: null, progress: null, showPrompt: false,
+    manual: false, resume: 'idle',
   }),
   initial: 'idle',
   invoke: { src: automaticChecks },
+  on: {
+    dismissPrompt: ({ context }) => ({ context: { ...context, showPrompt: false } }),
+  },
   states: {
     idle: { on: { check: startCheck('idle') } },
     current: { on: { check: startCheck('current') } },
@@ -83,10 +93,15 @@ const updatesMachine = updatesSetup.createMachine({
         schemas: { input: types<string>() },
         src: ({ input, signal }): Promise<AppUpdate | null> => Effect.runPromise(checkForAppUpdate(input), { signal }),
         input: ({ context }) => context.version,
-        onDone: ({ context, event }) => ({
-          target: !event.output ? 'current' : context.update?.digest === event.output.digest ? context.resume : 'available',
-          context: { ...context, update: event.output },
-        }),
+        onDone: ({ context, event }) => {
+          const update = event.output;
+          if (!update) return { target: 'current', context: { ...context, update, showPrompt: false } };
+          return {
+            target: context.update?.digest === update.digest ? context.resume : 'available',
+            context: { ...context, update,
+              showPrompt: context.showPrompt || (!context.manual && context.update?.tag !== update.tag) },
+          };
+        },
         onError: ({ context }) => ({ target: context.manual && !context.update ? 'check-failed' : context.resume }),
       }),
     },
@@ -125,7 +140,10 @@ const updatesMachine = updatesSetup.createMachine({
           yield* Effect.tryPromise(() => appUpdater.installUpdate());
           return 'ready';
         }), { signal }),
-        onDone: ({ event }) => ({ target: event.output }),
+        onDone: ({ context, event }) => ({
+          target: event.output,
+          context: { ...context, showPrompt: event.output === 'permission' && context.showPrompt },
+        }),
         onError: { target: 'download-failed' },
       }),
     },
@@ -145,5 +163,6 @@ export function useAppUpdates() {
     kind,
     check() { send({ type: 'check', manual: true }); },
     install() { send({ type: 'install' }); },
+    dismissPrompt() { send({ type: 'dismissPrompt' }); },
   };
 }

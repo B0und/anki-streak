@@ -215,6 +215,12 @@ msgstr "Checking for updates…"
 msgid "questDue"
 msgstr "Clear due reviews"
 
+#. Hide the app update dialog while the download continues.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "closeUpdatePrompt"
+msgstr "Close"
+
 #. js-lingui-explicit-id
 #: src/messages.ts
 msgid "compact"
@@ -358,6 +364,12 @@ msgstr "Done"
 msgid "downloadInstall"
 msgstr "Download and install"
 
+#. Size is the APK size in megabytes, already formatted for the locale.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "updatePromptSize"
+msgstr "Download size: {size} MB"
+
 #. js-lingui-explicit-id
 #: src/messages.ts
 msgid "downloading"
@@ -451,6 +463,12 @@ msgstr "Language"
 #: src/messages.ts
 msgid "lastCheck"
 msgstr "Last check: {time}"
+
+#. Dismiss the app update dialog without starting the download.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "updateLater"
+msgstr "Later"
 
 #. js-lingui-explicit-id
 #: src/messages.ts
@@ -612,6 +630,12 @@ msgstr "Reload decks"
 #: src/messages.ts
 msgid "replayAward"
 msgstr "Replay celebration"
+
+#. Retry a failed app update download.
+#. js-lingui-explicit-id
+#: src/messages.ts
+msgid "retryUpdate"
+msgstr "Retry"
 
 #. js-lingui-explicit-id
 #: src/messages.ts

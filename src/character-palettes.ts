@@ -4,52 +4,52 @@ import type { Palette } from './appearance';
 export const characterPalettes = {
   "miku": {
     "widget": {
-      "accent": "#72F5DD",
-      "card": "#11282E",
-      "shade": "#0D2025",
+      "accent": "#B8EFE3",
+      "card": "#252B29",
+      "shade": "#1B2220",
       "pulse": {
-        "surface": "#183037",
-        "footer": "#12282E",
-        "hero": "#E7F3F2",
-        "label": "#93AFB1",
-        "value": "#B6CDCD"
+        "surface": "#2B3432",
+        "footer": "#242B2A",
+        "hero": "#DAF2EC",
+        "label": "#7CA49B",
+        "value": "#92BFB5"
       }
     },
     "app": {
       "light": {
-        "background": "#EEF6F3",
-        "surface": "#FAFFFD",
-        "subtle": "#DCEFEB",
-        "hero": "#CAEAE4",
-        "line": "#B8D6CE",
-        "text": "#123833",
-        "muted": "#456B64",
-        "accent": "#126B60",
+        "background": "#E4F4F0",
+        "surface": "#EFFFFB",
+        "subtle": "#CDECE5",
+        "hero": "#C2E9E0",
+        "line": "#AAD3CA",
+        "text": "#1A2E2A",
+        "muted": "#46665F",
+        "accent": "#006C5C",
         "onAccent": "#FFFFFF",
         "heat": [
-          "#DDECE7",
-          "#ACD9CE",
-          "#76BBA9",
-          "#449988",
-          "#176D61"
+          "#CCE7E1",
+          "#9CCBC1",
+          "#67A99C",
+          "#2D8C7C",
+          "#006C5C"
         ]
       },
       "dark": {
-        "background": "#0C1D22",
-        "surface": "#122A30",
-        "subtle": "#1B383C",
-        "hero": "#174044",
-        "line": "#325358",
-        "text": "#F0FFFA",
-        "muted": "#B1D0C9",
-        "accent": "#80EDDA",
-        "onAccent": "#092B26",
+        "background": "#18201E",
+        "surface": "#202C29",
+        "subtle": "#243A35",
+        "hero": "#21443D",
+        "line": "#31554E",
+        "text": "#E0FFF8",
+        "muted": "#A6D1C7",
+        "accent": "#8EF0DC",
+        "onAccent": "#003129",
         "heat": [
-          "#223E42",
-          "#28655F",
-          "#297E74",
-          "#49B3A0",
-          "#7BEBD7"
+          "#2B3936",
+          "#27574E",
+          "#2B7769",
+          "#3DA392",
+          "#7FDECB"
         ]
       }
     }
@@ -58,102 +58,102 @@ export const characterPalettes = {
     "widget": {
       "accent": "#EFE0C5",
       "card": "#2B2926",
-      "shade": "#231F1D",
+      "shade": "#22201C",
       "pulse": {
-        "surface": "#35312D",
-        "footer": "#2C2926",
+        "surface": "#34312D",
+        "footer": "#2B2926",
         "hero": "#F2EBDF",
-        "label": "#A59986",
-        "value": "#BFB29D"
+        "label": "#A49986",
+        "value": "#BEB29D"
       }
     },
     "app": {
       "light": {
         "background": "#F4EFE7",
         "surface": "#FFFAF2",
-        "subtle": "#EDE3D4",
+        "subtle": "#ECE3D4",
         "hero": "#E9DECB",
-        "line": "#D5C7B4",
-        "text": "#302820",
-        "muted": "#695C4F",
-        "accent": "#745330",
+        "line": "#D3C8B4",
+        "text": "#2E291F",
+        "muted": "#665D4E",
+        "accent": "#6D572D",
         "onAccent": "#FFFFFF",
         "heat": [
-          "#E8DFD2",
-          "#CDBDA8",
-          "#AE967B",
-          "#927453",
-          "#745330"
+          "#E7DFD2",
+          "#CABEA8",
+          "#A9987A",
+          "#8C7751",
+          "#6D572D"
         ]
       },
       "dark": {
-        "background": "#211D1A",
-        "surface": "#2D2823",
-        "subtle": "#3B332A",
-        "hero": "#473A2D",
-        "line": "#584A3C",
+        "background": "#201E1A",
+        "surface": "#2C2923",
+        "subtle": "#39342A",
+        "hero": "#443C2C",
+        "line": "#554C3B",
         "text": "#FFF6E7",
-        "muted": "#D2C4B0",
-        "accent": "#F0D7AA",
-        "onAccent": "#332614",
+        "muted": "#D0C5B0",
+        "accent": "#F0D7AB",
+        "onAccent": "#312714",
         "heat": [
-          "#3B342F",
-          "#5B4A38",
-          "#7C6348",
-          "#AA8964",
-          "#E2C49C"
+          "#39352E",
+          "#574C37",
+          "#776647",
+          "#A38C62",
+          "#DDC69C"
         ]
       }
     }
   },
   "emilia": {
     "widget": {
-      "accent": "#E1BFFF",
-      "card": "#252038",
-      "shade": "#1E1A2C",
+      "accent": "#EDD8FF",
+      "card": "#2B282D",
+      "shade": "#211F24",
       "pulse": {
-        "surface": "#2E2940",
-        "footer": "#252136",
-        "hero": "#F2EBF8",
-        "label": "#AEA0BE",
-        "value": "#CBBCD9"
+        "surface": "#343037",
+        "footer": "#2B282E",
+        "hero": "#F1E7FA",
+        "label": "#A394B1",
+        "value": "#BDACCC"
       }
     },
     "app": {
       "light": {
-        "background": "#F9F2EB",
-        "surface": "#FFFAF5",
-        "subtle": "#F2E7F1",
-        "hero": "#EDDFEF",
-        "line": "#DDCBDE",
-        "text": "#2A1738",
-        "muted": "#6C5873",
-        "accent": "#74429C",
+        "background": "#F3EDF9",
+        "surface": "#FDF8FF",
+        "subtle": "#EBDFF6",
+        "hero": "#E7D8F5",
+        "line": "#D2C2E0",
+        "text": "#2E2634",
+        "muted": "#655970",
+        "accent": "#6B4A85",
         "onAccent": "#FFFFFF",
         "heat": [
-          "#EADDED",
-          "#D4B9E6",
-          "#B78BD3",
-          "#9560BB",
-          "#73439C"
+          "#E6DBF0",
+          "#C9B7D9",
+          "#A78FBD",
+          "#8A6BA3",
+          "#6B4A85"
         ]
       },
       "dark": {
-        "background": "#19132C",
-        "surface": "#27203E",
-        "subtle": "#35284E",
-        "hero": "#382856",
-        "line": "#534268",
-        "text": "#FCF1FF",
-        "muted": "#CEC0DD",
-        "accent": "#E0BEFF",
-        "onAccent": "#291634",
+        "background": "#201C23",
+        "surface": "#2B2730",
+        "subtle": "#393140",
+        "hero": "#43374E",
+        "line": "#54465F",
+        "text": "#FBF4FF",
+        "muted": "#CFBEDE",
+        "accent": "#EBCBFF",
+        "onAccent": "#30213D",
         "heat": [
-          "#382C50",
-          "#5C447C",
-          "#8056AB",
-          "#A171CE",
-          "#D4AAFA"
+          "#38333E",
+          "#564565",
+          "#755C8A",
+          "#A17FBD",
+          "#DBB9F9"
         ]
       }
     }

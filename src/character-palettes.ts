@@ -417,6 +417,58 @@ export const characterPalettes = {
         ]
       }
     }
+  },
+  "astolfo": {
+    "widget": {
+      "accent": "#FFD2E6",
+      "card": "#2D282A",
+      "shade": "#241E20",
+      "pulse": {
+        "surface": "#382F32",
+        "footer": "#2E282A",
+        "hero": "#FBE5EE",
+        "label": "#B2909E",
+        "value": "#CEA8B7"
+      }
+    },
+    "app": {
+      "light": {
+        "background": "#FAEBF1",
+        "surface": "#FFF7FC",
+        "subtle": "#F8DCE7",
+        "hero": "#F7D5E2",
+        "line": "#E2BECC",
+        "text": "#35242B",
+        "muted": "#715661",
+        "accent": "#844160",
+        "onAccent": "#FFFFFF",
+        "heat": [
+          "#F1D9E2",
+          "#DBB3C3",
+          "#BE899F",
+          "#A36380",
+          "#844160"
+        ]
+      },
+      "dark": {
+        "background": "#231C1E",
+        "surface": "#30262A",
+        "subtle": "#402F36",
+        "hero": "#4E333F",
+        "line": "#60434F",
+        "text": "#FFF2F8",
+        "muted": "#E0BAC9",
+        "accent": "#FFC3E0",
+        "onAccent": "#3C1D2B",
+        "heat": [
+          "#3E3137",
+          "#654150",
+          "#8A556D",
+          "#BE7696",
+          "#FAB0CF"
+        ]
+      }
+    }
   }
 } as const;
 
@@ -438,5 +490,7 @@ export function mapCharacterThemes<T>(map: (palette: Palette) => T) {
     "dark_eris": map(characterPalettes["eris"].app.dark),
     "light_ruijerd": map(characterPalettes["ruijerd"].app.light),
     "dark_ruijerd": map(characterPalettes["ruijerd"].app.dark),
+    "light_astolfo": map(characterPalettes["astolfo"].app.light),
+    "dark_astolfo": map(characterPalettes["astolfo"].app.dark),
   };
 }

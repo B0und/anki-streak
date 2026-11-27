@@ -11,6 +11,7 @@ const themes = [
   { id: 'sylphiette', icon: '@drawable/launcher_sylphiette' },
   { id: 'eris', icon: '@drawable/launcher_eris' },
   { id: 'ruijerd', icon: '@drawable/launcher_ruijerd' },
+  { id: 'astolfo', icon: '@drawable/launcher_astolfo' },
 ];
 
 const withLauncherThemes: ConfigPlugin = (config) => withAndroidManifest(config, (config) => {

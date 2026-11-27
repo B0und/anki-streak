@@ -13,7 +13,8 @@ internal enum class WidgetTheme(val id: String, val happyPortrait: Int) {
   ROXY("roxy", R.drawable.roxy_happy),
   SYLPHIETTE("sylphiette", R.drawable.sylphiette_happy),
   ERIS("eris", R.drawable.eris_happy),
-  RUIJERD("ruijerd", R.drawable.ruijerd_happy);
+  RUIJERD("ruijerd", R.drawable.ruijerd_happy),
+  ASTOLFO("astolfo", R.drawable.astolfo_happy);
 
   companion object {
     fun fromId(id: String?): WidgetTheme = entries.firstOrNull { it.id == id } ?: MIKU

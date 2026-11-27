@@ -65,9 +65,17 @@ export const themes = {
     waiting: 'ruijerd_waiting',
     happy: 'ruijerd_happy',
   },
+  astolfo: {
+    name: 'Astolfo',
+    source: 'Fate/Apocrypha',
+    seed: '#F3A4C6',
+    portraitAspect: { waiting: 720 / 624, happy: 720 / 624 },
+    waiting: 'astolfo_waiting',
+    happy: 'astolfo_happy',
+  },
 } as const;
 
 export type WidgetTheme = keyof typeof themes;
 export const themeOrder: WidgetTheme[] = [
-  'miku', '2b', 'emilia', 'rudeus', 'roxy', 'sylphiette', 'eris', 'ruijerd',
+  'miku', '2b', 'emilia', 'rudeus', 'roxy', 'sylphiette', 'eris', 'ruijerd', 'astolfo',
 ];

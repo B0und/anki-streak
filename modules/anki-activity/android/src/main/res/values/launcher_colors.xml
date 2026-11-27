@@ -2,4 +2,9 @@
 <resources>
   <color name="launcher_2b_background">#37302B</color>
   <color name="launcher_emilia_background">#392753</color>
+  <color name="launcher_rudeus_background">#3C3628</color>
+  <color name="launcher_roxy_background">#25365A</color>
+  <color name="launcher_sylphiette_background">#35442D</color>
+  <color name="launcher_eris_background">#522D2A</color>
+  <color name="launcher_ruijerd_background">#24443A</color>
 </resources>

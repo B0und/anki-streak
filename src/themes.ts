@@ -1,3 +1,5 @@
+const mushokuTensei = 'Mushoku Tensei';
+
 export const themes = {
   miku: {
     name: 'Miku',
@@ -23,7 +25,49 @@ export const themes = {
     waiting: 'emilia_waiting',
     happy: 'emilia_happy',
   },
+  rudeus: {
+    name: 'Rudeus',
+    source: mushokuTensei,
+    seed: '#E1BA76',
+    portraitAspect: { waiting: 609 / 720, happy: 609 / 720 },
+    waiting: 'rudeus_waiting',
+    happy: 'rudeus_happy',
+  },
+  roxy: {
+    name: 'Roxy',
+    source: mushokuTensei,
+    seed: '#9EACFF',
+    portraitAspect: { waiting: 719 / 720, happy: 719 / 720 },
+    waiting: 'roxy_waiting',
+    happy: 'roxy_happy',
+  },
+  sylphiette: {
+    name: 'Sylphiette',
+    source: mushokuTensei,
+    seed: '#BBD88B',
+    portraitAspect: { waiting: 528 / 720, happy: 528 / 720 },
+    waiting: 'sylphiette_waiting',
+    happy: 'sylphiette_happy',
+  },
+  eris: {
+    name: 'Eris',
+    source: mushokuTensei,
+    seed: '#FF9C8E',
+    portraitAspect: { waiting: 691 / 720, happy: 691 / 720 },
+    waiting: 'eris_waiting',
+    happy: 'eris_happy',
+  },
+  ruijerd: {
+    name: 'Ruijerd',
+    source: mushokuTensei,
+    seed: '#80D7AB',
+    portraitAspect: { waiting: 720 / 575, happy: 720 / 575 },
+    waiting: 'ruijerd_waiting',
+    happy: 'ruijerd_happy',
+  },
 } as const;
 
 export type WidgetTheme = keyof typeof themes;
-export const themeOrder: WidgetTheme[] = ['miku', '2b', 'emilia'];
+export const themeOrder: WidgetTheme[] = [
+  'miku', '2b', 'emilia', 'rudeus', 'roxy', 'sylphiette', 'eris', 'ruijerd',
+];

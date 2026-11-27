@@ -157,6 +157,266 @@ export const characterPalettes = {
         ]
       }
     }
+  },
+  "rudeus": {
+    "widget": {
+      "accent": "#F7DEB6",
+      "card": "#2C2924",
+      "shade": "#231F1A",
+      "pulse": {
+        "surface": "#35312A",
+        "footer": "#2C2924",
+        "hero": "#F5EAD9",
+        "label": "#AA987B",
+        "value": "#C4B191"
+      }
+    },
+    "app": {
+      "light": {
+        "background": "#F6EFE3",
+        "surface": "#FFFAEE",
+        "subtle": "#F1E3CB",
+        "hero": "#EEDDC1",
+        "line": "#D9C7A9",
+        "text": "#31281A",
+        "muted": "#6A5C45",
+        "accent": "#775300",
+        "onAccent": "#FFFFFF",
+        "heat": [
+          "#EBDFCB",
+          "#D1BD9B",
+          "#B29667",
+          "#967436",
+          "#775300"
+        ]
+      },
+      "dark": {
+        "background": "#211D17",
+        "surface": "#2E281F",
+        "subtle": "#3C3324",
+        "hero": "#483A22",
+        "line": "#594A31",
+        "text": "#FFF5DF",
+        "muted": "#D6C4A4",
+        "accent": "#FCD48F",
+        "onAccent": "#362504",
+        "heat": [
+          "#3B352A",
+          "#5D4A29",
+          "#7F6331",
+          "#AF8945",
+          "#E9C381"
+        ]
+      }
+    }
+  },
+  "roxy": {
+    "widget": {
+      "accent": "#D7E0FF",
+      "card": "#28292E",
+      "shade": "#1E2025",
+      "pulse": {
+        "surface": "#303139",
+        "footer": "#28292F",
+        "hero": "#E7EBFE",
+        "label": "#9299B8",
+        "value": "#ABB2D4"
+      }
+    },
+    "app": {
+      "light": {
+        "background": "#ECEFFC",
+        "surface": "#F8FAFF",
+        "subtle": "#DEE3FC",
+        "hero": "#D7DEFC",
+        "line": "#C1C7E7",
+        "text": "#262937",
+        "muted": "#585D75",
+        "accent": "#4C5492",
+        "onAccent": "#FFFFFF",
+        "heat": [
+          "#DADFF5",
+          "#B6BEE1",
+          "#8E97C7",
+          "#6C75B0",
+          "#4C5492"
+        ]
+      },
+      "dark": {
+        "background": "#1C1D24",
+        "surface": "#262832",
+        "subtle": "#303343",
+        "hero": "#363B53",
+        "line": "#464B65",
+        "text": "#F3F6FF",
+        "muted": "#BDC4E6",
+        "accent": "#CDD7FF",
+        "onAccent": "#222643",
+        "heat": [
+          "#333540",
+          "#454B6B",
+          "#5C6494",
+          "#7F8ACB",
+          "#B8C5FF"
+        ]
+      }
+    }
+  },
+  "sylphiette": {
+    "widget": {
+      "accent": "#D8E9BF",
+      "card": "#282A25",
+      "shade": "#1F211B",
+      "pulse": {
+        "surface": "#30332C",
+        "footer": "#282B25",
+        "hero": "#E8EFDC",
+        "label": "#94A082",
+        "value": "#ACBA98"
+      }
+    },
+    "app": {
+      "light": {
+        "background": "#EDF2E5",
+        "surface": "#F8FDF0",
+        "subtle": "#DFE9D1",
+        "hero": "#D9E5C7",
+        "line": "#C2CFAF",
+        "text": "#262C1D",
+        "muted": "#59634A",
+        "accent": "#4D641D",
+        "onAccent": "#FFFFFF",
+        "heat": [
+          "#DBE4CF",
+          "#B8C6A2",
+          "#90A372",
+          "#6E8446",
+          "#4D641D"
+        ]
+      },
+      "dark": {
+        "background": "#1C1F19",
+        "surface": "#272B21",
+        "subtle": "#313727",
+        "hero": "#374128",
+        "line": "#475137",
+        "text": "#F2FCE4",
+        "muted": "#BFCCAB",
+        "accent": "#CBE69F",
+        "onAccent": "#222D0D",
+        "heat": [
+          "#33372C",
+          "#465331",
+          "#5E703E",
+          "#829A56",
+          "#BBD591"
+        ]
+      }
+    }
+  },
+  "eris": {
+    "widget": {
+      "accent": "#FFD5CD",
+      "card": "#2E2827",
+      "shade": "#251E1D",
+      "pulse": {
+        "surface": "#382F2E",
+        "footer": "#2F2827",
+        "hero": "#FDE6E2",
+        "label": "#B6918B",
+        "value": "#D1A9A2"
+      }
+    },
+    "app": {
+      "light": {
+        "background": "#FCECE9",
+        "surface": "#FFF8F6",
+        "subtle": "#FBDDD8",
+        "hero": "#FAD6D0",
+        "line": "#E6BFB9",
+        "text": "#362522",
+        "muted": "#735652",
+        "accent": "#8A4239",
+        "onAccent": "#FFFFFF",
+        "heat": [
+          "#F4D9D5",
+          "#DFB4AD",
+          "#C38A81",
+          "#A9655B",
+          "#8A4239"
+        ]
+      },
+      "dark": {
+        "background": "#241C1A",
+        "surface": "#312624",
+        "subtle": "#422F2C",
+        "hero": "#513430",
+        "line": "#63443F",
+        "text": "#FFF2EF",
+        "muted": "#E3BBB5",
+        "accent": "#FFC8BE",
+        "onAccent": "#3F1D19",
+        "heat": [
+          "#3F3230",
+          "#68423C",
+          "#8F574F",
+          "#C4786D",
+          "#FFB2A6"
+        ]
+      }
+    }
+  },
+  "ruijerd": {
+    "widget": {
+      "accent": "#C0EFD5",
+      "card": "#262B28",
+      "shade": "#1C221E",
+      "pulse": {
+        "surface": "#2C342F",
+        "footer": "#252B28",
+        "hero": "#DDF2E6",
+        "label": "#83A491",
+        "value": "#99BEAA"
+      }
+    },
+    "app": {
+      "light": {
+        "background": "#E6F4EC",
+        "surface": "#F1FFF7",
+        "subtle": "#D2ECDD",
+        "hero": "#C8E9D6",
+        "line": "#B0D3C0",
+        "text": "#1D2E25",
+        "muted": "#4B6657",
+        "accent": "#0E6B48",
+        "onAccent": "#FFFFFF",
+        "heat": [
+          "#D0E7DA",
+          "#A4CAB5",
+          "#72A98C",
+          "#438B68",
+          "#0E6B48"
+        ]
+      },
+      "dark": {
+        "background": "#19201C",
+        "surface": "#222C26",
+        "subtle": "#273930",
+        "hero": "#284435",
+        "line": "#375445",
+        "text": "#E5FFF0",
+        "muted": "#ACD0BC",
+        "accent": "#9FEFC5",
+        "onAccent": "#0A3120",
+        "heat": [
+          "#2D3932",
+          "#315744",
+          "#3C7659",
+          "#54A27C",
+          "#90DDB5"
+        ]
+      }
+    }
   }
 } as const;
 
@@ -168,5 +428,15 @@ export function mapCharacterThemes<T>(map: (palette: Palette) => T) {
     "dark_2b": map(characterPalettes["2b"].app.dark),
     "light_emilia": map(characterPalettes["emilia"].app.light),
     "dark_emilia": map(characterPalettes["emilia"].app.dark),
+    "light_rudeus": map(characterPalettes["rudeus"].app.light),
+    "dark_rudeus": map(characterPalettes["rudeus"].app.dark),
+    "light_roxy": map(characterPalettes["roxy"].app.light),
+    "dark_roxy": map(characterPalettes["roxy"].app.dark),
+    "light_sylphiette": map(characterPalettes["sylphiette"].app.light),
+    "dark_sylphiette": map(characterPalettes["sylphiette"].app.dark),
+    "light_eris": map(characterPalettes["eris"].app.light),
+    "dark_eris": map(characterPalettes["eris"].app.dark),
+    "light_ruijerd": map(characterPalettes["ruijerd"].app.light),
+    "dark_ruijerd": map(characterPalettes["ruijerd"].app.dark),
   };
 }

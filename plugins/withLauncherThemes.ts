@@ -6,6 +6,11 @@ const themes = [
   { id: 'miku', icon: '@mipmap/ic_launcher' },
   { id: '2b', icon: '@drawable/launcher_2b' },
   { id: 'emilia', icon: '@drawable/launcher_emilia' },
+  { id: 'rudeus', icon: '@drawable/launcher_rudeus' },
+  { id: 'roxy', icon: '@drawable/launcher_roxy' },
+  { id: 'sylphiette', icon: '@drawable/launcher_sylphiette' },
+  { id: 'eris', icon: '@drawable/launcher_eris' },
+  { id: 'ruijerd', icon: '@drawable/launcher_ruijerd' },
 ];
 
 const withLauncherThemes: ConfigPlugin = (config) => withAndroidManifest(config, (config) => {

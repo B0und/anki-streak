@@ -8,7 +8,12 @@ import android.os.Build
 internal enum class WidgetTheme(val id: String, val happyPortrait: Int) {
   MIKU("miku", R.drawable.miku_happy),
   TWO_B("2b", R.drawable.twob_happy),
-  EMILIA("emilia", R.drawable.emilia_happy);
+  EMILIA("emilia", R.drawable.emilia_happy),
+  RUDEUS("rudeus", R.drawable.rudeus_happy),
+  ROXY("roxy", R.drawable.roxy_happy),
+  SYLPHIETTE("sylphiette", R.drawable.sylphiette_happy),
+  ERIS("eris", R.drawable.eris_happy),
+  RUIJERD("ruijerd", R.drawable.ruijerd_happy);
 
   companion object {
     fun fromId(id: String?): WidgetTheme = entries.firstOrNull { it.id == id } ?: MIKU
